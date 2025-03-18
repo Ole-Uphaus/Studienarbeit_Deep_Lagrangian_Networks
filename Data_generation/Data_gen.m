@@ -6,6 +6,37 @@
 % durch. Dabei wird die bereits hergeleitete Zustandsraumdarstellung des
 % 2-FHG Roboters verwendet. 
 % -------------------------------------------------------------
+
+% Diese Funktion gibt zufällig entweder 1 oder -1 zurück
+function signum = random_sign()
+    r = randi([0, 1]);
+    signum = 2*r - 1;
+end
+
+% Diese Funktion erzeugt einen zufälligen Parameter (float) im gegebenen
+% Intervall
+function r_param = random_param(lower_barrier, upper_barrier)
+    r_param = lower_barrier + (upper_barrier - lower_barrier) * rand();
+end
+
+% Diese Funktion erstellt eine Matrix mit zufälligen Eingangssignalen. Die
+% dazu verwendeten Intervalle der Zufallsparameter können innerhalb der
+% Funktion verändert werden.
+function [u_mat] = create_random_input(t_u)
+    % Intervalle Zufallsparameter (können verändert werden)
+    gain = [0.1, 2];
+    frequency = [0.1, 5];
+    offset = [t_u(1) + 1, t_u(end) - 1];
+    
+    % Eingangsgrößen Kraft F
+    u_mat(1, :) = t_u.*0;  % kein Eingang
+    u_mat(2, :) = random_sign()*random_param(gain(1), gain(2))*heaviside(t_u - random_param(offset(1), offset(2)));    % Zufällige Sprungfunktion
+    u_mat(3, :) = random_sign()*random_param(gain(1), gain(2))*sin(random_param(frequency(1), frequency(2))*(t_u - random_param(0, pi)));   % Zufällige Sinus Funktion
+    u_mat(4, :) = random_sign()*random_param(gain(1), gain(2))*square(random_param(frequency(1), frequency(2))*t_u);   % Rechteckfunktion
+    u_mat(5, :) = random_sign()*random_param(gain(1), gain(2))*sawtooth(random_param(frequency(1), frequency(2))*t_u);  % Sägzahnfunktion
+
+end
+
 clc
 clear
 
@@ -31,11 +62,14 @@ x_0 = [r_0; phi_0; r_p_0; phi_p_0]; % Vektor der Anfangswerte
 % Zeitsignal
 t_u = linspace(t_span(1), t_span(2), 1000);
 
+% Funktionsverläufe
 u_zero = t_u.*0;    % kein Eingang
 u_step = heaviside(t_u - 2);    % Sprungfunktion
 u_sin = sin(t_u);   % Sinus Funktion
 u_rectangle = square(2*pi*0.5*t_u);   % Rechteckfunktion
 u_sawtooth = sawtooth(2*pi*0.5*t_u);  % Sägzahnfunktion
+
+u_vec = create_random_input(t_u);
 
 % Stellgrößen
 F_vec = [t_u; u_sawtooth];
