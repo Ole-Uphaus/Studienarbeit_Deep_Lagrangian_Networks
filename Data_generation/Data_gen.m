@@ -111,6 +111,15 @@ for i = 1:n
     end
 end
 
+%% Beschleunigungsterme berechnen (numerisch)
+
+% Schleife, die alle Simulationen durchgeht
+for i = 1:n^2
+    % Gradienten berechnen
+    simData(i).r_pp = gradient(simData(i).x(:, 3), simData(i).t);
+    simData(i).phi_pp = gradient(simData(i).x(:, 4), simData(i).t);
+end
+
 %% Plots erstellen
 
 % sollen Plots angezeigt werden?
@@ -126,6 +135,7 @@ if showplots == true
         plot(simData(i).t, simData(i).x(:, 1), 'b', 'LineWidth', 1.5);
         xlabel('Zeit [s]');
         ylabel('Weg [m]');
+        grid on;
         title('Position r(t)');
         
         % Oberer rechter Plot
@@ -133,6 +143,7 @@ if showplots == true
         plot(simData(i).t, simData(i).x(:, 2), 'b', 'LineWidth', 1.5);
         xlabel('Zeit [s]');
         ylabel('Winkel [rad]');
+        grid on;
         title('Winkel phi(t)');
 
         % Unterer linker Plot
@@ -140,6 +151,7 @@ if showplots == true
         plot(t_u, simData(i).F, 'r', 'LineWidth', 1.5);
         xlabel('Zeit [s]');
         ylabel('Kraft [N]');
+        grid on;
         title('Antriebskraft F');
 
         % Unterer rechter Plot
@@ -147,6 +159,7 @@ if showplots == true
         plot(t_u, simData(i).tau, 'r', 'LineWidth', 1.5);
         xlabel('Zeit [s]');
         ylabel('Moment [Nm]');
+        grid on;
         title('Antriebsdrehmoment tau');
     
     end
