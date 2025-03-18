@@ -10,30 +10,42 @@ clc
 clear
 
 %% Definition der Systemparameter und Initialisierung
+
 % Systemparameter
 m_kg = 5;   % Masse des Arms
 mL_kg = 2;  % Masse der Last
 J_kgm2 = 0.4;  % gesamte Rotationsträgheit
 l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 
-% Anfangswerte und Simulationsteit
+% Anfangswerte und Simulationszeit
 t_span = [0 10];    % Simulationszeit
 
-r_0 = 0.5;
-phi_0 = 2;
+r_0 = 0.5;  % Sollte immer größer als l sein
+phi_0 = 0;
 r_p_0 = 0;
 phi_p_0 = 0;
 x_0 = [r_0; phi_0; r_p_0; phi_p_0]; % Vektor der Anfangswerte
 
-% Eingangssignale 
+%% Eingangssignale
+
+% Zeitsignal
 t_u = linspace(t_span(1), t_span(2), 1000);
-F_vec = [t_u; 0.*t_u];
-tau_vec = [t_u; 0.*t_u];
+
+u_zero = t_u.*0;    % kein Eingang
+u_step = heaviside(t_u - 2);    % Sprungfunktion
+u_sin = sin(t_u);   % Sinus Funktion
+u_rectangle = square(2*pi*0.5*t_u);   % Rechteckfunktion
+u_sawtooth = sawtooth(2*pi*0.5*t_u);  % Sägzahnfunktion
+
+% Stellgrößen
+F_vec = [t_u; u_sawtooth];
+tau_vec = [t_u; u_step];
+
+%% Differentialgleichung lösen
 
 % ODE-Funktion mit Parametern
 odefun = @(t, x) ODE_2_FHG_Robot(t, x, F_vec, tau_vec, l_m, m_kg, mL_kg, J_kgm2);
 
-%% Differentialgleichung lösen
 % Solver zur Lösung der DGL
 options = odeset('MaxStep', 0.01, 'Stats', 'on');
 [t, x] = ode45(odefun, t_span, x_0, options);
