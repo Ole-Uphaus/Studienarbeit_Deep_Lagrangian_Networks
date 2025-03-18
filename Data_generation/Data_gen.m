@@ -37,10 +37,23 @@ function [u_mat] = create_random_input(t_u)
 
 end
 
+% Diese Funktion erstellt zufällige Anfangswerte in bestimmte Intervallen.
+% Die Intervalle können manuell in der Funktion angepasst werden.
+function x_0 = random_initial_values()
+    % Anfangswerte
+    r_0 = random_param(-1, 1);  % Sollte immer größer als l sein
+    phi_0 = random_param(-2*pi, 2*pi);
+    r_p_0 = random_param(-0.5, 0.5);
+    phi_p_0 = random_param(-0.5, 0.5);
+
+    x_0 = [r_0; phi_0; r_p_0; phi_p_0]; % Vektor der Anfangswerte
+end
+
 clc
 clear
+close all
 
-%% Definition der Systemparameter und Initialisierung
+%% Definition der Systemparameter
 
 % Systemparameter
 m_kg = 5;   % Masse des Arms
@@ -50,12 +63,6 @@ l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 
 % Anfangswerte und Simulationszeit
 t_span = [0 10];    % Simulationszeit
-
-r_0 = 0.5;  % Sollte immer größer als l sein
-phi_0 = 0;
-r_p_0 = 0;
-phi_p_0 = 0;
-x_0 = [r_0; phi_0; r_p_0; phi_p_0]; % Vektor der Anfangswerte
 
 %% Eingangssignale
 
@@ -79,6 +86,9 @@ counter = 1;
 % Alle Stellgrößenverläufe durchgehen
 for i = 1:n
     for j = 1:n
+        % Anfangswerte
+        x_0 = random_initial_values();
+
         % Stellgrößen
         F_vec = [t_u; uF_vec(i, :)];
         tau_vec = [t_u; utau_vec(j, :)];
@@ -93,6 +103,8 @@ for i = 1:n
         % Speichern
         simData(counter).t = t;
         simData(counter).x = x;
+        simData(counter).tau = utau_vec(j, :);
+        simData(counter).F = uF_vec(i, :);
 
         counter = counter + 1;
 
@@ -109,19 +121,33 @@ if showplots == true
         % Plot erstellen
         figure(i);
     
-        % Oberer Plot
-        subplot(2,1,1); % 2 Zeilen, 1 Spalte, oberer Plot
+        % Oberer linker Plot
+        subplot(2,2,1); % 2 Zeilen, 1 Spalte, oberer Plot
         plot(simData(i).t, simData(i).x(:, 1), 'b', 'LineWidth', 1.5);
         xlabel('Zeit [s]');
         ylabel('Weg [m]');
         title('Position r(t)');
         
-        % Unterer Plot
-        subplot(2,1,2); % 2 Zeilen, 1 Spalte, unterer Plot
-        plot(simData(i).t, simData(i).x(:, 2), 'r', 'LineWidth', 1.5);
+        % Oberer rechter Plot
+        subplot(2,2,2); % 2 Zeilen, 1 Spalte, unterer Plot
+        plot(simData(i).t, simData(i).x(:, 2), 'b', 'LineWidth', 1.5);
         xlabel('Zeit [s]');
         ylabel('Winkel [rad]');
         title('Winkel phi(t)');
+
+        % Unterer linker Plot
+        subplot(2,2,3); % 2 Zeilen, 1 Spalte, unterer Plot
+        plot(t_u, simData(i).F, 'r', 'LineWidth', 1.5);
+        xlabel('Zeit [s]');
+        ylabel('Kraft [N]');
+        title('Antriebskraft F');
+
+        % Unterer rechter Plot
+        subplot(2,2,4); % 2 Zeilen, 1 Spalte, unterer Plot
+        plot(t_u, simData(i).tau, 'r', 'LineWidth', 1.5);
+        xlabel('Zeit [s]');
+        ylabel('Moment [Nm]');
+        title('Antriebsdrehmoment tau');
     
     end
 end

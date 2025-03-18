@@ -11,6 +11,7 @@
 % -------------------------------------------------------------
 clc
 clear
+close all
 
 % Symbolische variablen definieren
 syms r phi r_p phi_p r_pp phi_pp F tau
