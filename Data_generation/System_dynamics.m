@@ -9,6 +9,8 @@
 % Lagrange Gleichungen gelöst werden müssen, wird die Lösung in diesem
 % Skript durchgeführt.
 % -------------------------------------------------------------
+clc
+clear
 
 % Symbolische variablen definieren
 syms r phi r_p phi_p r_pp phi_pp F tau
