@@ -68,10 +68,10 @@ model = Feed_forward_NN(input_size, hidden_size, output_size)
 
 # Loss funktionen und Optimierer wählen
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.004)
 
 # Optimierung
-num_epochs = 5     # Anzahlo der Durchläufe durch den gesamten Datensatz
+num_epochs = 30     # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
@@ -88,3 +88,11 @@ for epoch in range(num_epochs):
     
    
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+
+# Modell ausprobieren
+model.eval()
+with torch.no_grad():
+    predictions = model(features_tensor[50000])
+
+print('Das trainierte Modell hat folgendes ausgegeben:', predictions)
+print('Dies sind die zugehörigen label Werte:', labels_tensor[50000])
