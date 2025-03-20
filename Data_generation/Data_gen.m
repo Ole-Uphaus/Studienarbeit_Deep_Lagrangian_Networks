@@ -4,7 +4,8 @@
 % Beschreibung:
 % Diese Funktion führt die Generierung und Spiecherung der Trainigsdaten
 % durch. Dabei wird die bereits hergeleitete Zustandsraumdarstellung des
-% 2-FHG Roboters verwendet. 
+% 2-FHG Roboters verwendet. Die Speicherung erfolgt im Folgenden
+% Verzeichnis: Studienarbeit_Deep_Lagrangian_Networks\Training_Data\MATLAB_Simulation
 % -------------------------------------------------------------
 
 % Diese Funktion gibt zufällig entweder 1 oder -1 zurück
@@ -64,6 +65,12 @@ l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 % Anfangswerte und Simulationszeit
 t_span = [0 10];    % Simulationszeit
 
+% sollen Plots angezeigt werden?
+showplots = false;
+
+% sollen Simulationsdaten gespeichert werden
+savedata = true;
+
 %% Eingangssignale
 
 % Zeitsignal
@@ -120,11 +127,26 @@ for i = 1:n^2
     simData(i).phi_pp = gradient(simData(i).x(:, 4), simData(i).t);
 end
 
+%% Simulationsergebnisse Speichern
+
+if savedata == true
+    % Pfad dieses Skripts
+    my_path = fileparts(mfilename('fullpath'));
+
+    % Zielordner relativ zum Skriptpfad
+    target_folder = fullfile(my_path, '..', 'Training_Data', 'MATLAB_Simulation');
+    target_folder = fullfile(target_folder); % Pfad normalisieren
+
+    % Datei speichern
+    time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
+    dateiName = 'SimData__' + time_stamp + '.mat';
+    full_path = fullfile(target_folder, dateiName);
+    save(full_path, 'simData');
+end
+
 %% Plots erstellen
 
-% sollen Plots angezeigt werden?
-showplots = true;
-
+% Plots 
 if showplots == true
     for i = 1:n^2
         % Plot erstellen
