@@ -66,4 +66,25 @@ hidden_size = 10
 
 model = Feed_forward_NN(input_size, hidden_size, output_size)
 
+# Loss funktionen und Optimierer wählen
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 
+# Optimierung
+num_epochs = 5     # Anzahlo der Durchläufe durch den gesamten Datensatz
+
+print('Starte Optimierung...')
+
+for epoch in range(num_epochs):
+    for batch_features, batch_labels in dataloader:
+        # Forward pass
+        outputs = model(batch_features).squeeze()
+        loss = criterion(outputs, batch_labels)
+
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    
+   
+    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
