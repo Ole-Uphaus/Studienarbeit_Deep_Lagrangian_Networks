@@ -66,7 +66,7 @@ l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 t_span = [0 10];    % Simulationszeit
 
 % sollen Plots angezeigt werden?
-showplots = false;
+showplots = true;
 
 % sollen Simulationsdaten gespeichert werden
 savedata = true;
@@ -129,6 +129,16 @@ end
 
 %% Simulationsergebnisse Speichern
 
+% Daten in Features und Labels aufteilen.
+features = [simData(1).x(:, 1), simData(1).x(:, 2), simData(1).x(:, 3), simData(1).x(:, 4), interp1(t_u, simData(1).F, simData(1).t), interp1(t_u, simData(1).tau, simData(1).t)];
+labels = [simData(1).r_pp, simData(1).phi_pp];
+for i = 2:n^2
+    features = [features;
+        simData(i).x(:, 1), simData(i).x(:, 2), simData(i).x(:, 3), simData(i).x(:, 4), interp1(t_u, simData(i).F, simData(i).t), interp1(t_u, simData(i).tau, simData(i).t)];
+    labels = [labels;
+        simData(i).r_pp, simData(i).phi_pp];
+end
+
 if savedata == true
     % Pfad dieses Skripts
     my_path = fileparts(mfilename('fullpath'));
@@ -141,7 +151,7 @@ if savedata == true
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
     dateiName = 'SimData__' + time_stamp + '.mat';
     full_path = fullfile(target_folder, dateiName);
-    save(full_path, 'simData');
+    save(full_path, 'features', 'labels');
 end
 
 %% Plots erstellen
