@@ -12,6 +12,39 @@ clear
 clc
 close all
 
+% Funktion, die das trainierte Modell als ODE definiert
+function [dxdt] = ODE_Neral_Network(t, x, net, F_vec, tau_vec, scaler)
+    dxdt = zeros(4, 1); % 4 Zustände
+
+    % aktuelle Stellgrößen auslesen (Der Zeitvektor ist jeweils in F_vec
+    % und tau_vec enthalten -> f_vec(1, :) - Zeitvektor)
+    F = interp1(F_vec(1, :), F_vec(2, :), t);
+    tau = interp1(tau_vec(1, :), tau_vec(2, :), t);
+
+    % neuronales Netz auswerten
+    input_data = [x(1);
+        x(2);
+        x(3);
+        x(4);
+        F;
+        tau];
+
+    input_data_scaled = (input_data - scaler.mean_f') ./ scaler.scale_f';   % Eingangsdaten skalieren (wie bei Training des NN)
+
+    dlInput = dlarray(input_data_scaled, 'CB');
+    dlOutput = predict(net, dlInput);
+    predictions = extractdata(dlOutput);
+
+    predictions_scaled = predictions .* scaler.scale_l' + scaler.mean_l';
+
+    % Ableitungen des Zustandsvektors übergeben
+    dxdt(1) = x(3);
+    dxdt(2) = x(4);
+    dxdt(3) = predictions_scaled(1);
+    dxdt(4) = predictions_scaled(2);
+
+end
+
 %% Definition der Systemparameter
 
 % Dateipfad von Funktion hinzufügen
@@ -67,6 +100,19 @@ network_path = fullfile(my_path, '..', 'Training_Models', 'Feedforward_NN', 'Sav
 
 net = importNetworkFromONNX(network_path, 'InputDataFormats', {'BC'});
 
+% Scaler importieren
+scaler_name = "20250321_111518_scaler.mat";
+scaler_path = fullfile(my_path, '..', 'Training_Models', 'Feedforward_NN', 'Saved_Models', scaler_name);
+
+scaler = load(scaler_path);
+
+% ODE-Funktion mit Parametern
+odefun_2 = @(t, x) ODE_Neral_Network(t, x, net, F_vec, tau_vec, scaler);
+
+% Solver zur Lösung der DGL
+options = odeset('MaxStep', 0.01, 'Stats', 'on');
+[t_NN, x_NN] = ode45(odefun_2, t_span, x_0, options);
+
 %% Plotten
 
 figure();
@@ -74,15 +120,21 @@ figure();
 % Oberer Plot (r(t))
 subplot(2,1,1); % 2 Zeilen, 1 Spalte, oberer Plot
 plot(t_zrd, x_zrd(:, 1), 'b', 'LineWidth', 1.5);
+hold on;
+plot(t_NN, x_NN(:, 1), 'r', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('Weg [m]');
 grid on;
+hold off;
 title('Position r(t)');
 
 % Unterer Plot (phi(t))
 subplot(2,1,2); % 2 Zeilen, 1 Spalte, unterer Plot
 plot(t_zrd, x_zrd(:, 2), 'b', 'LineWidth', 1.5);
+hold on;
+plot(t_NN, x_NN(:, 2), 'r', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('Winkel [rad]');
 grid on;
+hold off;
 title('Winkel phi(t)');
