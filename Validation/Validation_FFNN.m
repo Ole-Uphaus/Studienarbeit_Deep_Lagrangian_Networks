@@ -89,19 +89,19 @@ tau_vec = [t_u; utau_vec];
 odefun_1 = @(t, x) ODE_2_FHG_Robot(t, x, F_vec, tau_vec, l_m, m_kg, mL_kg, J_kgm2);
 
 % Solver zur Lösung der DGL
-options = odeset('MaxStep', 0.01, 'Stats', 'on');
+options = odeset('MaxStep', 0.1, 'Stats', 'on');
 [t_zrd, x_zrd] = ode45(odefun_1, t_span, x_0, options);
 
 %% DGL lösen (mit trainiertem Modell aus Python)
 
 % neuronales Netz importieren
-network_name = "20250321_111518_feedforward_model.onnx";
+network_name = "20250321_134719_feedforward_model.onnx";
 network_path = fullfile(my_path, '..', 'Training_Models', 'Feedforward_NN', 'Saved_Models', network_name);
 
 net = importNetworkFromONNX(network_path, 'InputDataFormats', {'BC'});
 
 % Scaler importieren
-scaler_name = "20250321_111518_scaler.mat";
+scaler_name = "20250321_134719_scaler.mat";
 scaler_path = fullfile(my_path, '..', 'Training_Models', 'Feedforward_NN', 'Saved_Models', scaler_name);
 
 scaler = load(scaler_path);
@@ -110,7 +110,7 @@ scaler = load(scaler_path);
 odefun_2 = @(t, x) ODE_Neral_Network(t, x, net, F_vec, tau_vec, scaler);
 
 % Solver zur Lösung der DGL
-options = odeset('MaxStep', 0.01, 'Stats', 'on');
+options = odeset('MaxStep', 0.1, 'Stats', 'on');
 [t_NN, x_NN] = ode45(odefun_2, t_span, x_0, options);
 
 %% Plotten
@@ -119,22 +119,24 @@ figure();
 
 % Oberer Plot (r(t))
 subplot(2,1,1); % 2 Zeilen, 1 Spalte, oberer Plot
-plot(t_zrd, x_zrd(:, 1), 'b', 'LineWidth', 1.5);
+plot(t_zrd, x_zrd(:, 1), 'b', 'LineWidth', 1.5, 'DisplayName', 'Zustandraummodell');
 hold on;
-plot(t_NN, x_NN(:, 1), 'r', 'LineWidth', 1.5);
+plot(t_NN, x_NN(:, 1), 'r', 'LineWidth', 1.5, 'DisplayName', 'Neuronales Netzwerk');
 xlabel('Zeit [s]');
 ylabel('Weg [m]');
 grid on;
 hold off;
+legend show
 title('Position r(t)');
 
 % Unterer Plot (phi(t))
 subplot(2,1,2); % 2 Zeilen, 1 Spalte, unterer Plot
-plot(t_zrd, x_zrd(:, 2), 'b', 'LineWidth', 1.5);
+plot(t_zrd, x_zrd(:, 2), 'b', 'LineWidth', 1.5, 'DisplayName', 'Zustandraummodell');
 hold on;
-plot(t_NN, x_NN(:, 2), 'r', 'LineWidth', 1.5);
+plot(t_NN, x_NN(:, 2), 'r', 'LineWidth', 1.5, 'DisplayName', 'Neuronales Netzwerk');
 xlabel('Zeit [s]');
 ylabel('Winkel [rad]');
 grid on;
 hold off;
+legend show
 title('Winkel phi(t)');

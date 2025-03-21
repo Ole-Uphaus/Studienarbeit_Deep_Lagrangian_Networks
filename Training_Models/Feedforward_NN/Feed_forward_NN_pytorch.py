@@ -82,7 +82,7 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 # Optimierung
-num_epochs = 30    # Anzahl der Durchläufe durch den gesamten Datensatz
+num_epochs = 200    # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
