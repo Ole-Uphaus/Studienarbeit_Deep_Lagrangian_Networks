@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+from sklearn.preprocessing import StandardScaler
 import os
 
 def extract_training_data(file_name):
@@ -51,9 +52,15 @@ class Feed_forward_NN(nn.Module):
 # Trainingsdaten laden
 features, labels = extract_training_data('SimData__2025_03_20_13_59_55.mat')
 
+# Daten vorbereiten
+scaler_f = StandardScaler()
+scaler_l = StandardScaler()
+scaled_features = scaler_f.fit_transform(features)
+scaled_labels = scaler_l.fit_transform(labels)
+
 # Trainingsdaten in Torch-Tensoren umwandeln
-features_tensor = torch.tensor(features, dtype=torch.float32)
-labels_tensor = torch.tensor(labels, dtype=torch.float32)
+features_tensor = torch.tensor(scaled_features, dtype=torch.float32)
+labels_tensor = torch.tensor(scaled_labels, dtype=torch.float32)
 
 # Dataset und Dataloader erstellen
 dataset = TensorDataset(features_tensor, labels_tensor)
@@ -62,13 +69,13 @@ dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 # Neuronales Netz initialisieren
 input_size = features.shape[1]
 output_size = labels.shape[1]
-hidden_size = 10
+hidden_size = 30
 
 model = Feed_forward_NN(input_size, hidden_size, output_size)
 
 # Loss funktionen und Optimierer wählen
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.004)
+optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 # Optimierung
 num_epochs = 30     # Anzahl der Durchläufe durch den gesamten Datensatz
@@ -94,5 +101,7 @@ model.eval()
 with torch.no_grad():
     predictions = model(features_tensor[50000])
 
-print('Das trainierte Modell hat folgendes ausgegeben:', predictions)
-print('Dies sind die zugehörigen label Werte:', labels_tensor[50000])
+# In Numpy umwandeln und ausgeben
+precictions = predictions.detach().numpy().reshape(1, -1)
+print('Prädiktion:', scaler_l.inverse_transform(precictions))
+print('Realität:', labels[50000])
