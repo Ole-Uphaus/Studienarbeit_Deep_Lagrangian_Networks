@@ -121,7 +121,8 @@ scaler_path = os.path.join("Feedforward_NN", "Saved_Models", f"{timestamp}_scale
 # Modell exportieren
 torch.onnx.export(model, dummy_input, model_path, 
                   input_names=['input'], output_names=['output'], 
-                  dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}})
+                  dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
+                  opset_version=14)
 
 # Mittelwert und Std speichern
 scipy.io.savemat(scaler_path, {
