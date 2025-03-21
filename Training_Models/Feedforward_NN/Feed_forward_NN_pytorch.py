@@ -12,6 +12,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import StandardScaler
 import os
+from datetime import datetime
+import onnx
 
 def extract_training_data(file_name):
     # Pfad des aktuellen Skriptes
@@ -42,6 +44,8 @@ class Feed_forward_NN(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
             nn.Linear(hidden_size, output_size)
         )
     
@@ -69,7 +73,7 @@ dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 # Neuronales Netz initialisieren
 input_size = features.shape[1]
 output_size = labels.shape[1]
-hidden_size = 30
+hidden_size = 25
 
 model = Feed_forward_NN(input_size, hidden_size, output_size)
 
@@ -78,7 +82,7 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 # Optimierung
-num_epochs = 30     # Anzahl der Durchläufe durch den gesamten Datensatz
+num_epochs = 30    # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
@@ -105,3 +109,24 @@ with torch.no_grad():
 precictions = predictions.detach().numpy().reshape(1, -1)
 print('Prädiktion:', scaler_l.inverse_transform(precictions))
 print('Realität:', labels[50000])
+
+# Dummy Input für Export (gleiche Form wie deine Eingabedaten) - muss gemacht werden
+dummy_input = torch.randn(1, input_size)
+
+# Aktueller Zeitstempel
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+model_path = os.path.join("Feedforward_NN", "Saved_Models", f"{timestamp}_feedforward_model.onnx")
+scaler_path = os.path.join("Feedforward_NN", "Saved_Models", f"{timestamp}_scaler.mat")
+
+# Modell exportieren
+torch.onnx.export(model, dummy_input, model_path, 
+                  input_names=['input'], output_names=['output'], 
+                  dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}})
+
+# Mittelwert und Std speichern
+scipy.io.savemat(scaler_path, {
+    'mean_f': scaler_f.mean_,
+    'scale_f': scaler_f.scale_,
+    'mean_l': scaler_l.mean_,
+    'scale_l': scaler_l.scale_
+})
