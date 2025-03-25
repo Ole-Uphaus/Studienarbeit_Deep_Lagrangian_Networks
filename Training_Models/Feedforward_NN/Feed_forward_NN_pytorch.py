@@ -68,7 +68,7 @@ labels_tensor = torch.tensor(scaled_labels, dtype=torch.float32)
 
 # Dataset und Dataloader erstellen
 dataset = TensorDataset(features_tensor, labels_tensor)
-dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=64, shuffle=True, drop_last=True, )
 
 # Neuronales Netz initialisieren
 input_size = features.shape[1]
@@ -82,7 +82,7 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 # Optimierung
-num_epochs = 100    # Anzahl der Durchläufe durch den gesamten Datensatz
+num_epochs = 100   # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
