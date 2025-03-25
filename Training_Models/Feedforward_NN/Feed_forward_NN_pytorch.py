@@ -44,16 +44,14 @@ class Feed_forward_NN(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, output_size)
+            nn.Linear(hidden_size, output_size),
         )
     
     def forward(self, x):
         return self.net(x)
 
 # Soll Modell gespeichert werden?
-save_model = False
+save_model = True
 
 # Trainingsdaten laden
 features, labels = extract_training_data('SimData__2025_03_20_13_59_55.mat')
@@ -75,7 +73,7 @@ dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 # Neuronales Netz initialisieren
 input_size = features.shape[1]
 output_size = labels.shape[1]
-hidden_size = 25
+hidden_size = 256
 
 model = Feed_forward_NN(input_size, hidden_size, output_size)
 
@@ -84,7 +82,7 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 # Optimierung
-num_epochs = 5    # Anzahl der Durchläufe durch den gesamten Datensatz
+num_epochs = 100    # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
