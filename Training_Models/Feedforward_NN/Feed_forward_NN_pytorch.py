@@ -44,6 +44,8 @@ class Feed_forward_NN(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
             nn.Linear(hidden_size, output_size),
         )
     
@@ -82,7 +84,7 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 # Optimierung
-num_epochs = 100   # Anzahl der Durchläufe durch den gesamten Datensatz
+num_epochs = 50   # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
