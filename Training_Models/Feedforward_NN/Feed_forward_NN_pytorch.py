@@ -28,10 +28,13 @@ def extract_training_data(file_name):
 
     # Daten extrahieren
     data = scipy.io.loadmat(data_path)
-    features = data['features']
-    labels = data['labels']
 
-    return features, labels
+    features_training = data['features_training']
+    labels_training = data['labels_training']
+    features_test = data['features_test']
+    labels_test = data['labels_test']
+
+    return features_training, labels_training, features_test, labels_test
 
 # Erstellung neuronales Netz (Klasse)
 class Feed_forward_NN(nn.Module):
@@ -53,28 +56,36 @@ class Feed_forward_NN(nn.Module):
         return self.net(x)
 
 # Soll Modell gespeichert werden?
-save_model = True
+save_model = False
 
-# Trainingsdaten laden
-features, labels = extract_training_data('SimData__2025_03_20_13_59_55.mat')
+# Trainings- und Testdaten laden
+features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_03_27_09_36_50.mat')
 
-# Daten vorbereiten
+# Daten vorbereiten 
 scaler_f = StandardScaler()
 scaler_l = StandardScaler()
-scaled_features = scaler_f.fit_transform(features)
-scaled_labels = scaler_l.fit_transform(labels)
 
-# Trainingsdaten in Torch-Tensoren umwandeln
-features_tensor = torch.tensor(scaled_features, dtype=torch.float32)
-labels_tensor = torch.tensor(scaled_labels, dtype=torch.float32)
+scaled_features_training = scaler_f.fit_transform(features_training)
+scaled_labels_training = scaler_l.fit_transform(labels_training)
+scaled_features_test = scaler_f.transform(features_test)    # Hier nur transform, um Skalierungsparameter beizubehalten
+scaled_labels_test = scaler_l.transform(labels_test)    # Hier nur transform, um Skalierungsparameter beizubehalten
+
+# Trainings- und Testdaten in Torch-Tensoren umwandeln
+features_tensor_training = torch.tensor(scaled_features_training, dtype=torch.float32)
+labels_tensor_training = torch.tensor(scaled_labels_training, dtype=torch.float32)
+features_tensor_test = torch.tensor(scaled_features_test, dtype=torch.float32)
+labels_tensor_test = torch.tensor(scaled_labels_test, dtype=torch.float32)
 
 # Dataset und Dataloader erstellen
-dataset = TensorDataset(features_tensor, labels_tensor)
-dataloader = DataLoader(dataset, batch_size=128, shuffle=True, drop_last=True, )
+dataset_training = TensorDataset(features_tensor_training, labels_tensor_training)
+dataloader_training = DataLoader(dataset_training, batch_size=128, shuffle=True, drop_last=True, )
+dataset_test = TensorDataset(features_tensor_test, labels_tensor_test)
+dataloader_test = DataLoader(dataset_test, batch_size=128, shuffle=False, drop_last=False, )
+
 
 # Neuronales Netz initialisieren
-input_size = features.shape[1]
-output_size = labels.shape[1]
+input_size = features_training.shape[1]
+output_size = labels_training.shape[1]
 hidden_size = 256
 
 model = Feed_forward_NN(input_size, hidden_size, output_size)
@@ -83,13 +94,17 @@ model = Feed_forward_NN(input_size, hidden_size, output_size)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
-# Optimierung
-num_epochs = 50   # Anzahl der Durchläufe durch den gesamten Datensatz
+# Optimierung (Lernprozess)
+num_epochs = 10   # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
 for epoch in range(num_epochs):
-    for batch_features, batch_labels in dataloader:
+    # Modell in den Trainingsmodeus versetzen und loss Summe initialisieren
+    model.train()
+    loss_sum = 0
+
+    for batch_features, batch_labels in dataloader_training:
         # Forward pass
         outputs = model(batch_features).squeeze()
         loss = criterion(outputs, batch_labels)
@@ -98,19 +113,31 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
+        # Loss des aktuellen Batches ausfsummieren
+        loss_sum += loss.item()
     
+    # Mittleren Loss berechnen und ausgeben
+    training_loss_mean = loss_sum/len(dataloader_training)
    
-    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+    print(f'Epoch [{epoch+1}/{num_epochs}], Training-Loss: {training_loss_mean:.6f}')
 
-# Modell ausprobieren
+# Modellvalidierung mit Testdaten
 model.eval()
+loss_sum = 0
 with torch.no_grad():
-    predictions = model(features_tensor[50000])
+    for batch_features, batch_labels in dataloader_test:
+        # Forward Pass
+        outputs = model(batch_features).squeeze()
+        loss = criterion(outputs, batch_labels)
 
-# In Numpy umwandeln und ausgeben
-precictions = predictions.detach().numpy().reshape(1, -1)
-print('Prädiktion:', scaler_l.inverse_transform(precictions))
-print('Realität:', labels[50000])
+        # Loss des aktuellen Batches ausfsummieren
+        loss_sum += loss.item()
+
+# Mittleren Loss berechnen und ausgeben
+test_loss_mean = loss_sum/len(dataloader_test)
+
+print(f'Anwenden des trainierten Modells auf unbekannte Daten, Test-Loss: {test_loss_mean:.6f}')
 
 if save_model == True:
     # Dummy Input für Export (gleiche Form wie deine Eingabedaten) - muss gemacht werden
