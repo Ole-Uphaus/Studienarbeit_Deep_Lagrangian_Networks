@@ -95,13 +95,13 @@ options = odeset('MaxStep', 0.1, 'Stats', 'on');
 %% DGL lösen (mit trainiertem Modell aus Python)
 
 % neuronales Netz importieren
-network_name = "20250327_090440_feedforward_model.onnx";
+network_name = "20250327_142624_feedforward_model.onnx";
 network_path = fullfile(my_path, '..', 'Training_Models', 'Feedforward_NN', 'Saved_Models', network_name);
 
 net = importNetworkFromONNX(network_path, 'InputDataFormats', {'BC'});
 
 % Scaler importieren
-scaler_name = "20250327_090440_scaler.mat";
+scaler_name = "20250327_142624_scaler.mat";
 scaler_path = fullfile(my_path, '..', 'Training_Models', 'Feedforward_NN', 'Saved_Models', scaler_name);
 
 scaler = load(scaler_path);
@@ -119,7 +119,7 @@ figure();
 
 % Oberer Plot (r(t))
 subplot(2,1,1); % 2 Zeilen, 1 Spalte, oberer Plot
-plot(t_zrd, x_zrd(:, 1), 'b', 'LineWidth', 1.5, 'DisplayName', 'Zustandraummodell');
+plot(t_zrd, x_zrd(:, 1), 'b', 'LineWidth', 1.5, 'DisplayName', 'Zustandsraummodell');
 hold on;
 plot(t_NN, x_NN(:, 1), 'r', 'LineWidth', 1.5, 'DisplayName', 'Neuronales Netzwerk');
 xlabel('Zeit [s]');
@@ -131,7 +131,7 @@ title('Position r(t)');
 
 % Unterer Plot (phi(t))
 subplot(2,1,2); % 2 Zeilen, 1 Spalte, unterer Plot
-plot(t_zrd, x_zrd(:, 2), 'b', 'LineWidth', 1.5, 'DisplayName', 'Zustandraummodell');
+plot(t_zrd, x_zrd(:, 2), 'b', 'LineWidth', 1.5, 'DisplayName', 'Zustandsraummodell');
 hold on;
 plot(t_NN, x_NN(:, 2), 'r', 'LineWidth', 1.5, 'DisplayName', 'Neuronales Netzwerk');
 xlabel('Zeit [s]');

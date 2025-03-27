@@ -45,10 +45,13 @@ class Feed_forward_NN(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(),
+            nn.Dropout(0.2),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
+            nn.Dropout(0.2),
+            # nn.Linear(hidden_size, hidden_size),
+            # nn.ReLU(),
+            # nn.Dropout(0.3),
             nn.Linear(hidden_size, output_size),
         )
     
@@ -56,7 +59,7 @@ class Feed_forward_NN(nn.Module):
         return self.net(x)
 
 # Soll Modell gespeichert werden?
-save_model = False
+save_model = True
 
 # Trainings- und Testdaten laden
 features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_03_27_09_36_50.mat')
@@ -92,10 +95,10 @@ model = Feed_forward_NN(input_size, hidden_size, output_size)
 
 # Loss funktionen und Optimierer wählen
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0005)
+optimizer = optim.Adam(model.parameters(), lr=0.0005, weight_decay=1e-5)
 
 # Optimierung (Lernprozess)
-num_epochs = 10   # Anzahl der Durchläufe durch den gesamten Datensatz
+num_epochs = 50   # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
