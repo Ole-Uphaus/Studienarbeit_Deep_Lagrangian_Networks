@@ -127,16 +127,23 @@ for i = 1:n^2
     simData(i).phi_pp = gradient(simData(i).x(:, 4), simData(i).t);
 end
 
-%% Simulationsergebnisse Speichern
+%% Simulationsergebnisse Speichern (Daten in Trainings- und Testdaten aufteilen)
 
-% Daten in Features und Labels aufteilen.
-features = [simData(1).x(:, 1), simData(1).x(:, 2), simData(1).x(:, 3), simData(1).x(:, 4), interp1(t_u, simData(1).F, simData(1).t), interp1(t_u, simData(1).tau, simData(1).t)];
-labels = [simData(1).r_pp, simData(1).phi_pp];
+% Zufälligen Testdatensatz herausziehen
+test_index = randi([1, n^2]);   % Zufälliger Index für Testdaten
+features_test = [simData(test_index).x(:, 1), simData(test_index).x(:, 2), simData(test_index).x(:, 3), simData(test_index).x(:, 4), interp1(t_u, simData(test_index).F, simData(test_index).t), interp1(t_u, simData(test_index).tau, simData(test_index).t)];
+labels_test = [simData(test_index).r_pp, simData(test_index).phi_pp];
+
+% Trainingsdaten in Features und Labels aufteilen.
+features_training = [simData(1).x(:, 1), simData(1).x(:, 2), simData(1).x(:, 3), simData(1).x(:, 4), interp1(t_u, simData(1).F, simData(1).t), interp1(t_u, simData(1).tau, simData(1).t)];
+labels_training = [simData(1).r_pp, simData(1).phi_pp];
 for i = 2:n^2
-    features = [features;
-        simData(i).x(:, 1), simData(i).x(:, 2), simData(i).x(:, 3), simData(i).x(:, 4), interp1(t_u, simData(i).F, simData(i).t), interp1(t_u, simData(i).tau, simData(i).t)];
-    labels = [labels;
-        simData(i).r_pp, simData(i).phi_pp];
+    if i ~= test_index
+        features_training = [features_training;
+            simData(i).x(:, 1), simData(i).x(:, 2), simData(i).x(:, 3), simData(i).x(:, 4), interp1(t_u, simData(i).F, simData(i).t), interp1(t_u, simData(i).tau, simData(i).t)];
+        labels_training = [labels_training;
+            simData(i).r_pp, simData(i).phi_pp];
+    end
 end
 
 if savedata == true
@@ -151,7 +158,7 @@ if savedata == true
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
     dateiName = 'SimData__' + time_stamp + '.mat';
     full_path = fullfile(target_folder, dateiName);
-    save(full_path, 'features', 'labels');
+    save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test');
 end
 
 %% Plots erstellen

@@ -70,7 +70,7 @@ labels_tensor = torch.tensor(scaled_labels, dtype=torch.float32)
 
 # Dataset und Dataloader erstellen
 dataset = TensorDataset(features_tensor, labels_tensor)
-dataloader = DataLoader(dataset, batch_size=64, shuffle=True, drop_last=True, )
+dataloader = DataLoader(dataset, batch_size=128, shuffle=True, drop_last=True, )
 
 # Neuronales Netz initialisieren
 input_size = features.shape[1]
