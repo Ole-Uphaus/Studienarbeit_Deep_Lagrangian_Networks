@@ -49,9 +49,6 @@ class Feed_forward_NN(nn.Module):
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
             nn.Dropout(0.2),
-            # nn.Linear(hidden_size, hidden_size),
-            # nn.ReLU(),
-            # nn.Dropout(0.3),
             nn.Linear(hidden_size, output_size),
         )
     
@@ -81,10 +78,9 @@ labels_tensor_test = torch.tensor(scaled_labels_test, dtype=torch.float32)
 
 # Dataset und Dataloader erstellen
 dataset_training = TensorDataset(features_tensor_training, labels_tensor_training)
-dataloader_training = DataLoader(dataset_training, batch_size=128, shuffle=True, drop_last=True, )
+dataloader_training = DataLoader(dataset_training, batch_size=64, shuffle=True, drop_last=True, )
 dataset_test = TensorDataset(features_tensor_test, labels_tensor_test)
-dataloader_test = DataLoader(dataset_test, batch_size=128, shuffle=False, drop_last=False, )
-
+dataloader_test = DataLoader(dataset_test, batch_size=64, shuffle=False, drop_last=False, )
 
 # Neuronales Netz initialisieren
 input_size = features_training.shape[1]
@@ -95,7 +91,7 @@ model = Feed_forward_NN(input_size, hidden_size, output_size)
 
 # Loss funktionen und Optimierer wählen
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0005, weight_decay=1e-5)
+optimizer = optim.Adam(model.parameters(), lr=0.0007, weight_decay=1e-5)
 
 # Optimierung (Lernprozess)
 num_epochs = 50   # Anzahl der Durchläufe durch den gesamten Datensatz
