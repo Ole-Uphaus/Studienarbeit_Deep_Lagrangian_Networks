@@ -26,7 +26,7 @@ end
 function [u_mat] = create_random_input(t_u)
     % Intervalle Zufallsparameter (können verändert werden)
     gain = [0.1, 2];
-    frequency = [0.1, 5];
+    frequency = [0.1, 2];
     offset = [t_u(1) + 1, t_u(end) - 1];
     
     % Eingangsgrößen Kraft F
