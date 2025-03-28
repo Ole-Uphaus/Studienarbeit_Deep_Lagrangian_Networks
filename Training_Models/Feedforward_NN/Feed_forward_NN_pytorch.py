@@ -59,7 +59,7 @@ class Feed_forward_NN(nn.Module):
 save_model = True
 
 # Trainings- und Testdaten laden
-features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_03_27_09_36_50.mat')
+features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_03_28_14_26_51.mat')
 
 # Daten vorbereiten 
 scaler_f = StandardScaler()
