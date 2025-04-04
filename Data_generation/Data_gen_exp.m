@@ -64,13 +64,13 @@ l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 % Simulationsparameter
 t_span = [0 10];    % Simulationszeit
 max_step_size = 0.1;    % Maximale Schrittweite bei der Simulation
-cycles = 3; % Anzahl der Durchläufe (wie oft alle Stellgrößenverläufe durchgegangen werden)
+cycles = 10; % Anzahl der Durchläufe (wie oft alle Stellgrößenverläufe durchgegangen werden)
 
 % sollen Plots angezeigt werden?
-showplots = true;
+showplots = false;
 
 % sollen Simulationsdaten gespeichert werden
-savedata = false;
+savedata = true;
 
 %% Eingangssignale
 
