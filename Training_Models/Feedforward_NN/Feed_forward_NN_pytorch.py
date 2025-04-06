@@ -38,25 +38,31 @@ def extract_training_data(file_name):
 
 # Erstellung neuronales Netz (Klasse)
 class Feed_forward_NN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, input_size, hidden_size, output_size, dropout):
         super(Feed_forward_NN, self).__init__()
 
         # Hier eine Vereinfachung, dass der befehl in forward Funktion kürzer wird
         self.net = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(),
-            nn.Dropout(0.3),
+            nn.Dropout(dropout),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Dropout(0.3),
+            nn.Dropout(dropout),
             nn.Linear(hidden_size, output_size),
         )
     
     def forward(self, x):
         return self.net(x)
-
-# Soll Modell gespeichert werden?
-save_model = True
+    
+# Parameter festlegen
+hyper_param = {'save_model': True,
+               'epoch': 200,
+               'hidden_size': 256,
+               'batch_size': 512,
+               'learning_rate': 0.001,
+               'wheight_decay': 1e-5,
+               'dropout': 0.3}
 
 # Trainings- und Testdaten laden
 features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')
@@ -78,23 +84,23 @@ labels_tensor_test = torch.tensor(scaled_labels_test, dtype=torch.float32)
 
 # Dataset und Dataloader erstellen
 dataset_training = TensorDataset(features_tensor_training, labels_tensor_training)
-dataloader_training = DataLoader(dataset_training, batch_size=64, shuffle=True, drop_last=True, )
+dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch_size'], shuffle=True, drop_last=True, )
 dataset_test = TensorDataset(features_tensor_test, labels_tensor_test)
-dataloader_test = DataLoader(dataset_test, batch_size=64, shuffle=False, drop_last=False, )
+dataloader_test = DataLoader(dataset_test, batch_size=hyper_param['batch_size'], shuffle=False, drop_last=False, )
 
 # Neuronales Netz initialisieren
 input_size = features_training.shape[1]
 output_size = labels_training.shape[1]
-hidden_size = 256
+hidden_size = hyper_param['hidden_size']
 
-model = Feed_forward_NN(input_size, hidden_size, output_size)
+model = Feed_forward_NN(input_size, hidden_size, output_size, hyper_param['dropout'])
 
 # Loss funktionen und Optimierer wählen
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
+optimizer = optim.Adam(model.parameters(), lr=hyper_param['learning_rate'], weight_decay=hyper_param['wheight_decay'])
 
 # Optimierung (Lernprozess)
-num_epochs = 50   # Anzahl der Durchläufe durch den gesamten Datensatz
+num_epochs = hyper_param['epoch']  # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
@@ -138,7 +144,7 @@ test_loss_mean = loss_sum/len(dataloader_test)
 
 print(f'Anwenden des trainierten Modells auf unbekannte Daten, Test-Loss: {test_loss_mean:.6f}')
 
-if save_model == True:
+if hyper_param['save_model'] == True:
     # Dummy Input für Export (gleiche Form wie deine Eingabedaten) - muss gemacht werden
     dummy_input = torch.randn(1, input_size)
 
