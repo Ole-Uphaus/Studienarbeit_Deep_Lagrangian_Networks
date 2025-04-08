@@ -1,8 +1,8 @@
 '''
 Autor:      Ole Uphaus
-Datum:      20.03.2025
+Datum:      08.04.2025
 Beschreibung:
-Dieses Skript soll auf Grundlage der Simuleirten Trainingsdaten ein neuronales Netz trainieren. Dies ist jedoch nur ein Feed-Forward Netz, das keine Informationen über lagrange Gleichungen enthält. Die benötigten Trainingsdaten werden aus einem .mat File extrahiert.
+Dieses Skript soll das DeLaN neuronale Netz von Lutter Nutzen, um mit den Trainingsdaten des 2 FHG Roboters zu Trainieren. Es soll unterucht werden, wie gut das Modell performt, gegenüber dem Feed-Forward-NN.
 '''
 
 import scipy.io
@@ -14,6 +14,9 @@ from sklearn.preprocessing import StandardScaler
 import os
 from datetime import datetime
 import onnx
+import numpy as np
+
+from DeLaN_model_Lutter import DeepLagrangianNetwork
 
 def extract_training_data(file_name):
     # Pfad des aktuellen Skriptes
@@ -36,86 +39,80 @@ def extract_training_data(file_name):
 
     return features_training, labels_training, features_test, labels_test
 
-# Erstellung neuronales Netz (Klasse)
-class Feed_forward_NN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, dropout):
-        super(Feed_forward_NN, self).__init__()
-
-        # Hier eine Vereinfachung, dass der befehl in forward Funktion kürzer wird
-        self.net = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_size, output_size),
-        )
-    
-    def forward(self, x):
-        return self.net(x)
-    
 # Parameter festlegen
-hyper_param = {'save_model': True,
-               'epoch': 200,
-               'hidden_size': 256,
-               'batch_size': 512,
-               'learning_rate': 0.001,
-               'wheight_decay': 1e-5,
-               'dropout': 0.3}
+n_dof = 2
+hyper = {'n_width': 64,
+        'n_depth': 2,
+        'diagonal_epsilon': 0.01,
+        'activation': 'SoftPlus',
+        'b_init': 1.e-4,
+        'b_diag_init': 0.001,
+        'w_init': 'xavier_normal',
+        'gain_hidden': np.sqrt(2.),
+        'gain_output': 0.1,
+        'n_minibatch': 512,
+        'learning_rate': 1.e-04,
+        'weight_decay': 1.e-5,
+        'max_epoch': 10000}
 
 # Trainings- und Testdaten laden
 features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')
 
-# Daten vorbereiten 
-scaler_f = StandardScaler()
-scaler_l = StandardScaler()
-
-scaled_features_training = scaler_f.fit_transform(features_training)
-scaled_labels_training = scaler_l.fit_transform(labels_training)
-scaled_features_test = scaler_f.transform(features_test)    # Hier nur transform, um Skalierungsparameter beizubehalten
-scaled_labels_test = scaler_l.transform(labels_test)    # Hier nur transform, um Skalierungsparameter beizubehalten
-
-# Trainings- und Testdaten in Torch-Tensoren umwandeln
-features_tensor_training = torch.tensor(scaled_features_training, dtype=torch.float32)
-labels_tensor_training = torch.tensor(scaled_labels_training, dtype=torch.float32)
-features_tensor_test = torch.tensor(scaled_features_test, dtype=torch.float32)
-labels_tensor_test = torch.tensor(scaled_labels_test, dtype=torch.float32)
+features_training = torch.from_numpy(features_training[:2500, :]).float()
+labels_training = torch.from_numpy(labels_training[:2500, :]).float()
+features_test = torch.from_numpy(features_test[:2500, :]).float()
+labels_test = torch.from_numpy(labels_test[:2500, :]).float()
 
 # Dataset und Dataloader erstellen
-dataset_training = TensorDataset(features_tensor_training, labels_tensor_training)
-dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch_size'], shuffle=True, drop_last=True, )
-dataset_test = TensorDataset(features_tensor_test, labels_tensor_test)
-dataloader_test = DataLoader(dataset_test, batch_size=hyper_param['batch_size'], shuffle=False, drop_last=False, )
+dataset_training = TensorDataset(features_training, labels_training)
+dataloader_training = DataLoader(dataset_training, batch_size=hyper["n_minibatch"], shuffle=True, drop_last=True, )
+dataset_test = TensorDataset(features_test, labels_test)
+dataloader_test = DataLoader(dataset_test, batch_size=hyper["n_minibatch"], shuffle=False, drop_last=False, )
 
-# Neuronales Netz initialisieren
-input_size = features_training.shape[1]
-output_size = labels_training.shape[1]
-hidden_size = hyper_param['hidden_size']
+# Modell Initialisieren
+delan_model = DeepLagrangianNetwork(n_dof, **hyper)
 
-model = Feed_forward_NN(input_size, hidden_size, output_size, hyper_param['dropout'])
-
-# Loss funktionen und Optimierer wählen
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=hyper_param['learning_rate'], weight_decay=hyper_param['wheight_decay'])
+# Generate & Initialize the Optimizer:
+optimizer = torch.optim.Adam(delan_model.parameters(),
+                                lr=hyper["learning_rate"],
+                                weight_decay=hyper["weight_decay"],
+                                amsgrad=True)
 
 # Optimierung (Lernprozess)
-num_epochs = hyper_param['epoch']  # Anzahl der Durchläufe durch den gesamten Datensatz
+num_epochs = hyper['max_epoch']  # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 
 for epoch in range(num_epochs):
     # Modell in den Trainingsmodeus versetzen und loss Summe initialisieren
-    model.train()
+    delan_model.train()
     loss_sum = 0
 
     for batch_features, batch_labels in dataloader_training:
-        # Forward pass
-        outputs = model(batch_features).squeeze()
-        loss = criterion(outputs, batch_labels)
-
-        # Backward pass and optimization
+        # Reset gradients:
         optimizer.zero_grad()
+
+        # Variablen extrahieren
+        q = batch_features[:, [0, 1]]
+        qd = batch_features[:, [2, 3]]
+        qdd = batch_features[:, [4, 5]]
+
+        tau = batch_labels
+
+        # Forward pass
+        tau_hat, dEdt_hat = delan_model(q, qd, qdd)
+
+        # Compute the loss of the Euler-Lagrange Differential Equation:
+        err_inv = torch.sum((tau_hat - tau) ** 2, dim=1)
+        l_mean_inv_dyn = torch.mean(err_inv)
+
+        # Compute the loss of the Power Conservation:
+        dEdt = torch.matmul(qd.view(-1, 2, 1).transpose(dim0=1, dim1=2), tau.view(-1, 2, 1)).view(-1)
+        err_dEdt = (dEdt_hat - dEdt) ** 2
+        l_mean_dEdt = torch.mean(err_dEdt)
+
+        # Compute gradients & update the weights:
+        loss = l_mean_inv_dyn + l_mean_dEdt
         loss.backward()
         optimizer.step()
 
@@ -125,44 +122,45 @@ for epoch in range(num_epochs):
     # Mittleren Loss berechnen und ausgeben
     training_loss_mean = loss_sum/len(dataloader_training)
    
-    print(f'Epoch [{epoch+1}/{num_epochs}], Training-Loss: {training_loss_mean:.6f}')
+    if epoch == 0 or np.mod(epoch + 1, 100) == 0:
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Training-Loss: {training_loss_mean:.3e}')
 
-# Modellvalidierung mit Testdaten
-model.eval()
-loss_sum = 0
-with torch.no_grad():
-    for batch_features, batch_labels in dataloader_test:
-        # Forward Pass
-        outputs = model(batch_features).squeeze()
-        loss = criterion(outputs, batch_labels)
+# # Modellvalidierung mit Testdaten
+# delan_model.eval()
+# loss_sum = 0
+# with torch.no_grad():
+#     for batch_features, batch_labels in dataloader_test:
+#         # Forward Pass
+#         outputs = delan_model(batch_features).squeeze()
+#         loss = criterion(outputs, batch_labels)
 
-        # Loss des aktuellen Batches ausfsummieren
-        loss_sum += loss.item()
+#         # Loss des aktuellen Batches ausfsummieren
+#         loss_sum += loss.item()
 
-# Mittleren Loss berechnen und ausgeben
-test_loss_mean = loss_sum/len(dataloader_test)
+# # Mittleren Loss berechnen und ausgeben
+# test_loss_mean = loss_sum/len(dataloader_test)
 
-print(f'Anwenden des trainierten Modells auf unbekannte Daten, Test-Loss: {test_loss_mean:.6f}')
+# print(f'Anwenden des trainierten Modells auf unbekannte Daten, Test-Loss: {test_loss_mean:.6f}')
 
-if hyper_param['save_model'] == True:
-    # Dummy Input für Export (gleiche Form wie deine Eingabedaten) - muss gemacht werden
-    dummy_input = torch.randn(1, input_size)
+# if hyper_param['save_model'] == True:
+#     # Dummy Input für Export (gleiche Form wie deine Eingabedaten) - muss gemacht werden
+#     dummy_input = torch.randn(1, input_size)
 
-    # Aktueller Zeitstempel
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    model_path = os.path.join("Feedforward_NN", "Saved_Models", f"{timestamp}_feedforward_model.onnx")
-    scaler_path = os.path.join("Feedforward_NN", "Saved_Models", f"{timestamp}_scaler.mat")
+#     # Aktueller Zeitstempel
+#     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#     model_path = os.path.join("Feedforward_NN", "Saved_Models", f"{timestamp}_feedforward_model.onnx")
+#     scaler_path = os.path.join("Feedforward_NN", "Saved_Models", f"{timestamp}_scaler.mat")
 
-    # Modell exportieren
-    torch.onnx.export(model, dummy_input, model_path, 
-                    input_names=['input'], output_names=['output'], 
-                    dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
-                    opset_version=14)
+#     # Modell exportieren
+#     torch.onnx.export(model, dummy_input, model_path, 
+#                     input_names=['input'], output_names=['output'], 
+#                     dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
+#                     opset_version=14)
 
-    # Mittelwert und Std speichern
-    scipy.io.savemat(scaler_path, {
-        'mean_f': scaler_f.mean_,
-        'scale_f': scaler_f.scale_,
-        'mean_l': scaler_l.mean_,
-        'scale_l': scaler_l.scale_
-    })
+#     # Mittelwert und Std speichern
+#     scipy.io.savemat(scaler_path, {
+#         'mean_f': scaler_f.mean_,
+#         'scale_f': scaler_f.scale_,
+#         'mean_l': scaler_l.mean_,
+#         'scale_l': scaler_l.scale_
+#     })
