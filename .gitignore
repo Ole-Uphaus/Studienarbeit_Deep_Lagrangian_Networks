@@ -1,3 +1,4 @@
 
 *.asv
 Training_Models/allg_test.py
+*.pyc
