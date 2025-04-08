@@ -15,71 +15,8 @@ import os
 from datetime import datetime
 import onnx
 import numpy as np
-import dill as pickle
 
 from DeLaN_model_Lutter import DeepLagrangianNetwork
-from replay_memory import PyTorchReplayMemory
-
-def load_dataset(n_characters=3, filename="D:\\Programmierung_Ole\\Studienarbeit_Deep_Lagrangian_Networks\\Training_Models\\DeLaN_Lutter\\character_data.pickle", test_label=("e", "q", "v")):
-
-    with open(filename, 'rb') as f:
-        data = pickle.load(f)
-
-    n_dof = 2
-
-    # Split the dataset in train and test set:
-
-    # Random Test Set:
-    # test_idx = np.random.choice(len(data["labels"]), n_characters, replace=False)
-
-    # Specified Test Set:
-    # test_char = ["e", "q", "v"]
-    test_idx = [data["labels"].index(x) for x in test_label]
-
-    dt = np.concatenate([data["t"][idx][1:] - data["t"][idx][:-1] for idx in test_idx])
-    dt_mean, dt_var = np.mean(dt), np.var(dt)
-    assert dt_var < 1.e-12
-
-    train_labels, test_labels = [], []
-    train_qp, train_qv, train_qa, train_tau = np.zeros((0, n_dof)), np.zeros((0, n_dof)), np.zeros((0, n_dof)), np.zeros((0, n_dof))
-    train_p, train_pd = np.zeros((0, n_dof)), np.zeros((0, n_dof))
-
-    test_qp, test_qv, test_qa, test_tau = np.zeros((0, n_dof)), np.zeros((0, n_dof)), np.zeros((0, n_dof)), np.zeros((0, n_dof))
-    test_m, test_c, test_g = np.zeros((0, n_dof)), np.zeros((0, n_dof)), np.zeros((0, n_dof))
-    test_p, test_pd = np.zeros((0, n_dof)), np.zeros((0, n_dof))
-
-    divider = [0, ]   # Contains idx between characters for plotting
-
-    for i in range(len(data["labels"])):
-
-        if i in test_idx:
-            test_labels.append(data["labels"][i])
-            test_qp = np.vstack((test_qp, data["qp"][i]))
-            test_qv = np.vstack((test_qv, data["qv"][i]))
-            test_qa = np.vstack((test_qa, data["qa"][i]))
-            test_tau = np.vstack((test_tau, data["tau"][i]))
-
-            test_m = np.vstack((test_m, data["m"][i]))
-            test_c = np.vstack((test_c, data["c"][i]))
-            test_g = np.vstack((test_g, data["g"][i]))
-
-            test_p = np.vstack((test_p, data["p"][i]))
-            test_pd = np.vstack((test_pd, data["pdot"][i]))
-            divider.append(test_qp.shape[0])
-
-        else:
-            train_labels.append(data["labels"][i])
-            train_qp = np.vstack((train_qp, data["qp"][i]))
-            train_qv = np.vstack((train_qv, data["qv"][i]))
-            train_qa = np.vstack((train_qa, data["qa"][i]))
-            train_tau = np.vstack((train_tau, data["tau"][i]))
-
-            train_p = np.vstack((train_p, data["p"][i]))
-            train_pd = np.vstack((train_pd, data["pdot"][i]))
-
-    return (train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau), \
-           (test_labels, test_qp, test_qv, test_qa, test_p, test_pd, test_tau, test_m, test_c, test_g),\
-           divider, dt_mean
 
 def extract_training_data(file_name):
     # Pfad des aktuellen Skriptes
@@ -119,11 +56,18 @@ hyper = {'n_width': 64,
         'max_epoch': 10000}
 
 # Trainings- und Testdaten laden
-# features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')
+features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')
 
-train_data, test_data, divider, dt_mean = load_dataset()
-train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau = train_data
-test_labels, test_qp, test_qv, test_qa, test_p, test_pd, test_tau, test_m, test_c, test_g = test_data
+features_training = torch.from_numpy(features_training[:2500, :]).float()
+labels_training = torch.from_numpy(labels_training[:2500, :]).float()
+features_test = torch.from_numpy(features_test[:2500, :]).float()
+labels_test = torch.from_numpy(labels_test[:2500, :]).float()
+
+# Dataset und Dataloader erstellen
+dataset_training = TensorDataset(features_training, labels_training)
+dataloader_training = DataLoader(dataset_training, batch_size=hyper["n_minibatch"], shuffle=True, drop_last=True, )
+dataset_test = TensorDataset(features_test, labels_test)
+dataloader_test = DataLoader(dataset_test, batch_size=hyper["n_minibatch"], shuffle=False, drop_last=False, )
 
 # Modell Initialisieren
 delan_model = DeepLagrangianNetwork(n_dof, **hyper)
@@ -134,12 +78,6 @@ optimizer = torch.optim.Adam(delan_model.parameters(),
                                 weight_decay=hyper["weight_decay"],
                                 amsgrad=True)
 
-# Generate Replay Memory:
-cuda = False
-mem_dim = ((n_dof, ), (n_dof, ), (n_dof, ), (n_dof, ))
-mem = PyTorchReplayMemory(train_qp.shape[0], hyper["n_minibatch"], mem_dim, cuda)
-mem.add_samples([train_qp, train_qv, train_qa, train_tau])
-
 # Optimierung (Lernprozess)
 num_epochs = hyper['max_epoch']  # Anzahl der Durchläufe durch den gesamten Datensatz
 
@@ -149,11 +87,17 @@ for epoch in range(num_epochs):
     # Modell in den Trainingsmodeus versetzen und loss Summe initialisieren
     delan_model.train()
     loss_sum = 0
-    n_batches = 0
 
-    for q, qd, qdd, tau in mem:
+    for batch_features, batch_labels in dataloader_training:
         # Reset gradients:
         optimizer.zero_grad()
+
+        # Variablen extrahieren
+        q = batch_features[:, [0, 1]]
+        qd = batch_features[:, [2, 3]]
+        qdd = batch_features[:, [4, 5]]
+
+        tau = batch_labels
 
         # Forward pass
         tau_hat, dEdt_hat = delan_model(q, qd, qdd)
@@ -174,10 +118,9 @@ for epoch in range(num_epochs):
 
         # Loss des aktuellen Batches ausfsummieren
         loss_sum += loss.item()
-        n_batches += 1
     
     # Mittleren Loss berechnen und ausgeben
-    training_loss_mean = loss_sum/n_batches
+    training_loss_mean = loss_sum/len(dataloader_training)
    
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         print(f'Epoch [{epoch + 1}/{num_epochs}], Training-Loss: {training_loss_mean:.3e}')
