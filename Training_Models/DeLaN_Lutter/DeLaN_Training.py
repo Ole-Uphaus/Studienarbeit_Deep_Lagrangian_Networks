@@ -14,9 +14,23 @@ import os
 from datetime import datetime
 import numpy as np
 import dill as pickle
+import onnx
 
 from DeLaN_model_Lutter import DeepLagrangianNetwork
 from replay_memory import PyTorchReplayMemory
+
+class DeLaN_wrapped(nn.Module):
+    def __init__(self, model):
+        super(DeLaN_wrapped, self).__init__()
+        self.model = model
+
+    def forward(self, input):
+        # extrahieren
+        q = input[:, [0, 1]]
+        qd = input[:, [2, 3]]
+        tau = input[:, [4, 5]]
+
+        return self.model.for_dyn(q, qd, tau)
 
 def load_dataset(n_characters=3, filename="D:\\Programmierung_Ole\\Studienarbeit_Deep_Lagrangian_Networks\\Training_Models\\DeLaN_Lutter\\character_data.pickle", test_label=("e", "q", "v")):
 
@@ -114,12 +128,15 @@ hyper = {'n_width': 64,
         'n_minibatch': 512,
         'learning_rate': 5.e-04,
         'weight_decay': 1.e-5,
-        'max_epoch': 10000}
+        'max_epoch': 8000,
+        'save_model': True}
 
 # Trainings- und Testdaten laden 
 features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')  # Mein modell
 features_training = features_training[:2000, :]
 labels_training = labels_training[:2000, :]
+
+input_size = features_training.shape[1]
 
 train1_qp = torch.tensor(features_training[:, (0, 1)], dtype=torch.float32)
 train1_qv = torch.tensor(features_training[:, (2, 3)], dtype=torch.float32)
@@ -192,4 +209,24 @@ for epoch in range(num_epochs):
    
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         print(f'Epoch [{epoch + 1}/{num_epochs}], Training-Loss: {training_loss_mean:.3e}')
+
+# Modell Exportieren
+
+# Wrapper anwenden (damit das forward Modell in die forward methode rutscht)
+delan_model_wrapped = DeLaN_wrapped(delan_model)
+delan_model_wrapped.eval()
+
+if hyper['save_model'] == True:
+    # Dummy Input für Export (gleiche Form wie deine Eingabedaten) - muss gemacht werden
+    dummy_input = torch.randn(1, input_size)
+
+    # Aktueller Zeitstempel
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    model_path = os.path.join("Saved_Models", f"{timestamp}_DeLaN_model.onnx")
+
+    # Modell exportieren
+    torch.onnx.export(delan_model_wrapped, dummy_input, model_path, 
+                    input_names=['input'], output_names=['output'], 
+                    dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
+                    opset_version=14)
 

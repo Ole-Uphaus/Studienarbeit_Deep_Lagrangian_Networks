@@ -320,10 +320,8 @@ class DeepLagrangianNetwork(nn.Module):
         out = self._dyn_model(q, qd, torch.zeros_like(q))
         H, c, g = out[1], out[2], out[3]
 
-        # Compute Acceleration, e.g., forward model:
-        invH = torch.inverse(H)
-        qdd_pred = torch.matmul(invH, (tau - c - g).view(-1, self.n_dof, 1)).view(-1, self.n_dof)
-        return qdd_pred
+        # Compute Acceleration, e.g., forward model: (Berechnung in Matlab wegen Export)
+        return H, c, g, tau
 
     def energy(self, q, qd):
         out = self._dyn_model(q, qd, torch.zeros_like(q))
