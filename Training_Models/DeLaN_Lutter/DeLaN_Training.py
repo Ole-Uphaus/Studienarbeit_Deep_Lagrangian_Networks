@@ -10,10 +10,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.preprocessing import StandardScaler
 import os
 from datetime import datetime
-import onnx
 import numpy as np
 import dill as pickle
 
@@ -114,16 +112,29 @@ hyper = {'n_width': 64,
         'gain_hidden': np.sqrt(2.),
         'gain_output': 0.1,
         'n_minibatch': 512,
-        'learning_rate': 1.e-04,
+        'learning_rate': 5.e-04,
         'weight_decay': 1.e-5,
         'max_epoch': 10000}
 
-# Trainings- und Testdaten laden
-# features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')
+# Trainings- und Testdaten laden 
+features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')  # Mein modell
+features_training = features_training[:2000, :]
+labels_training = labels_training[:2000, :]
 
-train_data, test_data, divider, dt_mean = load_dataset()
+train1_qp = torch.tensor(features_training[:, (0, 1)], dtype=torch.float32)
+train1_qv = torch.tensor(features_training[:, (2, 3)], dtype=torch.float32)
+train1_qa = torch.tensor(labels_training, dtype=torch.float32)
+train1_tau = torch.tensor(features_training[:, (4, 5)], dtype=torch.float32)
+
+train_data, test_data, divider, dt_mean = load_dataset()    # Buchstaben Modell (Lutter)
 train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau = train_data
 test_labels, test_qp, test_qv, test_qa, test_p, test_pd, test_tau, test_m, test_c, test_g = test_data
+
+# Set the seed:
+seed = 42
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
 
 # Modell Initialisieren
 delan_model = DeepLagrangianNetwork(n_dof, **hyper)
@@ -138,7 +149,7 @@ optimizer = torch.optim.Adam(delan_model.parameters(),
 cuda = False
 mem_dim = ((n_dof, ), (n_dof, ), (n_dof, ), (n_dof, ))
 mem = PyTorchReplayMemory(train_qp.shape[0], hyper["n_minibatch"], mem_dim, cuda)
-mem.add_samples([train_qp, train_qv, train_qa, train_tau])
+mem.add_samples([train1_qp, train1_qv, train1_qa, train1_tau])
 
 # Optimierung (Lernprozess)
 num_epochs = hyper['max_epoch']  # Anzahl der Durchläufe durch den gesamten Datensatz
@@ -182,42 +193,3 @@ for epoch in range(num_epochs):
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         print(f'Epoch [{epoch + 1}/{num_epochs}], Training-Loss: {training_loss_mean:.3e}')
 
-# # Modellvalidierung mit Testdaten
-# delan_model.eval()
-# loss_sum = 0
-# with torch.no_grad():
-#     for batch_features, batch_labels in dataloader_test:
-#         # Forward Pass
-#         outputs = delan_model(batch_features).squeeze()
-#         loss = criterion(outputs, batch_labels)
-
-#         # Loss des aktuellen Batches ausfsummieren
-#         loss_sum += loss.item()
-
-# # Mittleren Loss berechnen und ausgeben
-# test_loss_mean = loss_sum/len(dataloader_test)
-
-# print(f'Anwenden des trainierten Modells auf unbekannte Daten, Test-Loss: {test_loss_mean:.6f}')
-
-# if hyper_param['save_model'] == True:
-#     # Dummy Input für Export (gleiche Form wie deine Eingabedaten) - muss gemacht werden
-#     dummy_input = torch.randn(1, input_size)
-
-#     # Aktueller Zeitstempel
-#     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-#     model_path = os.path.join("Feedforward_NN", "Saved_Models", f"{timestamp}_feedforward_model.onnx")
-#     scaler_path = os.path.join("Feedforward_NN", "Saved_Models", f"{timestamp}_scaler.mat")
-
-#     # Modell exportieren
-#     torch.onnx.export(model, dummy_input, model_path, 
-#                     input_names=['input'], output_names=['output'], 
-#                     dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
-#                     opset_version=14)
-
-#     # Mittelwert und Std speichern
-#     scipy.io.savemat(scaler_path, {
-#         'mean_f': scaler_f.mean_,
-#         'scale_f': scaler_f.scale_,
-#         'mean_l': scaler_l.mean_,
-#         'scale_l': scaler_l.scale_
-#     })
