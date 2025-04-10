@@ -56,13 +56,17 @@ class Feed_forward_NN(nn.Module):
         return self.net(x)
     
 # Parameter festlegen
-hyper_param = {'save_model': True,
+hyper_param = {'save_model': False,
                'epoch': 200,
                'hidden_size': 256,
                'batch_size': 512,
                'learning_rate': 0.001,
                'wheight_decay': 1e-5,
                'dropout': 0.3}
+
+# Checken, ob Cuda verfügbar
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Benutze Gerät: {device}")
 
 # Trainings- und Testdaten laden
 features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')
@@ -93,7 +97,7 @@ input_size = features_training.shape[1]
 output_size = labels_training.shape[1]
 hidden_size = hyper_param['hidden_size']
 
-model = Feed_forward_NN(input_size, hidden_size, output_size, hyper_param['dropout'])
+model = Feed_forward_NN(input_size, hidden_size, output_size, hyper_param['dropout']).to(device)
 
 # Loss funktionen und Optimierer wählen
 criterion = nn.MSELoss()
@@ -110,6 +114,11 @@ for epoch in range(num_epochs):
     loss_sum = 0
 
     for batch_features, batch_labels in dataloader_training:
+
+        # Tensoren auf GPU schieben
+        batch_features = batch_features.to(device)
+        batch_labels = batch_labels.to(device)
+
         # Forward pass
         outputs = model(batch_features).squeeze()
         loss = criterion(outputs, batch_labels)
@@ -132,6 +141,11 @@ model.eval()
 loss_sum = 0
 with torch.no_grad():
     for batch_features, batch_labels in dataloader_test:
+
+        # Tensoren auf GPU schieben
+        batch_features = batch_features.to(device)
+        batch_labels = batch_labels.to(device)
+
         # Forward Pass
         outputs = model(batch_features).squeeze()
         loss = criterion(outputs, batch_labels)
@@ -146,7 +160,7 @@ print(f'Anwenden des trainierten Modells auf unbekannte Daten, Test-Loss: {test_
 
 if hyper_param['save_model'] == True:
     # Dummy Input für Export (gleiche Form wie deine Eingabedaten) - muss gemacht werden
-    dummy_input = torch.randn(1, input_size)
+    dummy_input = torch.randn(1, input_size).to(device)
 
     # Aktueller Zeitstempel
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
