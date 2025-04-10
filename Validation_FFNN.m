@@ -49,7 +49,7 @@ end
 
 % Dateipfad von Funktion hinzufügen
 my_path = fileparts(mfilename('fullpath'));
-function_path = fullfile(my_path, '..', 'Data_generation');
+function_path = fullfile(my_path, 'Data_generation');
 
 addpath(function_path)
 
@@ -95,14 +95,14 @@ options = odeset('MaxStep', 0.1, 'Stats', 'on');
 %% DGL lösen (mit trainiertem Modell aus Python)
 
 % neuronales Netz importieren
-network_name = "20250406_102615_feedforward_model.onnx";
-network_path = fullfile(my_path, '..', 'Training_Models', 'Feedforward_NN', 'Saved_Models', network_name);
+network_name = "20250410_162123_feedforward_model.onnx";
+network_path = fullfile(my_path, 'Training_Models', 'Feedforward_NN', 'Saved_Models', network_name);
 
 net = importNetworkFromONNX(network_path, 'InputDataFormats', {'BC'});
 
 % Scaler importieren
-scaler_name = "20250406_102615_scaler.mat";
-scaler_path = fullfile(my_path, '..', 'Training_Models', 'Feedforward_NN', 'Saved_Models', scaler_name);
+scaler_name = "20250410_162123_scaler.mat";
+scaler_path = fullfile(my_path, 'Training_Models', 'Feedforward_NN', 'Saved_Models', scaler_name);
 
 scaler = load(scaler_path);
 
