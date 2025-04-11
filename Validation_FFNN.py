@@ -48,7 +48,8 @@ def ODE_Neural_Network(t, x, model, F_vec, tau_vec, scaler_f, scaler_l):
     scaled_features = torch.tensor(scaled_features, dtype=torch.float32)
 
     # Prädiktion
-    scaled_outputs = model(scaled_features)
+    with torch.no_grad():
+        scaled_outputs = model(scaled_features)
     scaled_outputs_numpy = scaled_outputs.detach().numpy()
     outputs = scaler_l.inverse_transform(scaled_outputs_numpy)
 

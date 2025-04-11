@@ -49,7 +49,8 @@ def ODE_Neural_Network(t, x, model, F_vec, tau_vec):
     tau_delan = torch.tensor(features[[4, 5]], dtype=torch.float32).unsqueeze(0)
 
     # Prädiktion
-    outputs = model.inv_dyn(q, qd, tau_delan)
+    with torch.no_grad():
+        outputs = model.inv_dyn(q, qd, tau_delan)
     outputs_numpy = outputs.detach().numpy()
 
     # Ableitungen
@@ -90,7 +91,7 @@ tau_vec = np.vstack([t_u, utau_vec])
 
 # Modell laden
 script_path = Path(__file__).resolve()
-model_path = os.path.join(script_path.parents[0], "Training_Models", "DeLaN_Lutter", "Saved_Models", "20250411_085515_DeLaN_model.pth")
+model_path = os.path.join(script_path.parents[0], "Training_Models", "DeLaN_Lutter", "Saved_Models", "20250411_100724_DeLaN_model.pth")
 DeLaN_parameters = torch.load(model_path, weights_only=False)
 
 model = DeepLagrangianNetwork(DeLaN_parameters['n_dof'], **DeLaN_parameters['hyper_param'])

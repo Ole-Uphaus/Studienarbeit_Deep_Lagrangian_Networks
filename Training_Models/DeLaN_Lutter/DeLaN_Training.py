@@ -129,7 +129,7 @@ hyper = {'n_width': 64,
         'n_minibatch': 512,
         'learning_rate': 5.e-04,
         'weight_decay': 1.e-5,
-        'max_epoch': 200,
+        'max_epoch': 30000,
         'save_model': True}
 
 # Checken, ob Cuda verfügbar
@@ -138,8 +138,8 @@ print(f"Benutze Gerät: {device}")
 
 # Trainings- und Testdaten laden 
 features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')  # Mein modell
-features_training = features_training[:2000, :]
-labels_training = labels_training[:2000, :]
+features_training = features_training[7000:8000, :]
+labels_training = labels_training[7000:8000, :]
 
 input_size = features_training.shape[1]
 
