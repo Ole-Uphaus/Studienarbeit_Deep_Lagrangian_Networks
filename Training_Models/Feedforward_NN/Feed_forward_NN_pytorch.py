@@ -85,13 +85,13 @@ if __name__ == "__main__":
     scaled_labels_test = scaler_l.transform(labels_test)    # Hier nur transform, um Skalierungsparameter beizubehalten
 
     # Trainings- und Testdaten in Torch-Tensoren umwandeln
-    features_tensor_training = torch.tensor(scaled_features_training, dtype=torch.float32)
-    labels_tensor_training = torch.tensor(scaled_labels_training, dtype=torch.float32)
-    features_tensor_test = torch.tensor(scaled_features_test, dtype=torch.float32)
-    labels_tensor_test = torch.tensor(scaled_labels_test, dtype=torch.float32)
+    features_tensor_training = torch.tensor(scaled_features_training, dtype=torch.float32).to(device)
+    labels_tensor_training = torch.tensor(scaled_labels_training, dtype=torch.float32).to(device)
+    features_tensor_test = torch.tensor(scaled_features_test, dtype=torch.float32).to(device)
+    labels_tensor_test = torch.tensor(scaled_labels_test, dtype=torch.float32).to(device)
 
     # Parameter festlegen
-    hyper_param = {'save_model': True,
+    hyper_param = {'save_model': False,
                 'epoch': 100,
                 'hidden_size': 256,
                 'batch_size': 512,
@@ -128,8 +128,8 @@ if __name__ == "__main__":
         for batch_features, batch_labels in dataloader_training:
 
             # Tensoren auf GPU schieben
-            batch_features = batch_features.to(device)
-            batch_labels = batch_labels.to(device)
+            batch_features = batch_features
+            batch_labels = batch_labels
 
             # Forward pass
             outputs = model(batch_features).squeeze()
@@ -155,8 +155,8 @@ if __name__ == "__main__":
         for batch_features, batch_labels in dataloader_test:
 
             # Tensoren auf GPU schieben
-            batch_features = batch_features.to(device)
-            batch_labels = batch_labels.to(device)
+            batch_features = batch_features
+            batch_labels = batch_labels
 
             # Forward Pass
             outputs = model(batch_features).squeeze()

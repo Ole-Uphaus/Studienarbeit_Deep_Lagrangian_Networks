@@ -15,6 +15,7 @@ from datetime import datetime
 import numpy as np
 import dill as pickle
 import onnx
+from pathlib import Path
 
 from DeLaN_model_Lutter import DeepLagrangianNetwork
 from replay_memory import PyTorchReplayMemory
@@ -128,8 +129,12 @@ hyper = {'n_width': 64,
         'n_minibatch': 512,
         'learning_rate': 5.e-04,
         'weight_decay': 1.e-5,
-        'max_epoch': 8000,
+        'max_epoch': 200,
         'save_model': True}
+
+# Checken, ob Cuda verfügbar
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Benutze Gerät: {device}")
 
 # Trainings- und Testdaten laden 
 features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')  # Mein modell
@@ -154,7 +159,7 @@ torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 
 # Modell Initialisieren
-delan_model = DeepLagrangianNetwork(n_dof, **hyper)
+delan_model = DeepLagrangianNetwork(n_dof, **hyper).to(device)
 
 # Generate & Initialize the Optimizer:
 optimizer = torch.optim.Adam(delan_model.parameters(),
@@ -163,7 +168,11 @@ optimizer = torch.optim.Adam(delan_model.parameters(),
                                 amsgrad=True)
 
 # Generate Replay Memory:
-cuda = False
+if device == torch.device('cuda'):
+    cuda = True
+else:
+    cuda = False
+
 mem_dim = ((n_dof, ), (n_dof, ), (n_dof, ), (n_dof, ))
 mem = PyTorchReplayMemory(train_qp.shape[0], hyper["n_minibatch"], mem_dim, cuda)
 mem.add_samples([train1_qp, train1_qv, train1_qa, train1_tau])
@@ -212,21 +221,16 @@ for epoch in range(num_epochs):
 
 # Modell Exportieren
 
-# Wrapper anwenden (damit das forward Modell in die forward methode rutscht)
-delan_model_wrapped = DeLaN_wrapped(delan_model)
-delan_model_wrapped.eval()
-
 if hyper['save_model'] == True:
-    # Dummy Input für Export (gleiche Form wie deine Eingabedaten) - muss gemacht werden
-    dummy_input = torch.randn(1, input_size)
-
+        
     # Aktueller Zeitstempel
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    model_path = os.path.join("Saved_Models", f"{timestamp}_DeLaN_model.onnx")
+    script_path = Path(__file__).resolve()
+    model_path = os.path.join(script_path.parents[0], "Saved_Models", f"{timestamp}_DeLaN_model.pth")
 
-    # Modell exportieren
-    torch.onnx.export(delan_model_wrapped, dummy_input, model_path, 
-                    input_names=['input'], output_names=['output'], 
-                    dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
-                    opset_version=14)
-
+    # Speichern
+    torch.save({
+        'state_dict': delan_model.state_dict(),
+        'hyper_param': hyper,
+        'n_dof': n_dof
+    }, model_path)
