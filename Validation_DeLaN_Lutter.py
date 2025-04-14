@@ -91,7 +91,7 @@ tau_vec = np.vstack([t_u, utau_vec])
 
 # Modell laden
 script_path = Path(__file__).resolve()
-model_path = os.path.join(script_path.parents[0], "Training_Models", "DeLaN_Lutter", "Saved_Models", "20250411_100724_DeLaN_model.pth")
+model_path = os.path.join(script_path.parents[0], "Training_Models", "DeLaN_Lutter", "Saved_Models", "20250414_155654_DeLaN_model.pth")
 DeLaN_parameters = torch.load(model_path, weights_only=False)
 
 model = DeepLagrangianNetwork(DeLaN_parameters['n_dof'], **DeLaN_parameters['hyper_param'])
@@ -101,9 +101,9 @@ model.eval()
 # ODE lösen (analytisches Modell)
 solution_analytic = solve_ivp(
     ODE_2_FHG_Robot,
-    t_span,
-    x_0,
-    'RK45',
+    t_span=t_span,
+    y0=x_0,
+    method='RK23',
     t_eval=t_u,
     args=(F_vec, tau_vec, l_m, m_kg, mL_kg, J_kgm2),
     max_step=0.1
@@ -117,9 +117,9 @@ phi_analytic = solution_analytic.y[1]
 # ODE lösen (Feed-Forward NN)
 solution_NN = solve_ivp(
     ODE_Neural_Network,
-    t_span,
-    x_0,
-    'RK45',
+    t_span=t_span,
+    y0=x_0,
+    method='RK23',
     t_eval=t_u,
     args=(model, F_vec, tau_vec),
     max_step=0.1
