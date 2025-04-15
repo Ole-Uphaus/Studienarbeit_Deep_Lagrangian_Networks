@@ -64,13 +64,13 @@ l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 % Simulationsparameter
 t_span = [0 10];    % Simulationszeit
 max_step_size = 0.1;    % Maximale Schrittweite bei der Simulation
-cycles = 10; % Anzahl der Durchläufe (wie oft alle Stellgrößenverläufe durchgegangen werden)
+cycles = 1; % Anzahl der Durchläufe (wie oft alle Stellgrößenverläufe durchgegangen werden)
 
 % sollen Plots angezeigt werden?
 showplots = false;
 
 % sollen Simulationsdaten gespeichert werden
-savedata = true;
+savedata = false;
 
 %% Eingangssignale
 
@@ -127,6 +127,29 @@ for i = 1:((n^2)*cycles)
     % Gradienten berechnen
     simData(i).r_pp = gradient(simData(i).x(:, 3), simData(i).t);
     simData(i).phi_pp = gradient(simData(i).x(:, 4), simData(i).t);
+end
+
+%% Einträge Massenmatrix und Coriolisterme berechnen
+
+% Schleife, die alle Simulationen durchgeht
+for i = 1:((n^2)*cycles)
+
+    for j = 1:length(simData(i).t)
+        % q und q_p aus Simulationergebnissen herausziehen
+        r = simData(i).x(j, 1);
+        phi = simData(i).x(j, 2);
+        r_p = simData(i).x(j, 3);
+        phi_p = simData(i).x(j, 4);
+
+        % Massenmatrix
+        simData(i).M_11(j) = m_kg + mL_kg;    % Oberer linker Eintrag der Massenmatrix
+        simData(i).M_22(j) = J_kgm2 + m_kg*(r - l_m)^2 + mL_kg*r^2;    % Unterer rechter Eintrag der Massenmatrix
+
+        % Corioliskräfte
+        simData(i).C_1(j) = -(mL_kg*r + m_kg*(r - l_m))*phi_p^2; % Erster Vektoreintrag
+        simData(i).C_2(j) = 2*(m_kg*(r - l_m) + mL_kg*r)*r_p*phi_p; % Zweiter Vektoreintrag
+
+    end
 end
 
 %% Simulationsergebnisse Speichern (Daten in Trainings- und Testdaten aufteilen)

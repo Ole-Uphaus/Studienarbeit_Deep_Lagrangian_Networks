@@ -20,19 +20,6 @@ from pathlib import Path
 from DeLaN_model_Lutter import DeepLagrangianNetwork
 from replay_memory import PyTorchReplayMemory
 
-class DeLaN_wrapped(nn.Module):
-    def __init__(self, model):
-        super(DeLaN_wrapped, self).__init__()
-        self.model = model
-
-    def forward(self, input):
-        # extrahieren
-        q = input[:, [0, 1]]
-        qd = input[:, [2, 3]]
-        tau = input[:, [4, 5]]
-
-        return self.model.for_dyn(q, qd, tau)
-
 def load_dataset(n_characters=3, filename="D:\\Programmierung_Ole\\Studienarbeit_Deep_Lagrangian_Networks\\Training_Models\\DeLaN_Lutter\\character_data.pickle", test_label=("e", "q", "v")):
 
     with open(filename, 'rb') as f:
