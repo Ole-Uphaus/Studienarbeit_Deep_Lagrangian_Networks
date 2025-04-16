@@ -99,8 +99,9 @@ def extract_training_data(file_name):
     labels_training = data['labels_training']
     features_test = data['features_test']
     labels_test = data['labels_test']
+    Mass_Cor_test = data['Mass_Cor_test']
 
-    return features_training, labels_training, features_test, labels_test
+    return features_training, labels_training, features_test, labels_test, Mass_Cor_test
 
 # Parameter festlegen
 n_dof = 2
@@ -117,23 +118,21 @@ hyper = {'n_width': 64,
         'learning_rate': 5.e-04,
         'weight_decay': 1.e-5,
         'max_epoch': 10000,
-        'save_model': True}
+        'save_model': False}
 
 # Checken, ob Cuda verfügbar
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Benutze Gerät: {device}")
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, features_test, labels_test = extract_training_data('SimData__2025_04_04_09_51_52.mat')  # Mein modell
-features_training = features_training[:10000, :]
-labels_training = labels_training[:10000, :]
+features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_2025_04_16_16_39_16_Samples_10349.mat')  # Mein modell
 
 input_size = features_training.shape[1]
 
-train1_qp = torch.tensor(features_training[:, (0, 1)], dtype=torch.float32)
-train1_qv = torch.tensor(features_training[:, (2, 3)], dtype=torch.float32)
-train1_qa = torch.tensor(labels_training, dtype=torch.float32)
-train1_tau = torch.tensor(features_training[:, (4, 5)], dtype=torch.float32)
+train1_qp = np.array(features_training[:, (0, 1)])
+train1_qv = np.array(features_training[:, (2, 3)])
+train1_qa = np.array(labels_training)
+train1_tau = np.array(features_training[:, (4, 5)])
 
 train_data, test_data, divider, dt_mean = load_dataset()    # Buchstaben Modell (Lutter)
 train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau = train_data
