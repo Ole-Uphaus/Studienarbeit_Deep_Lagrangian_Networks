@@ -115,6 +115,8 @@ seed_loss_vec[:, 0] = seed_vec
 # Loop, um mehrere Seeds auszuprobieren
 for i_seed in seed_vec:
 
+    print('Aktueller Seed: ', i_seed)
+
     # Parameter festlegen
     n_dof = 2
     hyper = {'n_width': 64,
@@ -151,7 +153,7 @@ for i_seed in seed_vec:
     test_labels, test_qp, test_qv, test_qa, test_p, test_pd, test_tau, test_m, test_c, test_g = test_data
 
     # Set the seed:
-    seed = 42
+    seed = i_seed
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
