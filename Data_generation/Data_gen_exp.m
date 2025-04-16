@@ -70,7 +70,7 @@ cycles = 1; % Anzahl der Durchläufe (wie oft alle Stellgrößenverläufe durchg
 showplots = false;
 
 % sollen Simulationsdaten gespeichert werden
-savedata = false;
+savedata = true;
 
 %% Eingangssignale
 
@@ -160,11 +160,17 @@ test_idx = randperm(((n^2)*cycles), number_testdata);   % Zufällige Indizees f�
 
 features_test = [simData(test_idx(1)).x(:, 1), simData(test_idx(1)).x(:, 2), simData(test_idx(1)).x(:, 3), simData(test_idx(1)).x(:, 4), interp1(t_u, simData(test_idx(1)).F, simData(test_idx(1)).t), interp1(t_u, simData(test_idx(1)).tau, simData(test_idx(1)).t)];
 labels_test = [simData(test_idx(1)).r_pp, simData(test_idx(1)).phi_pp];
+Mass_Cor_test = [simData(test_idx(1)).M_11', simData(test_idx(1)).M_22', simData(test_idx(1)).C_1', simData(test_idx(1)).C_2'];
 for i = test_idx(2:end)
+    % Features [r, phi, r_p, phi_p, F, tau]
     features_test = [features_test;
-    simData(i).x(:, 1), simData(i).x(:, 2), simData(i).x(:, 3), simData(i).x(:, 4), interp1(t_u, simData(i).F, simData(i).t), interp1(t_u, simData(i).tau, simData(i).t)];
+        simData(i).x(:, 1), simData(i).x(:, 2), simData(i).x(:, 3), simData(i).x(:, 4), interp1(t_u, simData(i).F, simData(i).t), interp1(t_u, simData(i).tau, simData(i).t)];
+    % Labels [r_pp, phi_pp]
     labels_test = [labels_test;
-    simData(i).r_pp, simData(i).phi_pp];
+        simData(i).r_pp, simData(i).phi_pp];
+    % Mass and Coriolis Terms [M_11, M_22, C_1, C_2]
+    Mass_Cor_test = [Mass_Cor_test;
+        simData(i).M_11', simData(i).M_22', simData(i).C_1', simData(i).C_2'];
 end
 
 % Trainingsdaten auswählen und in Features und Labels aufteilen (80%)
@@ -173,8 +179,10 @@ training_idx = setdiff((1:(n^2)*cycles), test_idx);
 features_training = [simData(training_idx(1)).x(:, 1), simData(training_idx(1)).x(:, 2), simData(training_idx(1)).x(:, 3), simData(training_idx(1)).x(:, 4), interp1(t_u, simData(training_idx(1)).F, simData(training_idx(1)).t), interp1(t_u, simData(training_idx(1)).tau, simData(training_idx(1)).t)];
 labels_training = [simData(training_idx(1)).r_pp, simData(training_idx(1)).phi_pp];
 for i = training_idx(2:end)
+    % Features [r, phi, r_p, phi_p, F, tau]
     features_training = [features_training;
         simData(i).x(:, 1), simData(i).x(:, 2), simData(i).x(:, 3), simData(i).x(:, 4), interp1(t_u, simData(i).F, simData(i).t), interp1(t_u, simData(i).tau, simData(i).t)];
+    % Labels [r_pp, phi_pp]
     labels_training = [labels_training;
         simData(i).r_pp, simData(i).phi_pp];
 end
@@ -191,7 +199,7 @@ if savedata == true
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
     dateiName = 'SimData__' + time_stamp + '.mat';
     full_path = fullfile(target_folder, dateiName);
-    save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test');
+    save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
 
 %% Plots erstellen
