@@ -196,8 +196,9 @@ if savedata == true
     target_folder = fullfile(target_folder); % Pfad normalisieren
 
     % Datei speichern
+    num_samples = num2str(length(features_test) + length(features_training));
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
-    dateiName = 'SimData__' + time_stamp + '.mat';
+    dateiName = 'SimData_' + time_stamp + '_Samples_' + num_samples + '.mat';
     full_path = fullfile(target_folder, dateiName);
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
