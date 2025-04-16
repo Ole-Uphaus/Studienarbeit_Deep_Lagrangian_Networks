@@ -105,7 +105,7 @@ def extract_training_data(file_name):
     return features_training, labels_training, features_test, labels_test, Mass_Cor_test
 
 # Seeds ausprobieren
-max_seed = 10
+max_seed = 100
 seed_vec = np.arange(1, max_seed + 1)
 
 # Ergebnisvektor
@@ -129,7 +129,7 @@ for i_seed in seed_vec:
             'n_minibatch': 512,
             'learning_rate': 5.e-04,
             'weight_decay': 1.e-5,
-            'max_epoch': 5,
+            'max_epoch': 2000,
             'save_model': False}
 
     # Checken, ob Cuda verfügbar
