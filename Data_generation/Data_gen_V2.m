@@ -2,7 +2,7 @@
 % Autor:      Ole Uphaus
 % Datum:      04.04.2025
 % Beschreibung:
-% Dies ist die Erweiterung der ersten Funktion zur Erzeugung der
+% Dies ist die Erweiterung der ersten Funktion (V1) zur Erzeugung der
 % Trainingsdaten. Die Funktion funktioniert im Prinzip genauso. Jedoch
 % sollen noch mehr verschiedene Trajektorien generiert werden.
 % -------------------------------------------------------------
