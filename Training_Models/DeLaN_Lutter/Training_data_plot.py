@@ -8,6 +8,8 @@ In diesem Skript will ich die Trainingsdaten von plotten, die Lutter für das Tr
 import numpy as np
 import dill as pickle
 import matplotlib.pyplot as plt
+import os
+import scipy.io
 
 def load_dataset(n_characters=3, filename="D:\\Programmierung_Ole\\Studienarbeit_Deep_Lagrangian_Networks\\Training_Models\\DeLaN_Lutter\\character_data.pickle", test_label=("e", "q", "v")):
 
@@ -70,31 +72,80 @@ def load_dataset(n_characters=3, filename="D:\\Programmierung_Ole\\Studienarbeit
            (test_labels, test_qp, test_qv, test_qa, test_p, test_pd, test_tau, test_m, test_c, test_g),\
            divider, dt_mean
 
+def extract_training_data(file_name):
+    # Pfad des aktuellen Skriptes
+    script_path = os.path.dirname(os.path.abspath(__file__))
+
+    # Relativer Pfad zum Datenordner von hier aus
+    # Wir müssen zwei Ebenen hoch und dann in den Zielordner
+    data_path = os.path.join(script_path, '..', '..', 'Training_Data', 'MATLAB_Simulation', file_name)
+
+    # Pfad normieren
+    data_path = os.path.normpath(data_path)
+
+    # Daten extrahieren
+    data = scipy.io.loadmat(data_path)
+
+    features_training = data['features_training']
+    labels_training = data['labels_training']
+    features_test = data['features_test']
+    labels_test = data['labels_test']
+    Mass_Cor_test = data['Mass_Cor_test']
+
+    return features_training, labels_training, features_test, labels_test, Mass_Cor_test
+
 # Datensatz laden
 train_data, test_data, divider, dt_mean = load_dataset()    # Buchstaben Modell (Lutter)
 train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau = train_data
 test_labels, test_qp, test_qv, test_qa, test_p, test_pd, test_tau, test_m, test_c, test_g = test_data
 
-t_vec = np.linspace(0, 20, train_qp.shape[0])
+# Trainings- und Testdaten laden 
+features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_2025_04_16_16_39_16_Samples_10349.mat')  # Mein modell
+train1_qp = np.array(features_training[:, (0, 1)])
+train1_qv = np.array(features_training[:, (2, 3)])
+train1_qa = np.array(labels_training)
+train1_tau = np.array(features_training[:, (4, 5)])
+
+samples_vec = np.arange(1, train_qp.shape[0] + 1)
+samples_vec1 = np.arange(1, train1_qp.shape[0] + 1)
 print('Train Characters: ', train_labels)
 print('Num. Characters: ', len(train_labels))
 
-# Plotten der Ergebnisse
-plt.figure(figsize=(10, 6))
+# Plotten Trainingsdaten Lutter
+plt.figure()
 
 plt.subplot(2, 1, 1)
-plt.plot(t_vec, train_qp[:, 0], label='q1')
+plt.plot(samples_vec, train_qp[:, 0], label='q1')
 plt.title('q1')
-plt.xlabel('Zeit [s]')
+plt.xlabel('Samples')
 plt.ylabel('q [rad]')
 plt.grid(True)
 plt.legend()
 
 plt.subplot(2, 1, 2)
-plt.plot(t_vec, train_qp[:, 1], label='q2')
+plt.plot(samples_vec, train_qp[:, 1], label='q2')
 plt.title('q2')
 plt.xlabel('Zeit [s]')
 plt.ylabel('q [rad]')
+plt.grid(True)
+plt.legend()
+
+# Plotten meiner Trainingsdaten
+plt.figure()
+
+plt.subplot(2, 1, 1)
+plt.plot(samples_vec1, train1_qp[:, 0], label='r')
+plt.title('r')
+plt.xlabel('Samples')
+plt.ylabel('r [m]')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 1, 2)
+plt.plot(samples_vec1, train1_qp[:, 1], label='phi')
+plt.title('phi')
+plt.xlabel('Samples')
+plt.ylabel('phi [rad]')
 plt.grid(True)
 plt.legend()
 
