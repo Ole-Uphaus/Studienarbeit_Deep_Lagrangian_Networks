@@ -9,6 +9,7 @@ import scipy.io
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, TensorDataset
 import os
 from datetime import datetime
@@ -123,7 +124,7 @@ hyper = {'n_width': 64,
         'n_minibatch': 512,
         'learning_rate': 5.e-04,
         'weight_decay': 1.e-5,
-        'max_epoch': 2000,
+        'max_epoch': 10000,
         'save_model': False}
 
 # Checken, ob Cuda verfügbar
@@ -223,12 +224,97 @@ qdd = torch.from_numpy(test1_qa).float().to(device)
 # Prädiktion
 with torch.no_grad():
     out = delan_model._dyn_model(q, qd, qdd)
-    H = out[1]
-    c = out[2]
-    g = out[3]
+    H = out[1].cpu().numpy()
+    c = out[2].cpu().numpy()
+    g = out[3].cpu().numpy()
 
 # Ausgabe
-print('H Matrix am Anfang: ', H[1, :, :])
+samples_vec = np.arange(1, H.shape[0] + 1)
+zeros_vec = np.zeros(H.shape[0])
+
+# H
+plt.figure()
+
+plt.subplot(2, 2, 1)
+plt.plot(samples_vec, H[:, 0, 0], label='H11 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 0] ,label='H11 Analytic')
+plt.title('H11')
+plt.xlabel('Samples')
+plt.ylabel('H')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 2)
+plt.plot(samples_vec, H[:, 0, 1], label='H12 DeLaN')
+plt.plot(samples_vec, zeros_vec, label='H12 Analytic')
+plt.title('H12')
+plt.xlabel('Samples')
+plt.ylabel('H')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 3)
+plt.plot(samples_vec, H[:, 1, 0], label='H21 DeLaN')
+plt.plot(samples_vec, zeros_vec, label='H21 Analytic')
+plt.title('H21')
+plt.xlabel('Samples')
+plt.ylabel('H')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 4)
+plt.plot(samples_vec, H[:, 1, 1], label='H22 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H22 Analytic')
+plt.title('H22')
+plt.xlabel('Samples')
+plt.ylabel('H')
+plt.grid(True)
+plt.legend()
+
+# c
+plt.figure()
+
+plt.subplot(2, 1, 1)
+plt.plot(samples_vec, c[:, 0], label='C1 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 2] ,label='C1 Analytic')
+plt.title('C1')
+plt.xlabel('Samples')
+plt.ylabel('C')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 1, 2)
+plt.plot(samples_vec, c[:, 1], label='C2 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 3] ,label='C2 Analytic')
+plt.title('C2')
+plt.xlabel('Samples')
+plt.ylabel('C')
+plt.grid(True)
+plt.legend()
+
+# g
+plt.figure()
+
+plt.subplot(2, 1, 1)
+plt.plot(samples_vec, g[:, 0], label='g1 DeLaN')
+plt.plot(samples_vec, zeros_vec ,label='g1 Analytic')
+plt.title('g1')
+plt.xlabel('Samples')
+plt.ylabel('g')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 1, 2)
+plt.plot(samples_vec, g[:, 1], label='g2 DeLaN')
+plt.plot(samples_vec, zeros_vec ,label='g2 Analytic')
+plt.title('g2')
+plt.xlabel('Samples')
+plt.ylabel('g')
+plt.grid(True)
+plt.legend()
+
+plt.tight_layout()
+plt.show()
 
 # Modell Exportieren
 if hyper['save_model'] == True:
