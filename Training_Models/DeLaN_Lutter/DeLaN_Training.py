@@ -103,6 +103,12 @@ def extract_training_data(file_name):
 
     return features_training, labels_training, features_test, labels_test, Mass_Cor_test
 
+# Set the seed:
+seed = 43
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+
 # Parameter festlegen
 n_dof = 2
 hyper = {'n_width': 64,
@@ -117,7 +123,7 @@ hyper = {'n_width': 64,
         'n_minibatch': 512,
         'learning_rate': 5.e-04,
         'weight_decay': 1.e-5,
-        'max_epoch': 10000,
+        'max_epoch': 2000,
         'save_model': False}
 
 # Checken, ob Cuda verfügbar
@@ -129,20 +135,22 @@ features_training, labels_training, features_test, labels_test, Mass_Cor_test = 
 
 input_size = features_training.shape[1]
 
+# Trainingsdaten
 train1_qp = np.array(features_training[:, (0, 1)])
 train1_qv = np.array(features_training[:, (2, 3)])
 train1_qa = np.array(labels_training)
 train1_tau = np.array(features_training[:, (4, 5)])
 
+# Testdaten
+test1_qp = np.array(features_test[:, (0, 1)])
+test1_qv = np.array(features_test[:, (2, 3)])
+test1_qa = np.array(labels_test)
+test1_tau = np.array(features_test[:, (4, 5)])
+Mass_Cor_test = np.array(Mass_Cor_test)
+
 train_data, test_data, divider, dt_mean = load_dataset()    # Buchstaben Modell (Lutter)
 train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau = train_data
 test_labels, test_qp, test_qv, test_qa, test_p, test_pd, test_tau, test_m, test_c, test_g = test_data
-
-# Set the seed:
-seed = 42
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed_all(seed)
 
 # Modell Initialisieren
 delan_model = DeepLagrangianNetwork(n_dof, **hyper).to(device)
@@ -205,8 +213,24 @@ for epoch in range(num_epochs):
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         print(f'Epoch [{epoch + 1}/{num_epochs}], Training-Loss: {training_loss_mean:.3e}')
 
-# Modell Exportieren
+# Modell evaluieren
 
+# Convert NumPy samples to torch:
+q = torch.from_numpy(test1_qp).float().to(device)
+qd = torch.from_numpy(test1_qv).float().to(device)
+qdd = torch.from_numpy(test1_qa).float().to(device)
+
+# Prädiktion
+with torch.no_grad():
+    out = delan_model._dyn_model(q, qd, qdd)
+    H = out[1]
+    c = out[2]
+    g = out[3]
+
+# Ausgabe
+print('H Matrix am Anfang: ', H[1, :, :])
+
+# Modell Exportieren
 if hyper['save_model'] == True:
         
     # Aktueller Zeitstempel
