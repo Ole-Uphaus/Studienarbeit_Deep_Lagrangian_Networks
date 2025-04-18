@@ -132,7 +132,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Benutze Gerät: {device}")
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_2025_04_18_13_51_08_Samples_1500.mat')  # Mein modell
+features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_2025_04_18_11_25_10_Samples_3000.mat')  # Mein modell
 
 input_size = features_training.shape[1]
 
@@ -223,12 +223,32 @@ qdd = torch.from_numpy(test1_qa).float().to(device)
 
 # Prädiktion
 with torch.no_grad():
+
+    # Lagrange Gleichung komponenten berechnen
     out = delan_model._dyn_model(q, qd, qdd)
     H = out[1].cpu().numpy()
     c = out[2].cpu().numpy()
     g = out[3].cpu().numpy()
 
-# Ausgabe
+    # Loss berechnen
+    tau_hat, dEdt_hat = delan_model(q, qd, qdd)
+    tau_hat = tau_hat.cpu().numpy()
+    dEdt_hat = dEdt_hat.cpu().numpy()
+
+    err_inv = np.sum((tau_hat - test1_tau) ** 2, axis=1)
+    l_mean_inv_dyn = np.mean(err_inv)
+
+    dEdt = np.sum(qd.cpu().numpy() * test1_tau, axis=1)   # Numpy aquivalent zur Zeile oben aus Torch 
+    err_dEdt = (dEdt_hat - dEdt) ** 2
+    l_mean_dEdt = np.mean(err_dEdt)
+
+    loss = l_mean_inv_dyn + l_mean_dEdt
+
+# Ausgabe loss
+print('Evaluierung...')
+print(f'Test-Loss: {loss:.3e}')
+
+# Plotten
 samples_vec = np.arange(1, H.shape[0] + 1)
 zeros_vec = np.zeros(H.shape[0])
 
