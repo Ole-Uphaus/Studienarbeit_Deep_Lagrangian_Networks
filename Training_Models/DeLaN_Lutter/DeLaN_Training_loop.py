@@ -117,6 +117,12 @@ for i_seed in seed_vec:
 
     print('Aktueller Seed: ', i_seed)
 
+    # Set the seed:
+    seed = i_seed
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
     # Parameter festlegen
     n_dof = 2
     hyper = {'n_width': 64,
@@ -139,24 +145,26 @@ for i_seed in seed_vec:
     print(f"Benutze Gerät: {device}")
 
     # Trainings- und Testdaten laden 
-    features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_2025_04_16_16_39_16_Samples_10349.mat')  # Mein modell
+    features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_2025_04_18_11_25_10_Samples_3000.mat')  # Mein modell
 
     input_size = features_training.shape[1]
 
+    # Trainingsdaten
     train1_qp = np.array(features_training[:, (0, 1)])
     train1_qv = np.array(features_training[:, (2, 3)])
     train1_qa = np.array(labels_training)
     train1_tau = np.array(features_training[:, (4, 5)])
 
+    # Testdaten
+    test1_qp = np.array(features_test[:, (0, 1)])
+    test1_qv = np.array(features_test[:, (2, 3)])
+    test1_qa = np.array(labels_test)
+    test1_tau = np.array(features_test[:, (4, 5)])
+    Mass_Cor_test = np.array(Mass_Cor_test)
+
     train_data, test_data, divider, dt_mean = load_dataset()    # Buchstaben Modell (Lutter)
     train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau = train_data
     test_labels, test_qp, test_qv, test_qa, test_p, test_pd, test_tau, test_m, test_c, test_g = test_data
-
-    # Set the seed:
-    seed = i_seed
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
 
     # Modell Initialisieren
     delan_model = DeepLagrangianNetwork(n_dof, **hyper).to(device)
@@ -219,9 +227,33 @@ for i_seed in seed_vec:
         if epoch == 0 or np.mod(epoch + 1, 100) == 0:
             print(f'Epoch [{epoch + 1}/{num_epochs}], Training-Loss: {training_loss_mean:.3e}')
 
+    # Modell evaluieren
+
+    # Convert NumPy samples to torch:
+    q = torch.from_numpy(test1_qp).float().to(device)
+    qd = torch.from_numpy(test1_qv).float().to(device)
+    qdd = torch.from_numpy(test1_qa).float().to(device)
+
+    # Prädiktion
+    with torch.no_grad():
+
+        # Loss berechnen
+        tau_hat, dEdt_hat = delan_model(q, qd, qdd)
+        tau_hat = tau_hat.cpu().numpy()
+        dEdt_hat = dEdt_hat.cpu().numpy()
+
+        err_inv = np.sum((tau_hat - test1_tau) ** 2, axis=1)
+        l_mean_inv_dyn = np.mean(err_inv)
+
+        dEdt = np.sum(qd.cpu().numpy() * test1_tau, axis=1)   # Numpy aquivalent zur Zeile oben aus Torch 
+        err_dEdt = (dEdt_hat - dEdt) ** 2
+        l_mean_dEdt = np.mean(err_dEdt)
+
+        loss = l_mean_inv_dyn + l_mean_dEdt
+
     # Fehler abspeichern
-    loss_ges = training_loss_mean
-    seed_loss_vec[i_seed - 1, 1] = loss_ges
+    loss = l_mean_inv_dyn + l_mean_dEdt
+    seed_loss_vec[i_seed - 1, 1] = loss
 
     np.save("seed_loss_vec.npy", seed_loss_vec)
 
