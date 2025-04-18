@@ -100,7 +100,7 @@ train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau = train
 test_labels, test_qp, test_qv, test_qa, test_p, test_pd, test_tau, test_m, test_c, test_g = test_data
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_2025_04_16_16_39_16_Samples_10349.mat')  # Mein modell
+features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V2_2025_04_17_15_56_01_Samples_10297.mat')  # Mein modell
 train1_qp = np.array(features_training[:, (0, 1)])
 train1_qv = np.array(features_training[:, (2, 3)])
 train1_qa = np.array(labels_training)

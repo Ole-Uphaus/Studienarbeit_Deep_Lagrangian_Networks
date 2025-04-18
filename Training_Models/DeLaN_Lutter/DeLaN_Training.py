@@ -105,7 +105,7 @@ def extract_training_data(file_name):
     return features_training, labels_training, features_test, labels_test, Mass_Cor_test
 
 # Set the seed:
-seed = 43
+seed = 42
 np.random.seed(seed)
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
@@ -124,7 +124,7 @@ hyper = {'n_width': 64,
         'n_minibatch': 512,
         'learning_rate': 5.e-04,
         'weight_decay': 1.e-5,
-        'max_epoch': 10000,
+        'max_epoch': 2000,
         'save_model': False}
 
 # Checken, ob Cuda verfügbar
@@ -132,7 +132,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Benutze Gerät: {device}")
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_2025_04_16_16_39_16_Samples_10349.mat')  # Mein modell
+features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_2025_04_18_13_51_08_Samples_1500.mat')  # Mein modell
 
 input_size = features_training.shape[1]
 
@@ -271,10 +271,12 @@ plt.ylabel('H')
 plt.grid(True)
 plt.legend()
 
+plt.tight_layout()
+
 # c
 plt.figure()
 
-plt.subplot(2, 1, 1)
+plt.subplot(2, 2, 1)
 plt.plot(samples_vec, c[:, 0], label='C1 DeLaN')
 plt.plot(samples_vec, Mass_Cor_test[:, 2] ,label='C1 Analytic')
 plt.title('C1')
@@ -283,7 +285,7 @@ plt.ylabel('C')
 plt.grid(True)
 plt.legend()
 
-plt.subplot(2, 1, 2)
+plt.subplot(2, 2, 3)
 plt.plot(samples_vec, c[:, 1], label='C2 DeLaN')
 plt.plot(samples_vec, Mass_Cor_test[:, 3] ,label='C2 Analytic')
 plt.title('C2')
@@ -293,9 +295,7 @@ plt.grid(True)
 plt.legend()
 
 # g
-plt.figure()
-
-plt.subplot(2, 1, 1)
+plt.subplot(2, 2, 2)
 plt.plot(samples_vec, g[:, 0], label='g1 DeLaN')
 plt.plot(samples_vec, zeros_vec ,label='g1 Analytic')
 plt.title('g1')
@@ -304,7 +304,7 @@ plt.ylabel('g')
 plt.grid(True)
 plt.legend()
 
-plt.subplot(2, 1, 2)
+plt.subplot(2, 2, 4)
 plt.plot(samples_vec, g[:, 1], label='g2 DeLaN')
 plt.plot(samples_vec, zeros_vec ,label='g2 Analytic')
 plt.title('g2')

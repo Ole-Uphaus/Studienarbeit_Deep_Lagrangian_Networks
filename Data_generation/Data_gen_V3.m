@@ -58,7 +58,7 @@ t_vec = linspace(0, move_time, smples_per_run);
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 50;
+number_runs = 15;
 
 % Systemparameter
 m_kg = 5;   % Masse des Arms
