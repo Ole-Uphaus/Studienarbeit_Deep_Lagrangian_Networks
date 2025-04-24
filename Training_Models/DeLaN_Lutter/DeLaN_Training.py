@@ -132,7 +132,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Benutze Gerät: {device}")
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_2025_04_18_11_25_10_Samples_3000.mat')  # Mein modell
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_2025_04_18_11_12_08_Samples_5000.mat')  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_2025_04_18_11_12_08_Samples_5000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 input_size = features_training.shape[1]
 
@@ -148,6 +149,10 @@ test1_qv = np.array(features_test[:, (2, 3)])
 test1_qa = np.array(labels_test)
 test1_tau = np.array(features_test[:, (4, 5)])
 Mass_Cor_test = np.array(Mass_Cor_test)
+
+# Ausgabe Datendimensionen
+print('Datenpunkte Training: ', train1_qp.shape[0])
+print('Datenpunkte Evaluierung: ', test1_qp.shape[0])
 
 train_data, test_data, divider, dt_mean = load_dataset()    # Buchstaben Modell (Lutter)
 train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau = train_data
