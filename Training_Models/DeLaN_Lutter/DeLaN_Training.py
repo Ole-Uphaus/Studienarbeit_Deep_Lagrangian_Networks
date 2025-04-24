@@ -15,7 +15,6 @@ import os
 from datetime import datetime
 import numpy as np
 import dill as pickle
-import onnx
 from pathlib import Path
 
 from DeLaN_model_Lutter import DeepLagrangianNetwork
@@ -130,9 +129,10 @@ hyper = {'n_width': 64,
 # Checken, ob Cuda verfügbar
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Benutze Gerät: {device}")
+print()
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_2025_04_18_11_12_08_Samples_5000.mat')  # Mein Modell Trainingsdaten
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_2025_04_18_13_51_08_Samples_1500.mat')  # Mein Modell Trainingsdaten
 _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_2025_04_18_11_12_08_Samples_5000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 input_size = features_training.shape[1]
@@ -153,6 +153,7 @@ Mass_Cor_test = np.array(Mass_Cor_test)
 # Ausgabe Datendimensionen
 print('Datenpunkte Training: ', train1_qp.shape[0])
 print('Datenpunkte Evaluierung: ', test1_qp.shape[0])
+print()
 
 train_data, test_data, divider, dt_mean = load_dataset()    # Buchstaben Modell (Lutter)
 train_labels, train_qp, train_qv, train_qa, train_p, train_pd, train_tau = train_data
@@ -227,6 +228,8 @@ qd = torch.from_numpy(test1_qv).float().to(device)
 qdd = torch.from_numpy(test1_qa).float().to(device)
 
 # Prädiktion
+print()
+print('Evaluierung...')
 with torch.no_grad():
 
     # Lagrange Gleichung komponenten berechnen
@@ -235,7 +238,7 @@ with torch.no_grad():
     c = out[2].cpu().numpy()
     g = out[3].cpu().numpy()
 
-    # Loss berechnen
+    # Loss berechnen (um mit Training zu vergleichen)
     tau_hat, dEdt_hat = delan_model(q, qd, qdd)
     tau_hat = tau_hat.cpu().numpy()
     dEdt_hat = dEdt_hat.cpu().numpy()
@@ -249,9 +252,31 @@ with torch.no_grad():
 
     loss = l_mean_inv_dyn + l_mean_dEdt
 
+    # Loss Massenmatrix
+    loss_H11 = np.mean((H[:, 0, 0] - Mass_Cor_test[:, 0])**2)
+    loss_H12 = np.mean((H[:, 0, 1])**2)
+    loss_H22 = np.mean((H[:, 1, 1] - Mass_Cor_test[:, 1])**2)
+
+    # Loss Coriolisterme
+    loss_C1 = np.mean((c[:, 0] - Mass_Cor_test[:, 2])**2)
+    loss_C2 = np.mean((c[:, 1] - Mass_Cor_test[:, 3])**2)
+
+    # Loss Gravitation
+    loss_g1 = np.mean((g[:, 0])**2)
+    loss_g2 = np.mean((g[:, 1])**2)
+
 # Ausgabe loss
-print('Evaluierung...')
 print(f'Test-Loss: {loss:.3e}')
+print()
+print(f'Massenmatrix MSE H11: {loss_H11:.3e}')
+print(f'Massenmatrix MSE H12: {loss_H12:.3e}')
+print(f'Massenmatrix MSE H22: {loss_H22:.3e}')
+print()
+print(f'Corioliskräfte MSE C1: {loss_C1:.3e}')
+print(f'Corioliskräfte MSE C2: {loss_C2:.3e}')
+print()
+print(f'Gewichtskräfte MSE g1: {loss_g1:.3e}')
+print(f'Gewichtskräfte MSE g2: {loss_g2:.3e}')
 
 # Plotten
 samples_vec = np.arange(1, H.shape[0] + 1)
