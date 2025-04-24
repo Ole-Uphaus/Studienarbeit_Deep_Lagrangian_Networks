@@ -58,7 +58,7 @@ t_vec = linspace(0, move_time, smples_per_run);
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 15;
+number_runs = 50;
 
 % Systemparameter
 m_kg = 5;   % Masse des Arms
@@ -72,12 +72,12 @@ savedata = true;
 %% Wegpunkte für Trajektorie festlegen
 
 % Startpunkte
-r_0 = random_init(number_runs, 0, 0.5, false); % Intervall [0, 0.5]
-phi_0 = random_init(number_runs, 0, pi, false);  % Intervall [0, pi]
+r_0 = random_init(number_runs, -3, 5, false); % Bsp. Intervall [0, 0.5]
+phi_0 = random_init(number_runs, -5, 5, false);  % Bsp. Intervall [0, pi]
 
 % Differenzen für Endpunkte
-delta_r = random_init(number_runs, 0.2, 0.5, true); % Intervall [0.2, 0.5]
-delta_phi = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Intervall [1/4*pi, 3/4*pi]
+delta_r = random_init(number_runs, 1.8, 3, true); % Bsp. Intervall [0.2, 0.5]
+delta_phi = random_init(number_runs, 4, 5, true); % Bsp. Intervall [1/4*pi, 3/4*pi]
 
 %% Trajektorien generieren
 
