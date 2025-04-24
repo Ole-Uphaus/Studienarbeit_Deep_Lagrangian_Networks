@@ -20,9 +20,17 @@ from pathlib import Path
 from DeLaN_model_Lutter import DeepLagrangianNetwork
 from replay_memory import PyTorchReplayMemory
 
-def load_dataset(n_characters=3, filename="D:\\Programmierung_Ole\\Studienarbeit_Deep_Lagrangian_Networks\\Training_Models\\DeLaN_Lutter\\character_data.pickle", test_label=("e", "q", "v")):
+def load_dataset(n_characters=3, filename="character_data.pickle", test_label=("e", "q", "v")):
 
-    with open(filename, 'rb') as f:
+    # Pfad des aktuellen Skriptes
+    script_path = os.path.dirname(os.path.abspath(__file__))
+
+    # Relativer Pfad zum Datenordner von hier aus
+    # Wir müssen zwei Ebenen hoch und dann in den Zielordner
+    data_path = os.path.join(script_path, filename)
+    data_path = os.path.normpath(data_path)
+
+    with open(data_path, 'rb') as f:
         data = pickle.load(f)
 
     n_dof = 2
