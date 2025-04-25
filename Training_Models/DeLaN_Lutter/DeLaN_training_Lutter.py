@@ -18,7 +18,7 @@ import dill as pickle
 from pathlib import Path
 
 from DeLaN_model_Lutter import DeepLagrangianNetwork
-from replay_memory import PyTorchReplayMemory
+from replay_memory_Lutter import PyTorchReplayMemory
 
 def load_dataset(n_characters=3, filename="character_data.pickle", test_label=("e", "q", "v")):
 
