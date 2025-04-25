@@ -14,6 +14,7 @@ class Intern_NN(nn.Module):
 
         # Aktivierungsfunktion festlegen
         self.activation_fnc = self.get_activation_fnc(hyper_param['activation_fnc'])
+        self.ReLu = nn.ReLU()   # Aktivierungsfunktion für Output
 
         # Liste mit allen Layern
         self.layers = nn.ModuleList()
@@ -29,10 +30,10 @@ class Intern_NN(nn.Module):
         self.output_g = nn.Linear(hyper_param['hidden_width'], n_dof)
 
         # Output Hauptdiagonalelemente von L - Dimension==n_dof (ReLu Layer) 
-        self.output_L_diag = nn.ReLU(nn.Linear(hyper_param['hidden_width'], n_dof))
+        self.output_L_diag = nn.Linear(hyper_param['hidden_width'], n_dof)
 
         # Output Nebendiagonalelemente (untere Dreiecksmatrix) von L
-        n_side_diag = n_dof*(n_dof - 1)/2
+        n_side_diag = int(n_dof*(n_dof - 1)/2)
         self.output_L_side_diag = nn.Linear(hyper_param['hidden_width'], n_side_diag)
 
     def get_activation_fnc(self, name):
@@ -40,9 +41,8 @@ class Intern_NN(nn.Module):
         name = name.lower()
 
         # Alle erlaubten Aktivierungsfunktionen druchgehen (hier noch weitere hinzufügen)
-        if name = 'relu':
+        if name == 'relu':
             activation_fnc = nn.ReLU()
-
         else:
             activation_fnc = nn.ReLU()
 
@@ -54,4 +54,4 @@ class Intern_NN(nn.Module):
             x = self.activation_fnc(layer(x))
 
         # Jeweils die Netzwerk Outputs einzeln berechnen und zurückgeben
-        return self.output_g(x), self.output_L_diag(x), self.output_L_side_diag(x)
+        return self.output_g(x), self.ReLu(self.output_L_diag(x)), self.output_L_side_diag(x)
