@@ -11,7 +11,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 
-from DeLaN_model_Ole import Intern_NN
+from DeLaN_model_Ole import Deep_Lagrangian_Network
 
 # Checken, ob Cuda verfügbar und festlegen des devices, auf dem trainiert werden soll
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -30,16 +30,18 @@ hyper_param = {
 
 # Testnetzwerk erstellen
 n_dof = 2   # Später aus Trainingsdaten auslesen
-test_net = Intern_NN(n_dof, **hyper_param)
+test_net = Deep_Lagrangian_Network(n_dof, **hyper_param)
 
 # Netzwerk erproben
-test_input = torch.tensor([[1, 3], [2, 4], [3, 2], [5, 2], [3, 3]], dtype=torch.float32)
+test_input = torch.tensor([[1, 3], [2, 1], [3, 2]], dtype=torch.float32)
 print('Test Input: \n', test_input)
 print()
-output = test_net(test_input)
+output = test_net(test_input, test_input, test_input)
 
-print('Test Output g: \n', output[0])
+print('Test Output Diagonalelemente von L: \n', output[0])
 print()
-print('Test Output Hauptdiagonale: \n', output[1])
+print('Test Output Untere Dreiecksmatrix Einträge: \n', output[1])
 print()
-print('Test Output Nebendiagonale: \n', output[2])
+print('Test Output Ableitung Diagonalelemente von L: \n', output[2].shape)
+print()
+print('Test Output Ableitung Untere Dreiecksmatrix Einträge von L: \n', output[3].shape)
