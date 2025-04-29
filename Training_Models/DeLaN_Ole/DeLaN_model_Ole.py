@@ -67,6 +67,7 @@ class Deep_Lagrangian_Network(nn.Module):
 
         # Parameter festsetzen
         self.n_dof = n_dof
+        self.L_diagonal_offset = hyper_param['L_diagonal_offset']
 
     def forward(self, q, qd, qdd):
 
@@ -103,8 +104,14 @@ class Deep_Lagrangian_Network(nn.Module):
         # benötigte Dimensionen von L herausfinden (unterscheiden ob L oder L_dq zusammengesetzt werden soll)
         if len(L_diag.shape) == 2:
             dim = (self.batch_size, self.n_dof, self.n_dof)
+
+            # Einheitsmatrix mit diagonalem Offset auf der Hauptdiagonalen
+            diagonal_offset = torch.eye(self.n_dof) * self.L_diagonal_offset
         elif len(L_diag.shape) == 3:
             dim = (self.batch_size, self.n_dof, self.n_dof, self.n_dof)
+
+            # diagonele Offsetmatrix mit richtigen Dimensionen als Nullmatrix initialisieren
+            diagonal_offset = torch.zeros((self.n_dof, self.n_dof, self.n_dof), dtype=L_diag.dtype)
 
         # Leere Matrix erstellen
         L = torch.zeros(dim, dtype=L_diag.dtype)
@@ -119,6 +126,9 @@ class Deep_Lagrangian_Network(nn.Module):
         for i in range(self.batch_size):
             L[i, idx_main, idx_main] = L_diag[i]   # Hauptdiagonale
             L[i, rows, cols] = L_tril[i]    # Elemente unter der Hauptdiagonalen
+
+            # Diagonalen Offset hinzufügen (Nullmatrix wenn dL/dq)
+            L[i] += diagonal_offset
 
         return L
 

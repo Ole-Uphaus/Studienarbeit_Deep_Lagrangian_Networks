@@ -28,6 +28,7 @@ torch.cuda.manual_seed_all(seed)
 hyper_param = {
     'hidden_width': 64,
     'hidden_depth': 2,
+    'L_diagonal_offset': 0.1,
     'activation_fnc': 'relu',
     'batch_size': 512,
     'learning_rate': 1.e-5,
