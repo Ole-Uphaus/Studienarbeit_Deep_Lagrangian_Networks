@@ -78,19 +78,48 @@ class Deep_Lagrangian_Network(nn.Module):
         q = q.view((-1, self.n_dof))
 
         # Batch Größe bestimmen
-        batch_size = q.shape[0]
+        self.batch_size = q.shape[0]
 
         # Internes Netz mit Eingangswerten (q) auswerten
         output_g, output_L_diag, output_L_tril = self.Intern_NN(q)
 
         # Partielle Ableitungen der Einträge in L bezüglich der Eingänge (q) berechnen
-        output_L_diag_dq = torch.zeros((batch_size, output_L_diag.shape[1], self.n_dof))
-        output_L_tril_dq = torch.zeros((batch_size, output_L_tril.shape[1], self.n_dof))
+        output_L_diag_dq = torch.zeros((self.batch_size, output_L_diag.shape[1], self.n_dof))
+        output_L_tril_dq = torch.zeros((self.batch_size, output_L_tril.shape[1], self.n_dof))
 
-        for i in range(batch_size): # Schleife, damit nicht nach allen Eingängen des Batches abgeleitet wird
+        for i in range(self.batch_size): # Schleife, damit nicht immer nach allen Eingängen des Batches abgeleitet wird
             output_L_diag_dq[i] = jacobian(lambda inp: self.Intern_NN(inp)[1], q[i, :], create_graph=True)    # Ableitung Diagonalelemente nach q
             output_L_tril_dq[i] = jacobian(lambda inp: self.Intern_NN(inp)[2], q[i, :], create_graph=True)    # Ableitung Nebendiaginalelemente (untere Dreiecksmatrix) nach q
 
-        return output_L_diag, output_L_tril, output_L_diag_dq, output_L_tril_dq
+        # L zusammensetzen
+        L = self.construct_L_or_L_dq(output_L_diag, output_L_tril)
+
+        # L_dq zusammensetzen
+        L_dq = self.construct_L_or_L_dq(output_L_diag_dq, output_L_tril_dq)
+
+        return output_L_diag, output_L_tril, output_L_diag_dq, output_L_tril_dq, L, L_dq
+    
+    def construct_L_or_L_dq(self, L_diag, L_tril):
+        # benötigte Dimensionen von L herausfinden (unterscheiden ob L oder L_dq zusammengesetzt werden soll)
+        if len(L_diag.shape) == 2:
+            dim = (self.batch_size, self.n_dof, self.n_dof)
+        elif len(L_diag.shape) == 3:
+            dim = (self.batch_size, self.n_dof, self.n_dof, self.n_dof)
+
+        # Leere Matrix erstellen
+        L = torch.zeros(dim, dtype=L_diag.dtype)
+
+        # Indizees Hauptdiagonale
+        idx_main = range(self.n_dof)
+
+        # Indizees der Elemente unter der Hauptdiagonalen
+        rows, cols = torch.tril_indices(self.n_dof, self.n_dof, offset=-1)
+
+        # L Zusammensetzen
+        for i in range(self.batch_size):
+            L[i, idx_main, idx_main] = L_diag[i]   # Hauptdiagonale
+            L[i, rows, cols] = L_tril[i]    # Elemente unter der Hauptdiagonalen
+
+        return L
 
        

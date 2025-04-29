@@ -18,6 +18,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Benutze Device: {device}")
 print()
 
+# Seed setzen für Reproduzierbarkeit
+seed = 41
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+
 # Parameter festlegen
 hyper_param = {
     'hidden_width': 64,
@@ -42,6 +48,10 @@ print('Test Output Diagonalelemente von L: \n', output[0])
 print()
 print('Test Output Untere Dreiecksmatrix Einträge: \n', output[1])
 print()
-print('Test Output Ableitung Diagonalelemente von L: \n', output[2].shape)
+print('Test Output Ableitung Diagonalelemente von L: \n', output[2])
 print()
-print('Test Output Ableitung Untere Dreiecksmatrix Einträge von L: \n', output[3].shape)
+print('Test Output Ableitung Untere Dreiecksmatrix Einträge von L: \n', output[3])
+print()
+print('Matrix L: \n', output[4])
+print()
+print('Ableitung dL(dq): \n', output[5])
