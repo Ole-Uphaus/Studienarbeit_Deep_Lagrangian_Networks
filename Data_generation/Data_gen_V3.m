@@ -49,31 +49,43 @@ end
 
 % Diese funktion wertet bei gegebenen Trajektorien (q, q_p, q_pp) die
 % Inverse Dynamik des Robotermodells aus (Ursprüngliches Modell)
-function out = inv_dyn_2_FHG_Robot_1(traj_data, m_kg, mL_kg, J_kgm2, l_m)
+function out = inv_dyn_2_FHG_Robot_1(traj_data)
+
+    % Systemparameter
+    m_kg = 5;   % Masse des Arms
+    mL_kg = 2;  % Masse der Last
+    J_kgm2 = 0.4;  % gesamte Rotationsträgheit
+    l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
+
     % Output definieren
     out = struct();
 
     % Daten aus Trajektoren extrahieren
-    r = traj_data.r;
-    r_p = traj_data.r_p;
-    r_pp = traj_data.r_pp;
+    r = traj_data.q1;
+    r_p = traj_data.q1_p;
+    r_pp = traj_data.q1_pp;
 
-    phi = traj_data.phi;
-    phi_p = traj_data.phi_p;
-    phi_pp = traj_data.phi_pp;
+    phi = traj_data.q2;
+    phi_p = traj_data.q2_p;
+    phi_pp = traj_data.q2_pp;
 
     % Massenmatrix
     out.M_11 = m_kg + mL_kg + r*0;    % Oberer linker Eintrag der Massenmatrix (r*0 damit Vektor herauskommt)
+    out.M_12 = r*0; % Oberer Rechter Eintrag der Massenmatrix (r*0 damit Vektor herauskommt)
     out.M_22 = J_kgm2 + m_kg*(r - l_m).^2 + mL_kg*r.^2;    % Unterer rechter Eintrag der Massenmatrix
 
     % Corioliskräfte
     out.C_1 = -(mL_kg*r + m_kg*(r - l_m)).*phi_p.^2; % Erster Vektoreintrag
     out.C_2 = 2*(m_kg*(r - l_m) + mL_kg*r).*r_p.*phi_p; % Zweiter Vektoreintrag
 
+    % Gewichtskräfte
+    out.g_1 = r*0;  % Erster Vektoreintrag
+    out.g_2 = r*0;  % Zweiter Vektoreintrag
+
     % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
     % eingesetzt)
-    out.F = out.M_11.*r_pp + out.C_1;
-    out.tau = out.M_22.*phi_pp + out.C_2;
+    out.tau_1 = out.M_11.*r_pp + out.C_1;   % Eigentlich F
+    out.tau_2 = out.M_22.*phi_pp + out.C_2; % Eigentlich tau
 
 end
 
@@ -90,12 +102,6 @@ waypointTimes = [0 move_time];
 % Anzahl der voneinander unabhängigen Bewegungen
 number_runs = 10;
 
-% Systemparameter
-m_kg = 5;   % Masse des Arms
-mL_kg = 2;  % Masse der Last
-J_kgm2 = 0.4;  % gesamte Rotationsträgheit
-l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
-
 % Seed für reproduzierbare Ergebnisse
 rng(42)
 
@@ -105,12 +111,12 @@ savedata = false;
 %% Wegpunkte für Trajektorie festlegen
 
 % Startpunkte
-r_0 = random_init(number_runs, 0, 0.5, false); % Bsp. Intervall [0, 0.5]
-phi_0 = random_init(number_runs, 0, pi, false);  % Bsp. Intervall [0, pi]
+q1_0 = random_init(number_runs, 0, 0.5, false); % Bsp. Intervall [0, 0.5]
+q2_0 = random_init(number_runs, 0, pi, false);  % Bsp. Intervall [0, pi]
 
 % Differenzen für Endpunkte
-delta_r = random_init(number_runs, 0.2, 0.5, true); % Bsp. Intervall [0.2, 0.5]
-delta_phi = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall [1/4*pi, 3/4*pi]
+delta_q1 = random_init(number_runs, 0.2, 0.5, true); % Bsp. Intervall [0.2, 0.5]
+delta_q2 = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall [1/4*pi, 3/4*pi]
 
 %% Trajektorien generieren
 
@@ -120,21 +126,21 @@ traj_data(number_runs) = struct();
 for i = 1:number_runs
 
     % Wegpunkte
-    waypoints_r = [r_0(i), (r_0(i) + delta_r(i))];
-    waypoints_phi = [phi_0(i), (phi_0(i) + delta_phi(i))];
+    waypoints_q1 = [q1_0(i), (q1_0(i) + delta_q1(i))];
+    waypoints_q2 = [q2_0(i), (q2_0(i) + delta_q2(i))];
 
     % Berechnung der Trajektorien
-    [r, r_p, r_pp] = quinticpolytraj(waypoints_r, waypointTimes, t_vec);
-    [phi, phi_p, phi_pp] = quinticpolytraj(waypoints_phi, waypointTimes, t_vec);
+    [q1, q1_p, q1_pp] = quinticpolytraj(waypoints_q1, waypointTimes, t_vec);
+    [q2, q2_p, q2_pp] = quinticpolytraj(waypoints_q2, waypointTimes, t_vec);
 
     % Trajektorien speichern
-    traj_data(i).r = r';
-    traj_data(i).r_p = r_p';
-    traj_data(i).r_pp = r_pp';
+    traj_data(i).q1 = q1';
+    traj_data(i).q1_p = q1_p';
+    traj_data(i).q1_pp = q1_pp';
 
-    traj_data(i).phi = phi';
-    traj_data(i).phi_p = phi_p';
-    traj_data(i).phi_pp = phi_pp';
+    traj_data(i).q2 = q2';
+    traj_data(i).q2_p = q2_p';
+    traj_data(i).q2_pp = q2_pp';
 
 end
 
@@ -142,19 +148,24 @@ end
 
 for i = 1:number_runs
 
-    out = inv_dyn_2_FHG_Robot_1(traj_data(i), m_kg, mL_kg, J_kgm2, l_m);
+    out = inv_dyn_2_FHG_Robot_1(traj_data(i));
 
     % Massenmatrix
     traj_data(i).M_11 = out.M_11;
+    traj_data(i).M_12 = out.M_12;
     traj_data(i).M_22 = out.M_22;
 
     % Corioliskräfte
     traj_data(i).C_1 = out.C_1;
     traj_data(i).C_2 = out.C_2;
 
+    % Gewichtskräfte
+    traj_data(i).g_1 = out.g_1;
+    traj_data(i).g_2 = out.g_2;
+
     % Eingeprägte Kräfte/Momente 
-    traj_data(i).F = out.F;
-    traj_data(i).tau = out.tau;
+    traj_data(i).tau_1 = out.tau_1;
+    traj_data(i).tau_2 = out.tau_2;
 
 end
 
@@ -164,39 +175,39 @@ end
 number_testdata = floor((number_runs)/5);
 test_idx = randperm((number_runs), number_testdata);   % Zufällige Indizees für Testdaten
 
-features_test = [traj_data(test_idx(1)).r, traj_data(test_idx(1)).phi, traj_data(test_idx(1)).r_p, traj_data(test_idx(1)).phi_p, traj_data(test_idx(1)).F, traj_data(test_idx(1)).tau];
-labels_test = [traj_data(test_idx(1)).r_pp, traj_data(test_idx(1)).phi_pp];
-Mass_Cor_test = [traj_data(test_idx(1)).M_11, traj_data(test_idx(1)).M_22, traj_data(test_idx(1)).C_1, traj_data(test_idx(1)).C_2];
+features_test = [traj_data(test_idx(1)).q1, traj_data(test_idx(1)).q2, traj_data(test_idx(1)).q1_p, traj_data(test_idx(1)).q2_p, traj_data(test_idx(1)).tau_1, traj_data(test_idx(1)).tau_2];
+labels_test = [traj_data(test_idx(1)).q1_pp, traj_data(test_idx(1)).q2_pp];
+Mass_Cor_test = [traj_data(test_idx(1)).M_11, traj_data(test_idx(1)).M_12, traj_data(test_idx(1)).M_22, traj_data(test_idx(1)).C_1, traj_data(test_idx(1)).C_2, traj_data(test_idx(1)).g_1, traj_data(test_idx(1)).g_2];
 
 for i = test_idx(2:end)
-    % Features [r, phi, r_p, phi_p, F, tau]
+    % Features [q1, q2, q1_p, q2_p, tau_1, tau_2]
     features_test = [features_test;
-        traj_data(i).r, traj_data(i).phi, traj_data(i).r_p, traj_data(i).phi_p, traj_data(i).F, traj_data(i).tau];
-    % Labels [r_pp, phi_pp]
+        traj_data(i).q1, traj_data(i).q2, traj_data(i).q1_p, traj_data(i).q2_p, traj_data(i).tau_1, traj_data(i).tau_2];
+    % Labels [q1_pp, q2_pp]
     labels_test = [labels_test;
-        traj_data(i).r_pp, traj_data(i).phi_pp];
-    % Mass and Coriolis Terms [M_11, M_22, C_1, C_2]
+        traj_data(i).q1_pp, traj_data(i).q2_pp];
+    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2]
     Mass_Cor_test = [Mass_Cor_test;
-        traj_data(i).M_11, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2];
+        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2, traj_data(i).g_1, traj_data(i).g_2];
 end
 
 % Trainingsdaten auswählen und in Features und Labels aufteilen (80%)
 training_idx = setdiff((1:number_runs), test_idx);
 
-features_training = [traj_data(training_idx(1)).r, traj_data(training_idx(1)).phi, traj_data(training_idx(1)).r_p, traj_data(training_idx(1)).phi_p, traj_data(training_idx(1)).F, traj_data(training_idx(1)).tau];
-labels_training = [traj_data(training_idx(1)).r_pp, traj_data(training_idx(1)).phi_pp];
-Mass_Cor_training = [traj_data(training_idx(1)).M_11, traj_data(training_idx(1)).M_22, traj_data(training_idx(1)).C_1, traj_data(training_idx(1)).C_2];
+features_training = [traj_data(training_idx(1)).q1, traj_data(training_idx(1)).q2, traj_data(training_idx(1)).q1_p, traj_data(training_idx(1)).q2_p, traj_data(training_idx(1)).tau_1, traj_data(training_idx(1)).tau_2];
+labels_training = [traj_data(training_idx(1)).q1_pp, traj_data(training_idx(1)).q2_pp];
+Mass_Cor_training = [traj_data(training_idx(1)).M_11, traj_data(training_idx(1)).M_12, traj_data(training_idx(1)).M_22, traj_data(training_idx(1)).C_1, traj_data(training_idx(1)).C_2, traj_data(training_idx(1)).g_1, traj_data(training_idx(1)).g_2];
 
 for i = training_idx(2:end)
-    % Features [r, phi, r_p, phi_p, F, tau]
+    % Features [q1, q2, q1_p, q2_p, tau_1, tau_2]
     features_training = [features_training;
-        traj_data(i).r, traj_data(i).phi, traj_data(i).r_p, traj_data(i).phi_p, traj_data(i).F, traj_data(i).tau];
-    % Labels [r_pp, phi_pp]
+        traj_data(i).q1, traj_data(i).q2, traj_data(i).q1_p, traj_data(i).q2_p, traj_data(i).tau_1, traj_data(i).tau_2];
+    % Labels [q1_pp, q2_pp]
     labels_training = [labels_training;
-        traj_data(i).r_pp, traj_data(i).phi_pp];
-    % Mass and Coriolis Terms [M_11, M_22, C_1, C_2]
+        traj_data(i).q1_pp, traj_data(i).q2_pp];
+    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2]
     Mass_Cor_training = [Mass_Cor_training;
-        traj_data(i).M_11, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2];
+        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2,traj_data(i).g_1, traj_data(i).g_2];
 end
 
 if savedata == true
@@ -220,96 +231,128 @@ end
 % Zeitvektor über alle Trainingstrajektorien
 t_vec_ges = linspace(0, (number_runs - number_testdata) * move_time, (number_runs - number_testdata) * smples_per_run)';
 
-% Plot r, phi
+% Plot q1, q2
 figure('WindowState','maximized');
 
 subplot(2,3,1);
 plot(t_vec_ges, features_training(:, 1), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('r [m]');
+ylabel('q1');
 grid on;
-title('Position r(t)');
+title('q1(t)');
 
 subplot(2,3,4);
 plot(t_vec_ges, features_training(:, 2), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('phi [rad]');
+ylabel('q2');
 grid on;
-title('Winkel phi(t)');
+title('q2(t)');
 
-% Plot r_p, phi_p
+% Plot q1_p, q2_p
 subplot(2,3,2);
 plot(t_vec_ges, features_training(:, 3), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('rp [m/s]');
+ylabel('q1_p');
 grid on;
-title('Geschwindigkeit rp(t)');
+title('q1p(t)');
 
 subplot(2,3,5);
 plot(t_vec_ges, features_training(:, 4), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('phip [rad]');
+ylabel('q2_p');
 grid on;
-title('Winkelgeschwindigkeit phip(t)');
+title('q2p(t)');
 
-% Plot r_pp, phi_pp
+% Plot q1_pp, q2_pp
 subplot(2,3,3);
 plot(t_vec_ges, labels_training(:, 1), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('rpp [m/s]');
+ylabel('q1pp');
 grid on;
-title('Beschleunigung rpp(t)');
+title('q1pp(t)');
 
 subplot(2,3,6);
 plot(t_vec_ges, labels_training(:, 2), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('phipp [rad]');
+ylabel('q2pp');
 grid on;
-title('Winkelbeschleunigung phipp(t)');
+title('q2pp(t)');
 
 % Plot F, tau
 figure('WindowState','maximized');
 
-subplot(2,3,1);
+subplot(2,1,1);
 plot(t_vec_ges, features_training(:, 5), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('F [N]');
+ylabel('tau_1');
 grid on;
-title('Kraft F(t)');
+title('tau1(t)');
 
-subplot(2,3,4);
+subplot(2,1,2);
 plot(t_vec_ges, features_training(:, 6), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('T [Nm]');
+ylabel('tau_2');
 grid on;
-title('Drehmoment T(t)');
+title('tau2(t)');
 
-% Plott M_11, M_22
-subplot(2,3,2);
+% Plott M_11, M_12, M_22
+figure('WindowState','maximized');
+
+subplot(2,4,1);
 plot(t_vec_ges, Mass_Cor_training(:, 1), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('M11 [kg]');
+ylabel('M11');
 grid on;
-title('Massenmatrix M11(t)');
+title('M11(t)');
 
-subplot(2,3,5);
+subplot(2,4,5);
 plot(t_vec_ges, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('M22 [kgm2]');
+ylabel('M12');
 grid on;
-title('Massenmatrix M22(t)');
+title('M12(t)');
 
-% Plott C_1, C_2
-subplot(2,3,3);
+subplot(2,4,2);
+plot(t_vec_ges, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('M12');
+grid on;
+title('M12(t)');
+
+subplot(2,4,6);
 plot(t_vec_ges, Mass_Cor_training(:, 3), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('C1 [N]');
+ylabel('M22');
 grid on;
-title('Corioliskraft C1(t)');
+title('M22(t)');
 
-subplot(2,3,6);
+% Plott C_1, C_2
+subplot(2,4,3);
 plot(t_vec_ges, Mass_Cor_training(:, 4), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('C2 [N]');
+ylabel('C1');
 grid on;
-title('Corioliskraft C2(t)');
+title('C1(t)');
+
+subplot(2,4,7);
+plot(t_vec_ges, Mass_Cor_training(:, 5), 'b', 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('C2');
+grid on;
+title('C2(t)');
+
+% Plott g_1, g_2
+subplot(2,4,4);
+plot(t_vec_ges, Mass_Cor_training(:, 6), 'b', 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('g1');
+grid on;
+title('g1(t)');
+
+subplot(2,4,8);
+plot(t_vec_ges, Mass_Cor_training(:, 7), 'b', 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('g2');
+grid on;
+title('g2(t)');
+
