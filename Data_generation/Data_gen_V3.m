@@ -47,6 +47,36 @@ function x_0 = random_init(n, lower_barrier, upper_barrier, random_signum)
     end
 end
 
+% Diese funktion wertet bei gegebenen Trajektorien (q, q_p, q_pp) die
+% Inverse Dynamik des Robotermodells aus (Ursprüngliches Modell)
+function out = inv_dyn_2_FHG_Robot_1(traj_data, m_kg, mL_kg, J_kgm2, l_m)
+    % Output definieren
+    out = struct();
+
+    % Daten aus Trajektoren extrahieren
+    r = traj_data.r;
+    r_p = traj_data.r_p;
+    r_pp = traj_data.r_pp;
+
+    phi = traj_data.phi;
+    phi_p = traj_data.phi_p;
+    phi_pp = traj_data.phi_pp;
+
+    % Massenmatrix
+    out.M_11 = m_kg + mL_kg + r*0;    % Oberer linker Eintrag der Massenmatrix (r*0 damit Vektor herauskommt)
+    out.M_22 = J_kgm2 + m_kg*(r - l_m).^2 + mL_kg*r.^2;    % Unterer rechter Eintrag der Massenmatrix
+
+    % Corioliskräfte
+    out.C_1 = -(mL_kg*r + m_kg*(r - l_m)).*phi_p.^2; % Erster Vektoreintrag
+    out.C_2 = 2*(m_kg*(r - l_m) + mL_kg*r).*r_p.*phi_p; % Zweiter Vektoreintrag
+
+    % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
+    % eingesetzt)
+    out.F = out.M_11.*r_pp + out.C_1;
+    out.tau = out.M_22.*phi_pp + out.C_2;
+
+end
+
 %% Parameterdefinition
 
 % Bewegungszeit und Schrittweite
@@ -58,7 +88,7 @@ t_vec = linspace(0, move_time, smples_per_run);
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 50;
+number_runs = 10;
 
 % Systemparameter
 m_kg = 5;   % Masse des Arms
@@ -66,18 +96,21 @@ mL_kg = 2;  % Masse der Last
 J_kgm2 = 0.4;  % gesamte Rotationsträgheit
 l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 
+% Seed für reproduzierbare Ergebnisse
+rng(42)
+
 % Sollen Simulationsdaten gespeichert werden
-savedata = true;
+savedata = false;
 
 %% Wegpunkte für Trajektorie festlegen
 
 % Startpunkte
-r_0 = random_init(number_runs, -3, 5, false); % Bsp. Intervall [0, 0.5]
-phi_0 = random_init(number_runs, -5, 5, false);  % Bsp. Intervall [0, pi]
+r_0 = random_init(number_runs, 0, 0.5, false); % Bsp. Intervall [0, 0.5]
+phi_0 = random_init(number_runs, 0, pi, false);  % Bsp. Intervall [0, pi]
 
 % Differenzen für Endpunkte
-delta_r = random_init(number_runs, 1.8, 3, true); % Bsp. Intervall [0.2, 0.5]
-delta_phi = random_init(number_runs, 4, 5, true); % Bsp. Intervall [1/4*pi, 3/4*pi]
+delta_r = random_init(number_runs, 0.2, 0.5, true); % Bsp. Intervall [0.2, 0.5]
+delta_phi = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall [1/4*pi, 3/4*pi]
 
 %% Trajektorien generieren
 
@@ -109,27 +142,19 @@ end
 
 for i = 1:number_runs
 
-    % Daten aus Trajektoren extrahieren
-    r = traj_data(i).r;
-    r_p = traj_data(i).r_p;
-    r_pp = traj_data(i).r_pp;
-
-    phi = traj_data(i).phi;
-    phi_p = traj_data(i).phi_p;
-    phi_pp = traj_data(i).phi_pp;
+    out = inv_dyn_2_FHG_Robot_1(traj_data(i), m_kg, mL_kg, J_kgm2, l_m);
 
     % Massenmatrix
-    traj_data(i).M_11 = m_kg + mL_kg + r*0;    % Oberer linker Eintrag der Massenmatrix (r*0 damit Vektor herauskommt)
-    traj_data(i).M_22 = J_kgm2 + m_kg*(r - l_m).^2 + mL_kg*r.^2;    % Unterer rechter Eintrag der Massenmatrix
+    traj_data(i).M_11 = out.M_11;
+    traj_data(i).M_22 = out.M_22;
 
     % Corioliskräfte
-    traj_data(i).C_1 = -(mL_kg*r + m_kg*(r - l_m)).*phi_p.^2; % Erster Vektoreintrag
-    traj_data(i).C_2 = 2*(m_kg*(r - l_m) + mL_kg*r).*r_p.*phi_p; % Zweiter Vektoreintrag
+    traj_data(i).C_1 = out.C_1;
+    traj_data(i).C_2 = out.C_2;
 
-    % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
-    % eingesetzt)
-    traj_data(i).F = traj_data(i).M_11.*r_pp + traj_data(i).C_1;
-    traj_data(i).tau = traj_data(i).M_22.*phi_pp + traj_data(i).C_2;
+    % Eingeprägte Kräfte/Momente 
+    traj_data(i).F = out.F;
+    traj_data(i).tau = out.tau;
 
 end
 
