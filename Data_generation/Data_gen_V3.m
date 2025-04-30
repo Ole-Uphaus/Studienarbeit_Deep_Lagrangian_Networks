@@ -89,6 +89,51 @@ function out = inv_dyn_2_FHG_Robot_1(traj_data)
 
 end
 
+% Diese funktion wertet bei gegebenen Trajektorien (q, q_p, q_pp) die
+% Inverse Dynamik des Robotermodells aus (Neues Modell)
+function out = inv_dyn_2_FHG_Robot_2(traj_data)
+
+    % Systemparameter
+    m1_kg = 5;  % Masse Arm 1
+    m2_kg = 2;  % Masse Arm 2
+    l1_m = 0.5; % Länge Arm 1
+    l2_m = 0.5; % Länge Arm 2
+    J1_kgm2 = 0.4;  % Rotationsträgheit Arm 1
+    J2_kgm2 = 0.4;  % Rotationsträgheit Arm 2
+    g_mps2 = 9.81;  % Gravitationskonstante
+
+    % Output definieren
+    out = struct();
+
+    % Daten aus Trajektoren extrahieren
+    phi_1 = traj_data.q1;
+    phi_1_p = traj_data.q1_p;
+    phi_1_pp = traj_data.q1_pp;
+
+    phi_2 = traj_data.q2;
+    phi_2_p = traj_data.q2_p;
+    phi_2_pp = traj_data.q2_pp;
+
+    % Massenmatrix
+    out.M_11 = J1_kgm2 + (l1_m.^2.*m1_kg)./4 + l1_m.^2.*m2_kg + phi_1*0;   % Oberer linker Eintrag der Massenmatrix
+    out.M_12 = (l1_m.*l2_m.*m2_kg.*cos(phi_1 - phi_2))./2;      % Oberer Rechter Eintrag der Massenmatrix
+    out.M_22 = (m2_kg.*l2_m.^2)./4 + J2_kgm2 + phi_1*0;    % Unterer rechter Eintrag der Massenmatrix
+
+    % Corioliskräfte
+    out.C_1 = (l1_m.*l2_m.*m2_kg.*phi_2_p.^2.*sin(phi_1 - phi_2))./2;     % Erster Vektoreintrag
+    out.C_2 = -(l1_m.*l2_m.*m2_kg.*phi_1_p.^2.*sin(phi_1 - phi_2))./2;    % Zweiter Vektoreintrag
+
+    % Gewichtskräfte
+    out.g_1 = (g_mps2.*l1_m.*sin(phi_1).*(m1_kg + 2*m2_kg))./2;  % Erster Vektoreintrag
+    out.g_2 = (g_mps2.*l2_m.*m2_kg.*sin(phi_2))/2;  % Zweiter Vektoreintrag
+
+    % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
+    % eingesetzt)
+    out.tau_1 = out.M_11.*phi_1_pp + out.M_12.*phi_2_pp + out.C_1 + out.g_1;    % tau_1
+    out.tau_2 = out.M_22.*phi_2_pp + out.M_12.*phi_1_pp + out.C_2 + out.g_2;    % tau_2
+
+end
+
 %% Parameterdefinition
 
 % Bewegungszeit und Schrittweite
@@ -148,7 +193,7 @@ end
 
 for i = 1:number_runs
 
-    out = inv_dyn_2_FHG_Robot_1(traj_data(i));
+    out = inv_dyn_2_FHG_Robot_2(traj_data(i));
 
     % Massenmatrix
     traj_data(i).M_11 = out.M_11;
