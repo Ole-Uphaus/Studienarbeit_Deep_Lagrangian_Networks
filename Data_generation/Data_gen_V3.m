@@ -147,11 +147,15 @@ waypointTimes = [0 move_time];
 % Anzahl der voneinander unabhängigen Bewegungen
 number_runs = 10;
 
+% Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
+% Drehgelenken)
+Rob_Model = 2;
+
 % Seed für reproduzierbare Ergebnisse
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = false;
+savedata = true;
 
 %% Wegpunkte für Trajektorie festlegen
 
@@ -193,7 +197,12 @@ end
 
 for i = 1:number_runs
 
-    out = inv_dyn_2_FHG_Robot_2(traj_data(i));
+    % Ausgewähltes Modell nutzen
+    if Rob_Model == 1
+        out = inv_dyn_2_FHG_Robot_1(traj_data(i));
+    elseif Rob_Model == 2
+        out = inv_dyn_2_FHG_Robot_2(traj_data(i));
+    end
 
     % Massenmatrix
     traj_data(i).M_11 = out.M_11;
@@ -266,7 +275,7 @@ if savedata == true
     % Datei speichern
     num_samples = num2str(length(features_test) + length(features_training));
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
-    dateiName = 'SimData_V3_' + time_stamp + '_Samples_' + num_samples + '.mat';
+    dateiName = 'SimData_V3_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';
     full_path = fullfile(target_folder, dateiName);
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
