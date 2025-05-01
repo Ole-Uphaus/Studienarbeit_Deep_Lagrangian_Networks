@@ -94,12 +94,12 @@ end
 function out = inv_dyn_2_FHG_Robot_2(traj_data)
 
     % Systemparameter
-    m1_kg = 5;  % Masse Arm 1
-    m2_kg = 2;  % Masse Arm 2
+    m1_kg = 1;  % Masse Arm 1
+    m2_kg = 1;  % Masse Arm 2
     l1_m = 0.5; % Länge Arm 1
     l2_m = 0.5; % Länge Arm 2
-    J1_kgm2 = 0.4;  % Rotationsträgheit Arm 1
-    J2_kgm2 = 0.4;  % Rotationsträgheit Arm 2
+    J1_kgm2 = 1;  % Rotationsträgheit Arm 1
+    J2_kgm2 = 1;  % Rotationsträgheit Arm 2
     g_mps2 = 9.81;  % Gravitationskonstante
 
     % Output definieren
@@ -138,7 +138,7 @@ end
 
 % Bewegungszeit und Schrittweite
 smples_per_run = 100;
-move_time = 5;
+move_time = 1;
 t_vec = linspace(0, move_time, smples_per_run);
 
 % Zeitpunkte der Wegpunkte
@@ -155,17 +155,17 @@ Rob_Model = 2;
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = true;
+savedata = false;
 
 %% Wegpunkte für Trajektorie festlegen
 
 % Startpunkte
-q1_0 = random_init(number_runs, -pi/2, pi/2, false); % Bsp. Intervall [0, 0.5]
-q2_0 = random_init(number_runs, -pi/2, pi/2, false);  % Bsp. Intervall [0, pi]
+q1_0 = random_init(number_runs, -pi/4, pi/4, false); % Bsp. Intervall [0, 0.5]
+q2_0 = random_init(number_runs, -pi/4, pi/4, false);  % Bsp. Intervall [0, pi]
 
 % Differenzen für Endpunkte
-delta_q1 = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall [0.2, 0.5]
-delta_q2 = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall [1/4*pi, 3/4*pi]
+delta_q1 = random_init(number_runs, 1/5*pi, 1/4*pi, true); % Bsp. Intervall [0.2, 0.5]
+delta_q2 = random_init(number_runs, 1/5*pi, 1/4*pi, true); % Bsp. Intervall [1/4*pi, 3/4*pi]
 
 %% Trajektorien generieren
 

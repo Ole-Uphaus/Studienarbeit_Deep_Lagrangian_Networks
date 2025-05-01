@@ -129,9 +129,9 @@ hyper = {'n_width': 32,
         'gain_hidden': np.sqrt(2.),
         'gain_output': 0.1,
         'n_minibatch': 512,
-        'learning_rate': 5.e-04,
-        'weight_decay': 1.e-5,
-        'max_epoch': 2000,
+        'learning_rate': 9.e-04,
+        'weight_decay': 3.e-5,
+        'max_epoch': 3000,
         'save_model': False}
 
 # Checken, ob Cuda verfügbar
@@ -140,8 +140,8 @@ print(f"Benutze Gerät: {device}")
 print()
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_2_2025_05_01_08_46_59_Samples_3000.mat')  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_2_2025_05_01_08_46_59_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_56_40_Samples_5000.mat')  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 input_size = features_training.shape[1]
 
