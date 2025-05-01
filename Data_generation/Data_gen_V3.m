@@ -160,11 +160,11 @@ savedata = true;
 %% Wegpunkte für Trajektorie festlegen
 
 % Startpunkte
-q1_0 = random_init(number_runs, 0, 0.5, false); % Bsp. Intervall [0, 0.5]
-q2_0 = random_init(number_runs, 0, pi, false);  % Bsp. Intervall [0, pi]
+q1_0 = random_init(number_runs, -pi/2, pi/2, false); % Bsp. Intervall [0, 0.5]
+q2_0 = random_init(number_runs, -pi/2, pi/2, false);  % Bsp. Intervall [0, pi]
 
 % Differenzen für Endpunkte
-delta_q1 = random_init(number_runs, 0.2, 0.5, true); % Bsp. Intervall [0.2, 0.5]
+delta_q1 = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall [0.2, 0.5]
 delta_q2 = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall [1/4*pi, 3/4*pi]
 
 %% Trajektorien generieren
