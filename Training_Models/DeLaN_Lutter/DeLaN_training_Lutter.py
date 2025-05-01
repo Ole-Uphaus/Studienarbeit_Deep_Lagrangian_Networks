@@ -119,8 +119,8 @@ torch.cuda.manual_seed_all(seed)
 
 # Parameter festlegen
 n_dof = 2
-hyper = {'n_width': 64,
-        'n_depth': 2,
+hyper = {'n_width': 32,
+        'n_depth': 3,
         'diagonal_epsilon': 0.01,
         'activation': 'SoftPlus',
         'b_init': 1.e-4,
@@ -140,8 +140,8 @@ print(f"Benutze Gerät: {device}")
 print()
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_2025_04_18_11_25_10_Samples_3000.mat')  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_2025_04_18_11_25_10_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_2_2025_05_01_08_46_59_Samples_3000.mat')  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_2_2025_05_01_08_46_59_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 input_size = features_training.shape[1]
 
@@ -262,16 +262,16 @@ with torch.no_grad():
 
     # Loss Massenmatrix
     loss_H11 = np.mean((H[:, 0, 0] - Mass_Cor_test[:, 0])**2)
-    loss_H12 = np.mean((H[:, 0, 1])**2)
-    loss_H22 = np.mean((H[:, 1, 1] - Mass_Cor_test[:, 1])**2)
+    loss_H12 = np.mean((H[:, 0, 1] - Mass_Cor_test[:, 1])**2)
+    loss_H22 = np.mean((H[:, 1, 1] - Mass_Cor_test[:, 2])**2)
 
     # Loss Coriolisterme
-    loss_C1 = np.mean((c[:, 0] - Mass_Cor_test[:, 2])**2)
-    loss_C2 = np.mean((c[:, 1] - Mass_Cor_test[:, 3])**2)
+    loss_C1 = np.mean((c[:, 0] - Mass_Cor_test[:, 3])**2)
+    loss_C2 = np.mean((c[:, 1] - Mass_Cor_test[:, 4])**2)
 
     # Loss Gravitation
-    loss_g1 = np.mean((g[:, 0])**2)
-    loss_g2 = np.mean((g[:, 1])**2)
+    loss_g1 = np.mean((g[:, 0] - Mass_Cor_test[:, 5])**2)
+    loss_g2 = np.mean((g[:, 1] - Mass_Cor_test[:, 6])**2)
 
 # Ausgabe loss
 print(f'Test-Loss: {loss:.3e}')
@@ -304,7 +304,7 @@ plt.legend()
 
 plt.subplot(2, 2, 2)
 plt.plot(samples_vec, H[:, 0, 1], label='H12 DeLaN')
-plt.plot(samples_vec, zeros_vec, label='H12 Analytic')
+plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H12 Analytic')
 plt.title('H12')
 plt.xlabel('Samples')
 plt.ylabel('H')
@@ -313,7 +313,7 @@ plt.legend()
 
 plt.subplot(2, 2, 3)
 plt.plot(samples_vec, H[:, 1, 0], label='H21 DeLaN')
-plt.plot(samples_vec, zeros_vec, label='H21 Analytic')
+plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H21 Analytic')
 plt.title('H21')
 plt.xlabel('Samples')
 plt.ylabel('H')
@@ -322,7 +322,7 @@ plt.legend()
 
 plt.subplot(2, 2, 4)
 plt.plot(samples_vec, H[:, 1, 1], label='H22 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H22 Analytic')
+plt.plot(samples_vec, Mass_Cor_test[:, 2], label='H22 Analytic')
 plt.title('H22')
 plt.xlabel('Samples')
 plt.ylabel('H')
@@ -336,7 +336,7 @@ plt.figure()
 
 plt.subplot(2, 2, 1)
 plt.plot(samples_vec, c[:, 0], label='C1 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 2] ,label='C1 Analytic')
+plt.plot(samples_vec, Mass_Cor_test[:, 3] ,label='C1 Analytic')
 plt.title('C1')
 plt.xlabel('Samples')
 plt.ylabel('C')
@@ -345,7 +345,7 @@ plt.legend()
 
 plt.subplot(2, 2, 3)
 plt.plot(samples_vec, c[:, 1], label='C2 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 3] ,label='C2 Analytic')
+plt.plot(samples_vec, Mass_Cor_test[:, 4] ,label='C2 Analytic')
 plt.title('C2')
 plt.xlabel('Samples')
 plt.ylabel('C')
@@ -355,7 +355,7 @@ plt.legend()
 # g
 plt.subplot(2, 2, 2)
 plt.plot(samples_vec, g[:, 0], label='g1 DeLaN')
-plt.plot(samples_vec, zeros_vec ,label='g1 Analytic')
+plt.plot(samples_vec, Mass_Cor_test[:, 5] ,label='g1 Analytic')
 plt.title('g1')
 plt.xlabel('Samples')
 plt.ylabel('g')
@@ -364,7 +364,7 @@ plt.legend()
 
 plt.subplot(2, 2, 4)
 plt.plot(samples_vec, g[:, 1], label='g2 DeLaN')
-plt.plot(samples_vec, zeros_vec ,label='g2 Analytic')
+plt.plot(samples_vec, Mass_Cor_test[:, 6] ,label='g2 Analytic')
 plt.title('g2')
 plt.xlabel('Samples')
 plt.ylabel('g')
