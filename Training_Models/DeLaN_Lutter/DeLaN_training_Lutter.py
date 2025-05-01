@@ -129,8 +129,8 @@ hyper = {'n_width': 32,
         'gain_hidden': np.sqrt(2.),
         'gain_output': 0.1,
         'n_minibatch': 512,
-        'learning_rate': 9.e-04,
-        'weight_decay': 3.e-5,
+        'learning_rate': 5.e-04,
+        'weight_decay': 1.e-5,
         'max_epoch': 3000,
         'save_model': False}
 
