@@ -76,29 +76,47 @@ class Deep_Lagrangian_Network(nn.Module):
     def lagrangian_dynamics(self, q, qd, qdd):
 
         # Eingänge q reshapen, damit Ausgangsdimension stimmt
-        q = q.view((-1, self.n_dof))
+        q = q.view((-1, self.n_dof))    # q.shape = (batch_size, 1)
+        qd = qd.view((-1, self.n_dof))
+        qdd = qdd.view((-1, self.n_dof))
 
         # Batch Größe bestimmen
         self.batch_size = q.shape[0]
 
         # Internes Netz mit Eingangswerten (q) auswerten
-        output_g, output_L_diag, output_L_tril = self.Intern_NN(q)
+        output_g, output_L_diag, output_L_tril = self.Intern_NN(q)  # output_L_diag.shape = (batch_size, n_dof), output_L_tril.shape = (batch.size, anz_elemente_unter_hauptdiagonalen)
 
         # Partielle Ableitungen der Einträge in L bezüglich der Eingänge (q) berechnen
         output_L_diag_dq = torch.zeros((self.batch_size, output_L_diag.shape[1], self.n_dof))
         output_L_tril_dq = torch.zeros((self.batch_size, output_L_tril.shape[1], self.n_dof))
 
         for i in range(self.batch_size): # Schleife, damit nicht immer nach allen Eingängen des Batches abgeleitet wird
-            output_L_diag_dq[i] = jacobian(lambda inp: self.Intern_NN(inp)[1], q[i, :], create_graph=True)    # Ableitung Diagonalelemente nach q
-            output_L_tril_dq[i] = jacobian(lambda inp: self.Intern_NN(inp)[2], q[i, :], create_graph=True)    # Ableitung Nebendiaginalelemente (untere Dreiecksmatrix) nach q
+            output_L_diag_dq[i] = jacobian(lambda inp: self.Intern_NN(inp)[1], q[i, :], create_graph=True)    # Ableitung Diagonalelemente von L nach q (output_L_diag_dq.shape = (batch_size, n_dof, n_dof))
+            output_L_tril_dq[i] = jacobian(lambda inp: self.Intern_NN(inp)[2], q[i, :], create_graph=True)    # Ableitung Nebendiaginalelemente (untere Dreiecksmatrix) von L nach q (output_L_diag_dq.shape = (batch_size, anz_elemente_unter_hauptdiagonalen, n_dof))
 
         # L zusammensetzen
-        L = self.construct_L_or_L_dq(output_L_diag, output_L_tril)
+        L = self.construct_L_or_L_dq(output_L_diag, output_L_tril)  # (L.shape = (batch_size, n_dof, n_dof))
+        L_transp = L.transpose(1, 2)    # Dimensionen 1 und 2 vertauschen (L_transp.shape = (batch_size, n_dof, n_dof)
 
         # L_dq zusammensetzen
-        L_dq = self.construct_L_or_L_dq(output_L_diag_dq, output_L_tril_dq)
+        L_dq = self.construct_L_or_L_dq(output_L_diag_dq, output_L_tril_dq) # L_dq.shape(batch_size, n_dof, n_dof, n_dof)
+        L_dq_transpose = L_dq.transpose(1, 2)
 
-        return output_L_diag, output_L_tril, output_L_diag_dq, output_L_tril_dq, L, L_dq
+        # Massenmatrix H berechnen (L * LT)
+        H = torch.matmul(L, L_transp)   # H.shape = (batch_size, n_dof, n_dof)
+
+        # L_dt berechnen (L_dq * qd)    
+        L_dt = torch.einsum('bijk,bk->bij', L_dq, qd)    # L_dt.shape = (batch_size, n_dof, n_dof)
+        L_dt_transpose = L_dt.transpose(1, 2)
+
+        # H_dt berechnen (L * L_dtT + L_dt * LT)
+        H_dt = torch.matmul(L, L_dt_transpose) + torch.matmul(L_dt, L_transp)   # H_dt.shape = (batch_size, n_dof, n_dof)
+
+        # H_dq berechnen (L_dq * LT + L * L_dqT)
+        # H_dq = torch.matmul(L_dq, L_transp.unsqueeze(-1))
+
+
+        return output_L_diag, output_L_tril, output_L_diag_dq, output_L_tril_dq, L, L_dq, L_transp, L_dq_transpose, H, L_dt, L_dt_transpose
     
     def construct_L_or_L_dq(self, L_diag, L_tril):
         # benötigte Dimensionen von L herausfinden (unterscheiden ob L oder L_dq zusammengesetzt werden soll)
