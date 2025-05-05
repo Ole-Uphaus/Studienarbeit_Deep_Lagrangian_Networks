@@ -8,6 +8,7 @@ Dieses Skript beinhaltet das pytorch Modell des Deep Lagrangian Networks. Das Mo
 import torch
 import torch.nn as nn
 from torch.autograd.functional import jacobian
+from torch.autograd import grad
 
 class Intern_NN(nn.Module):
     def __init__(self, n_dof, **hyper_param):
@@ -85,16 +86,15 @@ class Deep_Lagrangian_Network(nn.Module):
         # Batch Größe bestimmen
         self.batch_size = q.shape[0]
 
+        # Autograd verfolgung für q aktivieren
+        q.requires_grad_(True)
+
         # Internes Netz mit Eingangswerten (q) auswerten
         output_g, output_L_diag, output_L_tril = self.Intern_NN(q)  # output_L_diag.shape = (batch_size, n_dof), output_L_tril.shape = (batch.size, anz_elemente_unter_hauptdiagonalen)
 
         # Partielle Ableitungen der Einträge in L bezüglich der Eingänge (q) berechnen
-        output_L_diag_dq = torch.zeros((self.batch_size, output_L_diag.shape[1], self.n_dof), device=self.device)
-        output_L_tril_dq = torch.zeros((self.batch_size, output_L_tril.shape[1], self.n_dof), device=self.device)
-
-        for i in range(self.batch_size): # Schleife, damit nicht immer nach allen Eingängen des Batches abgeleitet wird
-            output_L_diag_dq[i] = jacobian(lambda inp: self.Intern_NN(inp)[1], q[i, :], create_graph=True)    # Ableitung Diagonalelemente von L nach q (output_L_diag_dq.shape = (batch_size, n_dof, n_dof))
-            output_L_tril_dq[i] = jacobian(lambda inp: self.Intern_NN(inp)[2], q[i, :], create_graph=True)    # Ableitung Nebendiaginalelemente (untere Dreiecksmatrix) von L nach q (output_L_diag_dq.shape = (batch_size, anz_elemente_unter_hauptdiagonalen, n_dof))
+        output_L_diag_dq = self.compute_Jacobian_batched(output_L_diag, q)
+        output_L_tril_dq = self.compute_Jacobian_batched(output_L_tril, q)
 
         # L zusammensetzen
         L = self.construct_L_or_L_dq(output_L_diag, output_L_tril)  # (L.shape = (batch_size, n_dof, n_dof))
@@ -127,7 +127,23 @@ class Deep_Lagrangian_Network(nn.Module):
         # Inverse Dynamik auswerten
         tau = torch.einsum('bij,bj->bi', H, qdd) + c + output_g
 
-        return tau, H, c, output_g
+        return tau, H, c, output_g, output_L_diag, output_L_diag_dq
+    
+    def compute_Jacobian_batched(self, output_L, input_q):
+        # Dimensionen des Outputs bekommen
+        output_L_dim = output_L.shape[1]
+
+        # Jacobimatrix initialisieren
+        jac = torch.zeros((self.batch_size, output_L_dim, self.n_dof), device=self.device, dtype=output_L.dtype)
+
+        for i in range(output_L_dim):
+            # Gradienten Batchweise für einen Output berechnen (Summierung ist zulässig, da ja nur das eine Element in der SUmme vom jeweiligen Output abhängt und der Rest ja null ist)
+            gradient = grad(output_L[:, i].sum(), input_q, retain_graph=True, create_graph=True, allow_unused=False)[0]
+
+            # Entsprechende Einträge in Jacobimatrix ergänzen
+            jac[:, i, :] = gradient
+
+        return jac
     
     def construct_L_or_L_dq(self, L_diag, L_tril):
         # benötigte Dimensionen von L herausfinden (unterscheiden ob L oder L_dq zusammengesetzt werden soll)

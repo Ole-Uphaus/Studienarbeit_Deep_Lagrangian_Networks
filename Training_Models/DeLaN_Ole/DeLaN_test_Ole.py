@@ -51,4 +51,9 @@ output = test_net(test_q, test_qd, test_qdd)
 
 # Outputs ansehen
 print('Massenmatrix H: \n', output[1])
-
+print()
+print('Corioliskräfte c: \n', output[2])
+# print()
+# print('L_diag: \n', output[4])
+# print()
+# print('L_diag_dq: \n', output[5])
