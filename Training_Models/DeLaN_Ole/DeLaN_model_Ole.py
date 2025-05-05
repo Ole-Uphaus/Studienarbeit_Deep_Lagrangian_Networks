@@ -103,20 +103,29 @@ class Deep_Lagrangian_Network(nn.Module):
         L_dq_transpose = L_dq.transpose(1, 2)
 
         # Massenmatrix H berechnen (L * LT)
-        H = torch.matmul(L, L_transp)   # H.shape = (batch_size, n_dof, n_dof)
+        H = torch.einsum('bij,bjk->bik', L, L_transp)   # H.shape = (batch_size, n_dof, n_dof)
 
         # L_dt berechnen (L_dq * qd)    
-        L_dt = torch.einsum('bijk,bk->bij', L_dq, qd)    # L_dt.shape = (batch_size, n_dof, n_dof)
+        L_dt = torch.einsum('bijc,bc->bij', L_dq, qd)    # L_dt.shape = (batch_size, n_dof, n_dof)
         L_dt_transpose = L_dt.transpose(1, 2)
 
         # H_dt berechnen (L * L_dtT + L_dt * LT)
-        H_dt = torch.matmul(L, L_dt_transpose) + torch.matmul(L_dt, L_transp)   # H_dt.shape = (batch_size, n_dof, n_dof)
+        H_dt = torch.einsum('bij,bjk->bik', L, L_dt_transpose) + torch.einsum('bij,bjk->bik', L_dt, L_transp)   # H_dt.shape = (batch_size, n_dof, n_dof)
 
         # H_dq berechnen (L_dq * LT + L * L_dqT)
-        # H_dq = torch.matmul(L_dq, L_transp.unsqueeze(-1))
+        H_dq = torch.einsum('bijc,bjk->bikc', L_dq, L_transp) + torch.einsum('bij,bjkc->bikc', L, L_dq_transpose)   # H_dq.shape(batch_size, n_dof, n_dof, n_dof)
 
+        # qdT_H_dq_qd berechnen (qdT * H_dq * qd)
+        H_dq_qd = torch.einsum('bijc,bc->bij', H_dq, qd)    # H_dq_qd.shape(batch_size, n_dof, n_dof)
+        qdT_H_dq_qd = torch.einsum('bi,bij->bj', qd, H_dq_qd)   # qdT_H_dq_qd.shape(batch_size, n_dof)
 
-        return output_L_diag, output_L_tril, output_L_diag_dq, output_L_tril_dq, L, L_dq, L_transp, L_dq_transpose, H, L_dt, L_dt_transpose
+        # Coriolisterme berechnen (H_dt * qd - 0.5 * qdT_H_dq_qd)
+        c = torch.einsum('bij,bj->bi', H_dt, qd) - 0.5 * qdT_H_dq_qd    # c.shape(batch_size, n_dof)
+
+        # Inverse Dynamik auswerten
+        tau = torch.einsum('bij,bj->bi', H, qdd) + c + output_g
+
+        return tau, H, c, output_g
     
     def construct_L_or_L_dq(self, L_diag, L_tril):
         # benötigte Dimensionen von L herausfinden (unterscheiden ob L oder L_dq zusammengesetzt werden soll)
