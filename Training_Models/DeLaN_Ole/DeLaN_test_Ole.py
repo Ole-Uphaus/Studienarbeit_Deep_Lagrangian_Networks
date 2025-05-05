@@ -2,7 +2,7 @@
 Autor:      Ole Uphaus
 Datum:     25.04.2025
 Beschreibung:
-Dieses Skript soll das von mir erstellte Neep Lagrangian Network trainieren. Alle benötigten Funktionen und Klassen werden extern eingebunden. Alle Parameter und Hyperparameter des Netzwerk werden in diesem Skript festgelegt.
+Dieses Skript soll das von mir erstellte Deep Lagrangian Network testen. Dabei werden Frei erfundene Inputs durch das Netzwerk geschickt und die entsprechenden Outputs untersucht. Damit lassen sich vor allem die Matrixoperationen und Dimensionen nachvollziehen.
 '''
 
 import torch
@@ -49,39 +49,6 @@ print('Test Input qdd: \n', test_qdd)
 print()
 output = test_net(test_q, test_qd, test_qdd)
 
-# print('Test Output Diagonalelemente von L: \n', output[0])
-# print()
-# print('Test Output Untere Dreiecksmatrix Einträge: \n', output[1])
-# print()
-# print('Test Output Ableitung Diagonalelemente von L: \n', output[2])
-# print()
-# print('Test Output Ableitung Untere Dreiecksmatrix Einträge von L: \n', output[3])
-# print()
-# print('Matrix L: \n', output[4])
-# print()
-# print('Ableitung dL(dq): \n', output[5])
-# print()
-# print('Matrix L_Transp: \n', output[6])
-# print()
-# print('Matrix L_dqT: \n', output[7])
-# print()
-print('Matrixmultiplikation L*LT (H): \n', output[8])
-# print()
-# print('Matrixmultiplikation L_dq*qd (L_dt): \n', output[9])
-# print()
-# print('L_dt transponiert: \n', output[10])
-# print()
-# print('H_dt: \n', output[11])
-# print()
-# print('H_dq: \n', output[12])
-# print()
-# print('H_dq_qd: \n', output[13])
-# print()
-# print('qdT_H_dq_qd: \n', output[14])
-# print()
-# print('g: \n', output[15])
-# print()
-# print('c: \n', output[16])
-print()
-print('tau: \n', output[17])
+# Outputs ansehen
+print('Massenmatrix H: \n', output[1])
 
