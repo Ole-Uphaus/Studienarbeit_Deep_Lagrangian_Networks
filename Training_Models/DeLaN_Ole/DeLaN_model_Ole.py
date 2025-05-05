@@ -127,7 +127,7 @@ class Deep_Lagrangian_Network(nn.Module):
         # Inverse Dynamik auswerten
         tau = torch.einsum('bij,bj->bi', H, qdd) + c + output_g
 
-        return tau, H, c, output_g, output_L_diag, output_L_diag_dq
+        return tau, H, c, output_g
     
     def compute_Jacobian_batched(self, output_L, input_q):
         # Dimensionen des Outputs bekommen
