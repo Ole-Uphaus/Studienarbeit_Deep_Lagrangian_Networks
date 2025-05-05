@@ -74,6 +74,8 @@ class Deep_Lagrangian_Network(nn.Module):
         return self.lagrangian_dynamics(q, qd, qdd)
 
     def lagrangian_dynamics(self, q, qd, qdd):
+        # Device festlegen
+        self.device = q.device
 
         # Eingänge q reshapen, damit Ausgangsdimension stimmt
         q = q.view((-1, self.n_dof))    # q.shape = (batch_size, 1)
@@ -87,8 +89,8 @@ class Deep_Lagrangian_Network(nn.Module):
         output_g, output_L_diag, output_L_tril = self.Intern_NN(q)  # output_L_diag.shape = (batch_size, n_dof), output_L_tril.shape = (batch.size, anz_elemente_unter_hauptdiagonalen)
 
         # Partielle Ableitungen der Einträge in L bezüglich der Eingänge (q) berechnen
-        output_L_diag_dq = torch.zeros((self.batch_size, output_L_diag.shape[1], self.n_dof))
-        output_L_tril_dq = torch.zeros((self.batch_size, output_L_tril.shape[1], self.n_dof))
+        output_L_diag_dq = torch.zeros((self.batch_size, output_L_diag.shape[1], self.n_dof), device=self.device)
+        output_L_tril_dq = torch.zeros((self.batch_size, output_L_tril.shape[1], self.n_dof), device=self.device)
 
         for i in range(self.batch_size): # Schleife, damit nicht immer nach allen Eingängen des Batches abgeleitet wird
             output_L_diag_dq[i] = jacobian(lambda inp: self.Intern_NN(inp)[1], q[i, :], create_graph=True)    # Ableitung Diagonalelemente von L nach q (output_L_diag_dq.shape = (batch_size, n_dof, n_dof))
@@ -133,15 +135,15 @@ class Deep_Lagrangian_Network(nn.Module):
             dim = (self.batch_size, self.n_dof, self.n_dof)
 
             # Einheitsmatrix mit diagonalem Offset auf der Hauptdiagonalen
-            diagonal_offset = torch.eye(self.n_dof) * self.L_diagonal_offset
+            diagonal_offset = torch.eye(self.n_dof, device=self.device) * self.L_diagonal_offset
         elif len(L_diag.shape) == 3:
             dim = (self.batch_size, self.n_dof, self.n_dof, self.n_dof)
 
             # diagonele Offsetmatrix mit richtigen Dimensionen als Nullmatrix initialisieren
-            diagonal_offset = torch.zeros((self.n_dof, self.n_dof, self.n_dof), dtype=L_diag.dtype)
+            diagonal_offset = torch.zeros((self.n_dof, self.n_dof, self.n_dof), dtype=L_diag.dtype, device=self.device)
 
         # Leere Matrix erstellen
-        L = torch.zeros(dim, dtype=L_diag.dtype)
+        L = torch.zeros(dim, dtype=L_diag.dtype, device=self.device)
 
         # Indizees Hauptdiagonale
         idx_main = range(self.n_dof)
