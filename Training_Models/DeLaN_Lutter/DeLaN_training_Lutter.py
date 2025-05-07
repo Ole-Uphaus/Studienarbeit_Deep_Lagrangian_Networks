@@ -16,6 +16,7 @@ from datetime import datetime
 import numpy as np
 import dill as pickle
 from pathlib import Path
+import time
 
 from DeLaN_model_Lutter import DeepLagrangianNetwork
 from replay_memory_Lutter import PyTorchReplayMemory
@@ -140,7 +141,7 @@ print(f"Benutze Gerät: {device}")
 print()
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_56_40_Samples_5000.mat')  # Mein Modell Trainingsdaten
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Trainingsdaten
 _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 input_size = features_training.shape[1]
@@ -190,6 +191,7 @@ mem.add_samples([train1_qp, train1_qv, train1_qa, train1_tau])
 num_epochs = hyper['max_epoch']  # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
+start_time = time.time()
 
 for epoch in range(num_epochs):
     # Modell in den Trainingsmodeus versetzen und loss Summe initialisieren
@@ -226,7 +228,7 @@ for epoch in range(num_epochs):
     training_loss_mean = loss_sum/n_batches
    
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
-        print(f'Epoch [{epoch + 1}/{num_epochs}], Training-Loss: {training_loss_mean:.3e}')
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Training-Loss: {training_loss_mean:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
 
 # Modell evaluieren
 

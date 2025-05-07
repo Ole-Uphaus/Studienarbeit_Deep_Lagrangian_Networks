@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
+import time
 
 from DeLaN_model_Ole import Deep_Lagrangian_Network
 from DeLaN_functions_Ole import *
@@ -27,14 +28,14 @@ torch.cuda.manual_seed_all(seed)
 
 # Parameter festlegen
 hyper_param = {
-    'hidden_width': 64,
-    'hidden_depth': 2,
+    'hidden_width': 32,
+    'hidden_depth': 3,
     'L_diagonal_offset': 0.001,
     'activation_fnc': 'softplus',
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-5,
-    'n_epoch': 2000,
+    'n_epoch': 200,
     'save_model': False}
 
 # Trainings- und Testdaten laden 
@@ -63,8 +64,10 @@ optimizer = torch.optim.Adam(DeLaN_network.parameters(),
                                 lr=hyper_param["learning_rate"],
                                 weight_decay=hyper_param["weight_decay"])
 
+# Optimierung starten und Zeitmessung beginnen
 print('Starte Optimierung...')
 print()
+start_time = time.time()
 
 # Training des Netzwerks
 for epoch in range(hyper_param['n_epoch']):
@@ -101,6 +104,6 @@ for epoch in range(hyper_param['n_epoch']):
     # Mittleren Loss berechnen und ausgeben
     loss_mean_batch = loss_sum/len(dataloader_training)
 
-    if epoch == 0 or np.mod(epoch + 1, 10) == 0:
-        print(f'Epoch [{epoch + 1}/{hyper_param['n_epoch']}], Training-Loss: {loss_mean_batch:.3e}')
+    if epoch == 0 or np.mod(epoch + 1, 100) == 0:
+        print(f'Epoch [{epoch + 1}/{hyper_param['n_epoch']}], Training-Loss: {loss_mean_batch:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
 
