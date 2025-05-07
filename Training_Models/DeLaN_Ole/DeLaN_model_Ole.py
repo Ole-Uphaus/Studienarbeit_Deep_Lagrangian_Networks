@@ -179,15 +179,14 @@ class Deep_Lagrangian_Network(nn.Module):
         idx_main = range(self.n_dof)
 
         # Indizees der Elemente unter der Hauptdiagonalen
-        rows, cols = torch.tril_indices(self.n_dof, self.n_dof, offset=-1)
+        rows, cols = torch.tril_indices(self.n_dof, self.n_dof, offset=-1, device=self.device)
 
         # L Zusammensetzen
-        for i in range(self.batch_size):
-            L[i, idx_main, idx_main] = L_diag[i]   # Hauptdiagonale
-            L[i, rows, cols] = L_tril[i]    # Elemente unter der Hauptdiagonalen
+        L[:, idx_main, idx_main] = L_diag   # Hauptdiagonale
+        L[:, rows, cols] = L_tril    # Elemente unter der Hauptdiagonalen
 
-            # Diagonalen Offset hinzufügen (Nullmatrix wenn dL/dq)
-            L[i] += diagonal_offset
+        # Diagonalen Offset hinzufügen (Nullmatrix wenn dL/dq)
+        L += diagonal_offset
 
         return L
 
