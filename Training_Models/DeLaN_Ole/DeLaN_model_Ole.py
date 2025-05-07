@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 from torch.autograd.functional import jacobian
 from torch.autograd import grad
+import torch.nn.init as init
 
 class Intern_NN(nn.Module):
     def __init__(self, n_dof, **hyper_param):
@@ -38,6 +39,9 @@ class Intern_NN(nn.Module):
         n_tril = int(n_dof*(n_dof - 1)/2)
         self.output_L_tril = nn.Linear(hyper_param['hidden_width'], n_tril)
 
+        # Netzgewichte Initialisieren (Xavier Normal)
+        self.init_weights()
+
     def get_activation_fnc(self, name):
         # Alles klein geschrieben
         name = name.lower()
@@ -45,10 +49,20 @@ class Intern_NN(nn.Module):
         # Alle erlaubten Aktivierungsfunktionen druchgehen (hier noch weitere hinzufügen)
         if name == 'relu':
             activation_fnc = nn.ReLU()
+        elif name == 'softplus':
+            activation_fnc = nn.Softplus()
         else:
             activation_fnc = nn.ReLU()
 
         return activation_fnc
+    
+    def init_weights(self):
+        # Initialisiere alle linearen Layer mit Xavier Normal
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    init.zeros_(m.bias)  # Bias auf 0 setzen
     
     def forward(self, q):
         # Netzwerkeingang q iterativ durch alle Layer geben

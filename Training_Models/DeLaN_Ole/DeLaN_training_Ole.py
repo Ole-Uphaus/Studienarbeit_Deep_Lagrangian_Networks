@@ -15,12 +15,12 @@ from DeLaN_model_Ole import Deep_Lagrangian_Network
 from DeLaN_functions_Ole import *
 
 # Checken, ob Cuda verfügbar und festlegen des devices, auf dem trainiert werden soll
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 print(f"Benutze Device: {device}")
 print()
 
 # Seed setzen für Reproduzierbarkeit
-seed = 41
+seed = 1
 np.random.seed(seed)
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
@@ -29,10 +29,10 @@ torch.cuda.manual_seed_all(seed)
 hyper_param = {
     'hidden_width': 64,
     'hidden_depth': 2,
-    'L_diagonal_offset': 0.1,
-    'activation_fnc': 'relu',
+    'L_diagonal_offset': 0.001,
+    'activation_fnc': 'softplus',
     'batch_size': 512,
-    'learning_rate': 1.e-5,
+    'learning_rate': 5.e-4,
     'weight_decay': 1.e-5,
     'n_epoch': 2000,
     'save_model': False}
@@ -92,6 +92,7 @@ for epoch in range(hyper_param['n_epoch']):
         # Loss berechnen und Optimierungsschritt durchführen
         loss = mean_err_inv_dyn
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(DeLaN_network.parameters(), max_norm=0.5)
         optimizer.step()
 
         # Loss des aktuellen Batches aufsummieren
