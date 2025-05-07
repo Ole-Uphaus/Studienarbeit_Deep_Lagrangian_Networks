@@ -15,7 +15,7 @@ from DeLaN_model_Ole import Deep_Lagrangian_Network
 from DeLaN_functions_Ole import *
 
 # Checken, ob Cuda verfügbar und festlegen des devices, auf dem trainiert werden soll
-device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Benutze Device: {device}")
 print()
 
@@ -42,8 +42,8 @@ features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_
 _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
-features_training_tensor = torch.tensor(features_training, dtype=torch.float32).to(device)
-labels_training_tensor = torch.tensor(labels_training, dtype=torch.float32).to(device)
+features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
+labels_training_tensor = torch.tensor(labels_training, dtype=torch.float32)
 
 # Dataset und Dataloader für das Training erstellen
 dataset_training = TensorDataset(features_training_tensor, labels_training_tensor)
@@ -77,10 +77,10 @@ for epoch in range(hyper_param['n_epoch']):
         optimizer.zero_grad()
 
         # Trainingsdaten zuordnen
-        q = batch_features[:, (0, 1)]
-        qd = batch_features[:, (2, 3)]
-        qdd = batch_labels
-        tau = batch_features[:, (4, 5)]
+        q = batch_features[:, (0, 1)].to(device)
+        qd = batch_features[:, (2, 3)].to(device)
+        qdd = batch_labels.to(device)
+        tau = batch_features[:, (4, 5)].to(device)
 
         # Forward pass
         tau_hat, _, _, _ = DeLaN_network(q, qd, qdd)
