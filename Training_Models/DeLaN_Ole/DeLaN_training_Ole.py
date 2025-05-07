@@ -48,7 +48,7 @@ labels_training_tensor = torch.tensor(labels_training, dtype=torch.float32)
 
 # Dataset und Dataloader für das Training erstellen
 dataset_training = TensorDataset(features_training_tensor, labels_training_tensor)
-dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch_size'], shuffle=True)
+dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch_size'], shuffle=True, drop_last=True)
 
 # Ausgabe Datendimensionen
 print('Datenpunkte Training: ', features_training.shape[0])

@@ -7,7 +7,6 @@ Dieses Skript beinhaltet das pytorch Modell des Deep Lagrangian Networks. Das Mo
 
 import torch
 import torch.nn as nn
-from torch.autograd.functional import jacobian
 from torch.autograd import grad
 import torch.nn.init as init
 
