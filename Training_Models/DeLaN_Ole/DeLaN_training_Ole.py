@@ -21,7 +21,7 @@ print(f"Benutze Device: {device}")
 print()
 
 # Seed setzen für Reproduzierbarkeit
-seed = 1
+seed = 42
 np.random.seed(seed)
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
@@ -35,7 +35,7 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-5,
-    'n_epoch': 200,
+    'n_epoch': 1000,
     'save_model': False}
 
 # Trainings- und Testdaten laden 
@@ -62,7 +62,8 @@ DeLaN_network = Deep_Lagrangian_Network(n_dof, **hyper_param).to(device)
 # Optimierer Initialisieren
 optimizer = torch.optim.Adam(DeLaN_network.parameters(),
                                 lr=hyper_param["learning_rate"],
-                                weight_decay=hyper_param["weight_decay"])
+                                weight_decay=hyper_param["weight_decay"],
+                                amsgrad=True)
 
 # Optimierung starten und Zeitmessung beginnen
 print('Starte Optimierung...')
