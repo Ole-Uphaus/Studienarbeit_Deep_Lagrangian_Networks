@@ -36,5 +36,4 @@ def extract_training_data(file_name):
     labels_training_delan = features_training[:, 4:]
     labels_test_delan = features_test[:, 4:]
 
-    print('hahb wd')
     return features_training_delan, labels_training_delan, features_test_delan, labels_test_delan, Mass_Cor_test

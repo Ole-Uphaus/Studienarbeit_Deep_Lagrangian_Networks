@@ -36,7 +36,7 @@ hyper_param = {
     'activation_fnc': 'softplus',
     'bias_init_constant': 1.e-1,
     'batch_size': 512,
-    'learning_rate': 1.e-4,
+    'learning_rate': 5.e-4,
     'weight_decay': 1.e-5,
     'n_epoch': 1000,
     'save_model': False}
@@ -45,12 +45,13 @@ hyper_param = {
 features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Trainingsdaten
 _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
-# # Scaler nutzen
-# scaler = StandardScaler()
-# features_training_scaled = scaler.fit_transform(features_training)
+# Scaler nutzen
+scaler = StandardScaler()
+features_training_scaled = scaler.fit_transform(features_training)
+features_test_scaled = scaler.fit_transform(features_test)
 
 # Torch Tensoren der Trainingsdaten erstellen
-features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
+features_training_tensor = torch.tensor(features_training_scaled, dtype=torch.float32)
 labels_training_tensor = torch.tensor(labels_training, dtype=torch.float32)
 
 # Dataset und Dataloader für das Training erstellen
@@ -58,7 +59,7 @@ dataset_training = TensorDataset(features_training_tensor, labels_training_tenso
 dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch_size'], shuffle=True, drop_last=True)
 
 # Testdaten in torch Tensoren umwandeln
-features_test_tensor = torch.tensor(features_test, dtype=torch.float32)
+features_test_tensor = torch.tensor(features_test_scaled, dtype=torch.float32)
 labels_test_tensor = torch.tensor(labels_test, dtype=torch.float32)
 
 # Ausgabe Datendimensionen
