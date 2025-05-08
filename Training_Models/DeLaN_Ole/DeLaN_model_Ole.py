@@ -20,6 +20,9 @@ class Intern_NN(nn.Module):
         self.activation_fnc = self.get_activation_fnc(hyper_param['activation_fnc'])
         self.ReLu = nn.ReLU()   # Aktivierungsfunktion für Output
 
+        # Dropout festlegen
+        self.dropout = nn.Dropout(hyper_param['dropuot'])
+
         # Liste mit allen Layern
         self.layers = nn.ModuleList()
 
@@ -70,6 +73,7 @@ class Intern_NN(nn.Module):
         # Netzwerkeingang q iterativ durch alle Layer geben
         for layer in self.layers:
             q = self.activation_fnc(layer(q))
+            q = self.dropout(q)
 
         # Jeweils die Netzwerk Outputs einzeln berechnen und zurückgeben
         return self.output_g(q), self.ReLu(self.output_L_diag(q)), self.output_L_tril(q)
