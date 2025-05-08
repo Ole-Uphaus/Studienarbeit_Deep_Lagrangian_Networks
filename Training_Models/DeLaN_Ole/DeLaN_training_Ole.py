@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 
 from DeLaN_model_Ole import Deep_Lagrangian_Network
 from DeLaN_functions_Ole import *
@@ -35,7 +36,7 @@ hyper_param = {
     'activation_fnc': 'softplus',
     'bias_init_constant': 1.e-1,
     'batch_size': 512,
-    'learning_rate': 5.e-4,
+    'learning_rate': 1.e-4,
     'weight_decay': 1.e-5,
     'n_epoch': 1000,
     'save_model': False}
@@ -43,6 +44,10 @@ hyper_param = {
 # Trainings- und Testdaten laden 
 features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Trainingsdaten
 _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+
+# # Scaler nutzen
+# scaler = StandardScaler()
+# features_training_scaled = scaler.fit_transform(features_training)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -89,8 +94,8 @@ for epoch in range(hyper_param['n_epoch']):
         # Trainingsdaten zuordnen
         q = batch_features[:, (0, 1)].to(device)
         qd = batch_features[:, (2, 3)].to(device)
-        qdd = batch_labels.to(device)
-        tau = batch_features[:, (4, 5)].to(device)
+        qdd = batch_features[:, (4, 5)].to(device)
+        tau = batch_labels.to(device)
 
         # Forward pass
         tau_hat, _, _, _ = DeLaN_network(q, qd, qdd)
@@ -120,8 +125,8 @@ DeLaN_network.eval()
 # Testdaten zuordnen und auf device verschieben
 q_test = features_test_tensor[:, (0, 1)].to(device)
 qd_test = features_test_tensor[:, (2, 3)].to(device)
-qdd_test = labels_test_tensor.to(device)
-tau_test = features_test_tensor[:, (4, 5)].cpu().numpy()    # Diesen Tensor direkt auf cpu schieben, damit damit nachher der loss berechnet werden kann
+qdd_test = features_test_tensor[:, (4, 5)].to(device)
+tau_test = labels_test_tensor.cpu().numpy()    # Diesen Tensor direkt auf cpu schieben, damit damit nachher der loss berechnet werden kann
 
 # Prädiktion
 print()

@@ -7,6 +7,7 @@ Dieses Skript enthält Funktionen im Zusammenhang mit dem Training und der Erpro
 
 import scipy.io
 import os
+import numpy as np
 
 def extract_training_data(file_name):
     # Pfad des aktuellen Skriptes
@@ -28,4 +29,12 @@ def extract_training_data(file_name):
     labels_test = data['labels_test']
     Mass_Cor_test = data['Mass_Cor_test']
 
-    return features_training, labels_training, features_test, labels_test, Mass_Cor_test
+    # Zusammensetzung der vektoren ändern, da Erstellung in Matlab für Inverse Dynamik ausgelegt war
+    features_training_delan = np.concatenate((features_training[:, :4], labels_training), axis=1)   # (q, qp, qpp)
+    features_test_delan = np.concatenate((features_test[:, :4], labels_test), axis=1)   
+
+    labels_training_delan = features_training[:, 4:]
+    labels_test_delan = features_test[:, 4:]
+
+    print('hahb wd')
+    return features_training_delan, labels_training_delan, features_test_delan, labels_test_delan, Mass_Cor_test
