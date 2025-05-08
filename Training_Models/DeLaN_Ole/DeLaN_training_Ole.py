@@ -31,12 +31,13 @@ torch.cuda.manual_seed_all(seed)
 hyper_param = {
     'hidden_width': 32,
     'hidden_depth': 3,
-    'L_diagonal_offset': 0.001,
+    'L_diagonal_offset': 1.e-5,
     'activation_fnc': 'softplus',
+    'bias_init_constant': 1.e-1,
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-5,
-    'n_epoch': 200,
+    'n_epoch': 1000,
     'save_model': False}
 
 # Trainings- und Testdaten laden 

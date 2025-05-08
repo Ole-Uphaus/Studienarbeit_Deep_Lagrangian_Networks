@@ -13,6 +13,8 @@ import torch.nn.init as init
 class Intern_NN(nn.Module):
     def __init__(self, n_dof, **hyper_param):
         super(Intern_NN, self).__init__()
+        # Parameter festsetzen
+        self.bias_init_constant = hyper_param['bias_init_constant']
 
         # Aktivierungsfunktion festlegen
         self.activation_fnc = self.get_activation_fnc(hyper_param['activation_fnc'])
@@ -56,12 +58,11 @@ class Intern_NN(nn.Module):
         return activation_fnc
     
     def init_weights(self):
-        # Initialisiere alle linearen Layer mit Xavier Normal
+        # Initialisiere alle linearen Layer
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                init.xavier_uniform_(m.weight)
-                if m.bias is not None:
-                    init.zeros_(m.bias)  # Bias auf 0 setzen
+                init.xavier_normal_(m.weight)  # Initialisierung der gewichte
+                init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
     
     def forward(self, q):
         # Netzwerkeingang q iterativ durch alle Layer geben
