@@ -231,6 +231,7 @@ for epoch in range(num_epochs):
         print(f'Epoch [{epoch + 1}/{num_epochs}], Training-Loss: {training_loss_mean:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
 
 # Modell evaluieren
+delan_model.eval()
 
 # Convert NumPy samples to torch:
 q = torch.from_numpy(test1_qp).float().to(device)
@@ -290,7 +291,6 @@ print(f'Gewichtskräfte MSE g2: {loss_g2:.3e}')
 
 # Plotten
 samples_vec = np.arange(1, H.shape[0] + 1)
-zeros_vec = np.zeros(H.shape[0])
 
 # H
 plt.figure()

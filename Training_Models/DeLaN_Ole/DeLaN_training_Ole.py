@@ -11,6 +11,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 from DeLaN_model_Ole import Deep_Lagrangian_Network
 from DeLaN_functions_Ole import *
@@ -35,7 +36,7 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-5,
-    'n_epoch': 1000,
+    'n_epoch': 200,
     'save_model': False}
 
 # Trainings- und Testdaten laden 
@@ -50,12 +51,16 @@ labels_training_tensor = torch.tensor(labels_training, dtype=torch.float32)
 dataset_training = TensorDataset(features_training_tensor, labels_training_tensor)
 dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch_size'], shuffle=True, drop_last=True)
 
+# Testdaten in torch Tensoren umwandeln
+features_test_tensor = torch.tensor(features_test, dtype=torch.float32)
+labels_test_tensor = torch.tensor(labels_test, dtype=torch.float32)
+
 # Ausgabe Datendimensionen
 print('Datenpunkte Training: ', features_training.shape[0])
 print('Datenpunkte Evaluierung: ', features_test.shape[0])
 print()
 
-# Testnetzwerk erstellen
+# DeLaN Netzwerk erstellen
 n_dof = labels_training.shape[1]
 DeLaN_network = Deep_Lagrangian_Network(n_dof, **hyper_param).to(device)
 
@@ -108,3 +113,119 @@ for epoch in range(hyper_param['n_epoch']):
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         print(f'Epoch [{epoch + 1}/{hyper_param['n_epoch']}], Training-Loss: {loss_mean_batch:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
 
+# Modell evaluieren (kein torch.nograd(), da interne Gradienten benötigt werden)
+DeLaN_network.eval()
+
+# Testdaten zuordnen und auf device verschieben
+q_test = features_test_tensor[:, (0, 1)].to(device)
+qd_test = features_test_tensor[:, (2, 3)].to(device)
+qdd_test = labels_test_tensor.to(device)
+tau_test = features_test_tensor[:, (4, 5)].cpu().numpy()    # Diesen Tensor direkt auf cpu schieben, damit damit nachher der loss berechnet werden kann
+
+# Prädiktion
+print()
+print('Evaluierung...')
+
+# Forward pass
+out_test = DeLaN_network(q_test, qd_test, qdd_test)
+
+tau_hat_test = out_test[0].cpu().detach().numpy()   # Tesnoren auf cpu legen, gradienten entfernen, un numpy arrays umwandeln
+H_test = out_test[1].cpu().detach().numpy()
+c_test = out_test[2].cpu().detach().numpy()
+g_test = out_test[3].cpu().detach().numpy()
+
+# Test loss berechnen (um mit Training zu vergleichen)
+err_inv_dyn_test = np.sum((tau_hat_test - tau_test)**2, axis=1)
+mean_err_inv_dyn_test = np.mean(err_inv_dyn_test)
+
+# Ausgabe loss
+print(f'Test-Loss: {mean_err_inv_dyn_test:.3e}')
+print()
+
+# Plotten
+samples_vec = np.arange(1, H_test.shape[0] + 1)
+
+# H
+plt.figure()
+
+plt.subplot(2, 2, 1)
+plt.plot(samples_vec, H_test[:, 0, 0], label='H11 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 0] ,label='H11 Analytic')
+plt.title('H11')
+plt.xlabel('Samples')
+plt.ylabel('H')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 2)
+plt.plot(samples_vec, H_test[:, 0, 1], label='H12 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H12 Analytic')
+plt.title('H12')
+plt.xlabel('Samples')
+plt.ylabel('H')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 3)
+plt.plot(samples_vec, H_test[:, 1, 0], label='H21 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H21 Analytic')
+plt.title('H21')
+plt.xlabel('Samples')
+plt.ylabel('H')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 4)
+plt.plot(samples_vec, H_test[:, 1, 1], label='H22 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 2], label='H22 Analytic')
+plt.title('H22')
+plt.xlabel('Samples')
+plt.ylabel('H')
+plt.grid(True)
+plt.legend()
+
+plt.tight_layout()
+
+# c
+plt.figure()
+
+plt.subplot(2, 2, 1)
+plt.plot(samples_vec, c_test[:, 0], label='C1 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 3] ,label='C1 Analytic')
+plt.title('C1')
+plt.xlabel('Samples')
+plt.ylabel('C')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 3)
+plt.plot(samples_vec, c_test[:, 1], label='C2 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 4] ,label='C2 Analytic')
+plt.title('C2')
+plt.xlabel('Samples')
+plt.ylabel('C')
+plt.grid(True)
+plt.legend()
+
+# g
+plt.subplot(2, 2, 2)
+plt.plot(samples_vec, g_test[:, 0], label='g1 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 5] ,label='g1 Analytic')
+plt.title('g1')
+plt.xlabel('Samples')
+plt.ylabel('g')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 4)
+plt.plot(samples_vec, g_test[:, 1], label='g2 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 6] ,label='g2 Analytic')
+plt.title('g2')
+plt.xlabel('Samples')
+plt.ylabel('g')
+plt.grid(True)
+plt.legend()
+
+plt.tight_layout()
+
+plt.show()
