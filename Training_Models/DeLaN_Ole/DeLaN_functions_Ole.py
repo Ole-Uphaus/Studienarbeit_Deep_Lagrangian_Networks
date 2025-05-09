@@ -8,6 +8,7 @@ Dieses Skript enthält Funktionen im Zusammenhang mit dem Training und der Erpro
 import scipy.io
 import os
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 def extract_training_data(file_name):
     # Pfad des aktuellen Skriptes
@@ -35,5 +36,18 @@ def extract_training_data(file_name):
 
     labels_training_delan = features_training[:, 4:]
     labels_test_delan = features_test[:, 4:]
+
+    # Verwendung eines Scalers für q
+    scaler = StandardScaler()
+
+    q_train = features_training_delan[:, :2].copy()
+    q_test = features_test_delan[:, :2].copy()
+
+    q_train_scaled = scaler.fit_transform(q_train)
+    q_test_scaled = scaler.transform(q_test)
+
+    # Skaliertes q wieder einsetzen in den features Tensor
+    features_training_delan[:, :2] = q_train_scaled
+    features_test_delan[:, :2] = q_test_scaled
 
     return features_training_delan, labels_training_delan, features_test_delan, labels_test_delan, Mass_Cor_test
