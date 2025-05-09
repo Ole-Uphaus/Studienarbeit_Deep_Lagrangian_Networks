@@ -43,7 +43,7 @@ class Intern_NN(nn.Module):
         n_tril = int(n_dof*(n_dof - 1)/2)
         self.output_L_tril = nn.Linear(hyper_param['hidden_width'], n_tril)
 
-        # Netzgewichte Initialisieren (Xavier Normal)
+        # Netzgewichte Initialisieren
         self.init_weights()
 
     def get_activation_fnc(self, name):
@@ -68,7 +68,8 @@ class Intern_NN(nn.Module):
         # Initialisiere alle linearen Layer
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                init.xavier_normal_(m.weight)  # Initialisierung der gewichte
+                init.xavier_normal_(m.weight)  # Initialisierung der gewichte Xavier normal
+                # init.kaiming_normal_(m.weight, nonlinearity='relu')  # Initialisierung der gewichte He
                 init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
     
     def forward(self, q):
