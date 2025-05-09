@@ -28,20 +28,20 @@ torch.cuda.manual_seed_all(seed)
 # Parameter festlegen
 hyper_param = {
     'hidden_width': 32,
-    'hidden_depth': 3,
+    'hidden_depth': 5,
     'L_diagonal_offset': 1.e-1,
-    'activation_fnc': 'elu',
+    'activation_fnc': 'softplus',
     'dropuot': 0.0,
     'bias_init_constant': 1.e-1,
     'batch_size': 512,
     'learning_rate': 5.e-4,
-    'weight_decay': 5.e-5,
+    'weight_decay': 1.e-4,
     'n_epoch': 2000,
     'save_model': False}
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_01_08_35_27_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat')  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
