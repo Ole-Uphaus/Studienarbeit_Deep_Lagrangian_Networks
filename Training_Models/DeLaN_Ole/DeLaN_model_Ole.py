@@ -57,6 +57,8 @@ class Intern_NN(nn.Module):
             activation_fnc = nn.Softplus()
         elif name == 'tanh':
             activation_fnc = nn.Tanh()
+        elif name == 'elu':
+            activation_fnc = nn.ELU()
         else:
             activation_fnc = nn.ReLU()
 
