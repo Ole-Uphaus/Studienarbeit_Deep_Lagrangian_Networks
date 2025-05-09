@@ -6,13 +6,10 @@ In diesem Skript wird das von mir erstellte Deep Lagrangien Network trainiert. H
 '''
 
 import torch
-import torch.nn as nn
-import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
 
 from DeLaN_model_Ole import Deep_Lagrangian_Network
 from DeLaN_functions_Ole import *
@@ -30,15 +27,15 @@ torch.cuda.manual_seed_all(seed)
 
 # Parameter festlegen
 hyper_param = {
-    'hidden_width': 256,
+    'hidden_width': 32,
     'hidden_depth': 3,
     'L_diagonal_offset': 1.e-1,
-    'activation_fnc': 'tanh',
+    'activation_fnc': 'elu',
     'dropuot': 0.0,
     'bias_init_constant': 1.e-1,
     'batch_size': 512,
     'learning_rate': 5.e-4,
-    'weight_decay': 1.e-3,
+    'weight_decay': 5.e-5,
     'n_epoch': 2000,
     'save_model': False}
 
