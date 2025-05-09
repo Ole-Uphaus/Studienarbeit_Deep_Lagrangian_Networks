@@ -145,7 +145,7 @@ t_vec = linspace(0, move_time, smples_per_run);
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 30;
+number_runs = 50;
 
 % Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
 % Drehgelenken)
