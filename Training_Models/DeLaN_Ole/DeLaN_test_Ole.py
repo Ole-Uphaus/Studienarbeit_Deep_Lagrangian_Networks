@@ -24,14 +24,16 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 
-# Parameter festlegen
 hyper_param = {
     'hidden_width': 64,
     'hidden_depth': 2,
-    'L_diagonal_offset': 0.1,
-    'activation_fnc': 'relu',
+    'L_diagonal_offset': 1.e-2,
+    'activation_fnc': 'softplus',
+    'dropuot': 0.0,
+    'bias_init_constant': 1.e-2,
     'batch_size': 512,
-    'learning_rate': 1.e-5,
+    'learning_rate': 5.e-4,
+    'weight_decay': 1.e-4,
     'n_epoch': 2000,
     'save_model': False}
 
@@ -50,18 +52,7 @@ print()
 output = test_net(test_q, test_qd, test_qdd)
 
 # Outputs ansehen
-# print('Massenmatrix H: \n', output[1])
-# print()
-# print('Corioliskräfte c: \n', output[2])
-# print()
-print('L_diag: \n', output[4])
+print('Massenmatrix H: \n', output[1])
 print()
-print('L_tril: \n', output[5])
+print('Corioliskräfte c: \n', output[2])
 print()
-print('L_diag_dq: \n', output[6])
-print()
-print('L_tril_dq: \n', output[7])
-# print()
-# print('L_ges: \n', output[8])
-# print()
-# print('L_ges_dq: \n', output[9])

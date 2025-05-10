@@ -141,8 +141,8 @@ class Deep_Lagrangian_Network(nn.Module):
         H_dq = torch.einsum('bijc,bjk->bikc', L_dq, L_transp) + torch.einsum('bij,bjkc->bikc', L, L_dq_transpose)   # H_dq.shape(batch_size, n_dof, n_dof, n_dof)
 
         # qdT_H_dq_qd berechnen (qdT * H_dq * qd)
-        H_dq_qd = torch.einsum('bijc,bc->bij', H_dq, qd)    # H_dq_qd.shape(batch_size, n_dof, n_dof)
-        qdT_H_dq_qd = torch.einsum('bi,bij->bj', qd, H_dq_qd)   # qdT_H_dq_qd.shape(batch_size, n_dof)
+        H_dq_qd = torch.einsum('bijc,bj->bic', H_dq, qd)    # H_dq_qd.shape(batch_size, n_dof, n_dof)
+        qdT_H_dq_qd = torch.einsum('bi,bic->bc', qd, H_dq_qd)   # qdT_H_dq_qd.shape(batch_size, n_dof)
 
         # Coriolisterme berechnen (H_dt * qd - 0.5 * qdT_H_dq_qd)
         c = torch.einsum('bij,bj->bi', H_dt, qd) - 0.5 * qdT_H_dq_qd    # c.shape(batch_size, n_dof)
