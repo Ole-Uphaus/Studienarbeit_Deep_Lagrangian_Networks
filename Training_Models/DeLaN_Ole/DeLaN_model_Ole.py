@@ -60,6 +60,12 @@ class Intern_NN(nn.Module):
             activation_fnc = nn.Tanh()
         elif name == 'elu':
             activation_fnc = nn.ELU()
+        elif name == 'gelu':
+            activation_fnc = nn.GELU()
+        elif name == 'silu':
+            activation_fnc = nn.SiLU()
+        elif name == 'mish':
+            activation_fnc = nn.Mish()
         else:
             activation_fnc = nn.ReLU()
 
