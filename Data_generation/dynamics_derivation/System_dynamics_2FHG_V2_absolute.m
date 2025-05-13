@@ -31,10 +31,18 @@ r_s2_vec = [l_1*sin(phi_1) + l_2/2*sin(phi_2);
 v_s2_vec = diff(r_s2_vec, phi_1)*phi_1_p + diff(r_s2_vec, phi_2)*phi_2_p;
 v_s2_squared = simplify(expand(v_s2_vec'*v_s2_vec));
 
+%% Kinematik (Rotation)
+
+% Erster Arm
+theta_1_p = phi_1_p;
+
+% Zweiter Arm
+theta_2_p = phi_2_p;
+
 %% Lagrange Funktion
 
 % Kinetische Energie
-T = 1/2*m_1*v_s1_squared + 1/2*m_2*v_s2_squared + 1/2*J_1*phi_1_p^2 + 1/2*J_2*phi_2_p^2;
+T = 1/2*m_1*v_s1_squared + 1/2*m_2*v_s2_squared + 1/2*J_1*theta_1_p^2 + 1/2*J_2*theta_2_p^2;
 
 % Potentielle Energie
 U = m_1*g*r_s1_vec(2, 1) + m_2*g*r_s2_vec(2, 1);
@@ -53,7 +61,7 @@ q_pp = [phi_1_pp, phi_2_pp]';
 jac_1 = jacobian(L, q_p).';
 jac_2 = jacobian(L, q).';
 
-Lagr_eq = simplify(diff(jac_1, phi_1)*phi_1_p + diff(jac_1, phi_1_p)*phi_1_pp + diff(jac_1, phi_2)*phi_2_p + diff(jac_1, phi_2_p)*phi_2_pp - jac_2);
+Lagr_eq = simplify(jacobian(jac_1, q)*q_p + jacobian(jac_1, q_p)*q_pp - jac_2);
 
 %% Massen-, Coriolis- und Gravitationsterme bestimmen
 
