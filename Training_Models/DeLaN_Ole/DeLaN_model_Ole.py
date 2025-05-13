@@ -15,6 +15,7 @@ class Intern_NN(nn.Module):
         super(Intern_NN, self).__init__()
         # Parameter festsetzen
         self.bias_init_constant = hyper_param['bias_init_constant']
+        self.weight_init = hyper_param['wheight_init']
 
         # Aktivierungsfunktion festlegen
         self.activation_fnc = self.get_activation_fnc(hyper_param['activation_fnc'])
@@ -68,9 +69,13 @@ class Intern_NN(nn.Module):
         # Initialisiere alle linearen Layer
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                init.xavier_normal_(m.weight)  # Initialisierung der gewichte Xavier normal
-                # init.kaiming_normal_(m.weight, nonlinearity='relu')  # Initialisierung der gewichte He
-                init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
+                if self.weight_init == 'xavier_normal':
+                    init.xavier_normal_(m.weight)  # Initialisierung der Gewichte mit Xavier normal
+                    init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
+                
+                else:
+                    init.xavier_normal_(m.weight)  # Initialisierung der Gewichte mit Xavier normal
+                    init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
     
     def forward(self, q):
         # Netzwerkeingang q iterativ durch alle Layer geben

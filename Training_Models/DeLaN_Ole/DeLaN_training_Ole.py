@@ -20,23 +20,33 @@ print(f"Benutze Device: {device}")
 print()
 
 # Seed setzen für Reproduzierbarkeit
-seed = 42
+seed = 1
 np.random.seed(seed)
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 
 # Parameter festlegen
 hyper_param = {
+    # Netzparameter
     'hidden_width': 32,
-    'hidden_depth': 5,
-    'L_diagonal_offset': 1.e-1,
-    'activation_fnc': 'softplus',
+    'hidden_depth': 3,
+    'activation_fnc': 'elu',
+
+    # Initialisierung
+    'bias_init_constant': 1.e-4,
+    'wheight_init': 'xavier_normal',
+
+    # Lagrange Dynamik
+    'L_diagonal_offset': 1.e-4,
+    
+    # Training
     'dropuot': 0.0,
-    'bias_init_constant': 1.e-1,
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
     'n_epoch': 2000,
+
+    # Sonstiges
     'save_model': False}
 
 # Trainings- und Testdaten laden 
