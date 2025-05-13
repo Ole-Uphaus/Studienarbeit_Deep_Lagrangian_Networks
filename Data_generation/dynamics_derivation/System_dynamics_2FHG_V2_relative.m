@@ -5,7 +5,8 @@
 % Dieses Skript soll die differentialgleichungen des 2-FHG Roboters
 % mithilfe der Lagrangeschen Gleichungen 2.Art herleiten. In diesem Skript
 % wird im Gegensatz zum ersten Skript die Dynamik eines weiteren 2 FHG
-% Roboters hergeleitet (Siehe Aufzeichnungen).
+% Roboters hergeleitet (Siehe Aufzeichnungen). In diesem Skript wird das
+% Robotermodell basierend auf den Relativwinkeln hergeleitet.
 % -------------------------------------------------------------
 clc
 clear
