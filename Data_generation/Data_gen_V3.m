@@ -145,7 +145,7 @@ t_vec = linspace(0, move_time, samples_per_run);
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 30;
+number_runs = 10;
 
 % Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
 % Drehgelenken)
@@ -155,7 +155,7 @@ Rob_Model = 2;
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = true;
+savedata = false;
 
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
@@ -170,7 +170,7 @@ if Rob_Model == 1
 
 elseif Rob_Model == 2
     % Startpunkte
-    q1_0 = random_init(number_runs, 0, 1/8*pi, true); % Bsp. Intervall phi_1 
+    q1_0 = random_init(number_runs, 1/4*pi, 1/2*pi, true); % Bsp. Intervall phi_1 
     q2_0 = random_init(number_runs, 0, 1/8*pi, true);  % Bsp. Intervall phi_2 
     
     % Differenzen für Endpunkte
