@@ -95,9 +95,9 @@ function out = inv_dyn_2_FHG_Robot_2(traj_data)
 
     % Systemparameter
     m1_kg = 1;  % Masse Arm 1
-    m2_kg = 1;  % Masse Arm 2
-    l1_m = 0.5; % Länge Arm 1
-    l2_m = 0.5; % Länge Arm 2
+    m2_kg = 0.5;  % Masse Arm 2
+    l1_m = 0.3; % Länge Arm 1
+    l2_m = 0.3; % Länge Arm 2
     J1_kgm2 = 1;  % Rotationsträgheit Arm 1
     J2_kgm2 = 1;  % Rotationsträgheit Arm 2
     g_mps2 = 9.81;  % Gravitationskonstante
@@ -115,17 +115,17 @@ function out = inv_dyn_2_FHG_Robot_2(traj_data)
     phi_2_pp = traj_data.q2_pp;
 
     % Massenmatrix
-    out.M_11 = J1_kgm2 + (l1_m.^2.*m1_kg)./4 + l1_m.^2.*m2_kg + phi_1*0;   % Oberer linker Eintrag der Massenmatrix
-    out.M_12 = (l1_m.*l2_m.*m2_kg.*cos(phi_1 - phi_2))./2;      % Oberer Rechter Eintrag der Massenmatrix
-    out.M_22 = (m2_kg.*l2_m.^2)./4 + J2_kgm2 + phi_1*0;    % Unterer rechter Eintrag der Massenmatrix
+    out.M_11 = J1_kgm2 + J2_kgm2 + (l1_m^2*m1_kg)/4 + l1_m^2*m2_kg + (l2_m^2*m2_kg)/4 + l1_m*l2_m*m2_kg.*cos(phi_2);   % Oberer linker Eintrag der Massenmatrix
+    out.M_12 = (m2_kg*l2_m^2)/4 + (l1_m*m2_kg.*cos(phi_2).*l2_m)/2 + J2_kgm2;      % Oberer Rechter Eintrag der Massenmatrix
+    out.M_22 = (m2_kg*l2_m^2)/4 + J2_kgm2 + phi_1*0;    % Unterer rechter Eintrag der Massenmatrix
 
     % Corioliskräfte
-    out.C_1 = (l1_m.*l2_m.*m2_kg.*phi_2_p.^2.*sin(phi_1 - phi_2))./2;     % Erster Vektoreintrag
-    out.C_2 = -(l1_m.*l2_m.*m2_kg.*phi_1_p.^2.*sin(phi_1 - phi_2))./2;    % Zweiter Vektoreintrag
+    out.C_1 = -(l1_m*l2_m*m2_kg.*phi_2_p.*sin(phi_2).*(2.*phi_1_p + phi_2_p))/2;     % Erster Vektoreintrag
+    out.C_2 = (l1_m*l2_m*m2_kg.*phi_1_p.^2.*sin(phi_2))/2;    % Zweiter Vektoreintrag
 
     % Gewichtskräfte
-    out.g_1 = (g_mps2.*l1_m.*sin(phi_1).*(m1_kg + 2*m2_kg))./2;  % Erster Vektoreintrag
-    out.g_2 = (g_mps2.*l2_m.*m2_kg.*sin(phi_2))/2;  % Zweiter Vektoreintrag
+    out.g_1 = g_mps2*m2_kg.*((l2_m.*sin(phi_1 + phi_2))/2 + l1_m.*sin(phi_1)) + (g_mps2*l1_m*m1_kg.*sin(phi_1))/2;  % Erster Vektoreintrag
+    out.g_2 = (g_mps2*l2_m*m2_kg.*sin(phi_1 + phi_2))/2;  % Zweiter Vektoreintrag
 
     % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
     % eingesetzt)
@@ -137,19 +137,19 @@ end
 %% Parameterdefinition
 
 % Bewegungszeit und Schrittweite
-smples_per_run = 100;
-move_time = 3;
-t_vec = linspace(0, move_time, smples_per_run);
+samples_per_run = 100;
+move_time = 1;  % Vrogeschlagene Werte: Rob_Model = 1 (3s), Rob_Model = 2 (s)
+t_vec = linspace(0, move_time, samples_per_run);
 
 % Zeitpunkte der Wegpunkte
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 100;
+number_runs = 30;
 
 % Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
 % Drehgelenken)
-Rob_Model = 1;
+Rob_Model = 2;
 
 % Seed für reproduzierbare Ergebnisse
 rng(42)
@@ -157,15 +157,27 @@ rng(42)
 % Sollen Simulationsdaten gespeichert werden
 savedata = true;
 
-%% Wegpunkte für Trajektorie festlegen
+%% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
-% Startpunkte
-q1_0 = random_init(number_runs, 0, 0.5, false); % Bsp. Intervall [0, 0.5]
-q2_0 = random_init(number_runs, 0, pi, false);  % Bsp. Intervall [0, pi]
+if Rob_Model == 1
+    % Startpunkte
+    q1_0 = random_init(number_runs, 0, 0.5, false); % Bsp. Intervall r [0, 0.5]
+    q2_0 = random_init(number_runs, 0, pi, false);  % Bsp. Intervall phi [0, pi]
+    
+    % Differenzen für Endpunkte
+    delta_q1 = random_init(number_runs, 0.2, 0.5, true); % Bsp. Intervall delta_r [0.2, 0.5]
+    delta_q2 = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall delta_phi [1/4*pi, 3/4*pi]
 
-% Differenzen für Endpunkte
-delta_q1 = random_init(number_runs, 0.2, 0.5, true); % Bsp. Intervall [0.2, 0.5]
-delta_q2 = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall [1/4*pi, 3/4*pi]
+elseif Rob_Model == 2
+    % Startpunkte
+    q1_0 = random_init(number_runs, 0, 1/4*pi, true); % Bsp. Intervall phi_1 
+    q2_0 = random_init(number_runs, 0, 1/4*pi, true);  % Bsp. Intervall phi_2 
+    
+    % Differenzen für Endpunkte
+    delta_q1 = random_init(number_runs, 1/5*pi, 1/4*pi, true); % Bsp. Intervall delta_phi_1 
+    delta_q2 = random_init(number_runs, 1/5*pi, 1/4*pi, true); % Bsp. Intervall delta_phi_2 
+
+end
 
 %% Trajektorien generieren
 
@@ -283,7 +295,7 @@ end
 %% Ergebnisse Plotten (nur Trainingsdaten)
 
 % Zeitvektor über alle Trainingstrajektorien
-t_vec_ges = linspace(0, (number_runs - number_testdata) * move_time, (number_runs - number_testdata) * smples_per_run)';
+t_vec_ges = linspace(0, (number_runs - number_testdata) * move_time, (number_runs - number_testdata) * samples_per_run)';
 
 % Plot q1, q2
 figure('WindowState','maximized');
