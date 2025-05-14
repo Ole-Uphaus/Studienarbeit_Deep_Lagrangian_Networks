@@ -171,9 +171,9 @@ class Deep_Lagrangian_Network(nn.Module):
         c = torch.einsum('bij,bj->bi', H_dt, qd) - 0.5 * qdT_H_dq_qd    # c.shape(batch_size, n_dof)
 
         # Inverse Dynamik auswerten
-        tau = torch.einsum('bij,bj->bi', H, qdd) + c + output_g
+        tau_pred = torch.einsum('bij,bj->bi', H, qdd) + c + output_g
 
-        return tau, H, c, output_g
+        return tau_pred, H, c, output_g
     
     def compute_Jacobian_batched(self, output_L, input_q):
         # Dimensionen des Outputs bekommen
@@ -221,5 +221,19 @@ class Deep_Lagrangian_Network(nn.Module):
         L += diagonal_offset
 
         return L
-
+    
+    def forward_dynamics(self, q, qd, tau):
        
+        # Eingang tau reshapen, damit Ausgangsdimension stimmt
+        tau = tau.view((-1, self.n_dof))    # tau.shape = (batch_size, 1)
+
+        # Lagrange Dynamik auswerten (Beschleunigungen auf null setzen, da H, c, g nur von q und qd abhängen. tau_pred ist natürlich nicht mathematisch korrekt)
+        _, H, c, g = self.lagrangian_dynamics(q, qd, torch.zeros_like(q))
+
+        # H Batch weise invertieren (H^-1)
+        H_inv = torch.linalg.inv(H)
+
+        # Forwärts Dynamik auswerten (H^-1*(tau - g - c))
+        q_pred = torch.einsum('bij,bj->bi', H_inv, (tau - q - c))
+
+        return q_pred, H, c, g
