@@ -20,7 +20,7 @@ print(f"Benutze Device: {device}")
 print()
 
 # Seed setzen für Reproduzierbarkeit
-seed = 1
+seed = 42
 np.random.seed(seed)
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
@@ -33,7 +33,7 @@ hyper_param = {
     'activation_fnc': 'elu',
 
     # Initialisierung
-    'bias_init_constant': 1.e-4,
+    'bias_init_constant': 1.e-2,
     'wheight_init': 'xavier_normal',
 
     # Lagrange Dynamik
@@ -86,6 +86,7 @@ print()
 start_time = time.time()
 
 # Training des Netzwerks
+loss_history = []
 for epoch in range(hyper_param['n_epoch']):
     # Modell in den Trainingsmodeus versetzen und loss Summe initialisieren
     DeLaN_network.train()
@@ -120,7 +121,11 @@ for epoch in range(hyper_param['n_epoch']):
     # Mittleren Loss berechnen und ausgeben
     loss_mean_batch = loss_sum/len(dataloader_training)
 
+    # Loss an Loss history anhängen
+    loss_history.append([epoch + 1, loss_mean_batch])
+
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
+        # Ausgabe während des Trainings
         print(f'Epoch [{epoch + 1}/{hyper_param['n_epoch']}], Training-Loss: {loss_mean_batch:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
 
 # Modell evaluieren (kein torch.nograd(), da interne Gradienten benötigt werden)
@@ -154,6 +159,17 @@ print()
 
 # Plotten
 samples_vec = np.arange(1, H_test.shape[0] + 1)
+
+# Loss Entwicklung plotten
+loss_history = np.array(loss_history)
+plt.figure()
+plt.semilogy(loss_history[:, 0], loss_history[:, 1], label='Training Loss')
+plt.xlabel('Epoche')
+plt.ylabel('Loss')
+plt.title('Loss-Verlauf während des Trainings')
+plt.grid(True)
+plt.legend()
+plt.tight_layout()
 
 # H
 plt.figure()
