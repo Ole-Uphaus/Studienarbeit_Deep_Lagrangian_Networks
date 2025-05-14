@@ -77,11 +77,23 @@ class Intern_NN(nn.Module):
             if isinstance(m, nn.Linear):
                 if self.weight_init == 'xavier_normal':
                     init.xavier_normal_(m.weight)  # Initialisierung der Gewichte mit Xavier normal
-                    init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
+                    if m.bias is not None:
+                        init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
+
+                elif self.weight_init == 'kaiming_normal':
+                    init.kaiming_normal_(m.weight)  # Initialisierung der Gewichte mit He-Initialisierung
+                    if m.bias is not None:
+                        init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
+                
+                elif self.weight_init == 'xavier_uniform':
+                    init.xavier_uniform_(m.weight)  # Initialisierung der Gewichte mit Xavier uniform
+                    if m.bias is not None:
+                        init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
                 
                 else:
                     init.xavier_normal_(m.weight)  # Initialisierung der Gewichte mit Xavier normal
-                    init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
+                    if m.bias is not None:
+                        init.constant_(m.bias, self.bias_init_constant)          # Initialisierung des Bias
     
     def forward(self, q):
         # Netzwerkeingang q iterativ durch alle Layer geben
