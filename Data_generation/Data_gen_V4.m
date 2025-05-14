@@ -136,16 +136,27 @@ end
 
 %% Parameterdefinition
 
-% Bewegungszeit und Schrittweite
-samples_per_run = 100;
-move_time = 2;  % Vrogeschlagene Werte: Rob_Model = 1 (3s), Rob_Model = 2 (s)
-t_vec = linspace(0, move_time, samples_per_run);
+% Bewegungszeit, Schrittweite, größe Testdatensatz
+move_time = 10;  % [s]
+zeitschritt = 0.01; % [s]
+test_size = 0.3;
 
-% Zeitpunkte der Wegpunkte
-waypointTimes = [0 move_time];
+% Trainings- und Testzeitvektor in einen Struct
+t_vec_struct(2) = struct();
+t_vec_struct(1).t_vec = 0:zeitschritt:(move_time*(1 - test_size));    % Zeitvektor Trainingsdaten
+t_vec_struct(2).t_vec = (move_time*(1 - test_size) + zeitschritt):zeitschritt:move_time;    % Zeitvektor Testdaten
 
-% Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 10;
+% Amplituden, Frequenzen und Mittelwerte der Gelenktrajektorien
+A1 = pi/2;   % [rad]
+A2 = pi/2;   % [rad]
+f1 = 0.1;   % [Hz]
+f2 = 0.4;   % [Hz]
+M1 = pi/4;  % [rad]
+M2 = 0;     % [rad]
+
+% Winkelgeschwindigkeiten
+w1 = 2 * pi * f1;  % [rad/s]
+w2 = 2 * pi * f2;  % [rad/s]
 
 % Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
 % Drehgelenken)
@@ -157,48 +168,29 @@ rng(42)
 % Sollen Simulationsdaten gespeichert werden
 savedata = false;
 
-%% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
-
-if Rob_Model == 1
-    % Startpunkte
-    q1_0 = random_init(number_runs, 0, 0.5, false); % Bsp. Intervall r [0, 0.5]
-    q2_0 = random_init(number_runs, 0, pi, false);  % Bsp. Intervall phi [0, pi]
-    
-    % Differenzen für Endpunkte
-    delta_q1 = random_init(number_runs, 0.2, 0.5, true); % Bsp. Intervall delta_r [0.2, 0.5]
-    delta_q2 = random_init(number_runs, 1/4*pi, 3/4*pi, true); % Bsp. Intervall delta_phi [1/4*pi, 3/4*pi]
-
-elseif Rob_Model == 2
-    % Startpunkte
-    q1_0 = random_init(number_runs, 1/4*pi, 1/2*pi, true); % Bsp. Intervall phi_1 
-    q2_0 = random_init(number_runs, 0, 1/8*pi, true);  % Bsp. Intervall phi_2 
-    
-    % Differenzen für Endpunkte
-    delta_q1 = random_init(number_runs, 1/3*pi, 1/2*pi, true); % Bsp. Intervall delta_phi_1 
-    delta_q2 = random_init(number_runs, 1/3*pi, 1/2*pi, true); % Bsp. Intervall delta_phi_2 
-
-end
-
 %% Trajektorien generieren
 
 % Struct zur speicherung der Daten vorbereiten
-traj_data(number_runs) = struct();
+traj_data(2) = struct();
 
-for i = 1:number_runs
+for i = 1:2
+    % Gelenkpositionen
+    q1 = A1 * cos(w1 * t_vec_struct(i).t_vec) + M1;
+    q2 = A2 * cos(w2 * t_vec_struct(i).t_vec) + M2;
+    
+    % Gelenkgeschwindigkeiten
+    q1_p = -A1 * w1 * sin(w1 * t_vec_struct(i).t_vec);
+    q2_p = -A2 * w2 * sin(w2 * t_vec_struct(i).t_vec);
+    
+    % Gelenkbeschleunigungen
+    q1_pp = -A1 * w1^2 * cos(w1 * t_vec_struct(i).t_vec);
+    q2_pp = -A2 * w2^2 * cos(w2 * t_vec_struct(i).t_vec);
 
-    % Wegpunkte
-    waypoints_q1 = [q1_0(i), (q1_0(i) + delta_q1(i))];
-    waypoints_q2 = [q2_0(i), (q2_0(i) + delta_q2(i))];
-
-    % Berechnung der Trajektorien
-    [q1, q1_p, q1_pp] = quinticpolytraj(waypoints_q1, waypointTimes, t_vec);
-    [q2, q2_p, q2_pp] = quinticpolytraj(waypoints_q2, waypointTimes, t_vec);
-
-    % Trajektorien speichern
+    % Daten in Struct speichern
     traj_data(i).q1 = q1';
     traj_data(i).q1_p = q1_p';
     traj_data(i).q1_pp = q1_pp';
-
+    
     traj_data(i).q2 = q2';
     traj_data(i).q2_p = q2_p';
     traj_data(i).q2_pp = q2_pp';
@@ -207,28 +199,27 @@ end
 
 %% Inverse Dynamik auswerten + Massen- und Coriolisterme berechnen (Differentialgleichung)
 
-for i = 1:number_runs
-
+for i = 1:2
     % Ausgewähltes Modell nutzen
     if Rob_Model == 1
         out = inv_dyn_2_FHG_Robot_1(traj_data(i));
     elseif Rob_Model == 2
         out = inv_dyn_2_FHG_Robot_2(traj_data(i));
     end
-
+    
     % Massenmatrix
     traj_data(i).M_11 = out.M_11;
     traj_data(i).M_12 = out.M_12;
     traj_data(i).M_22 = out.M_22;
-
+    
     % Corioliskräfte
     traj_data(i).C_1 = out.C_1;
     traj_data(i).C_2 = out.C_2;
-
+    
     % Gewichtskräfte
     traj_data(i).g_1 = out.g_1;
     traj_data(i).g_2 = out.g_2;
-
+    
     % Eingeprägte Kräfte/Momente 
     traj_data(i).tau_1 = out.tau_1;
     traj_data(i).tau_2 = out.tau_2;
@@ -237,45 +228,17 @@ end
 
 %% Simulationsergebnisse Speichern (Daten in Trainings- und Testdaten aufteilen)
 
-% Testdaten auswählen und in Features und Labels aufteilen (20%)
-number_testdata = floor((number_runs)/5);
-test_idx = randperm((number_runs), number_testdata);   % Zufällige Indizees für Testdaten
+% Testdaten speichern
+features_test = [traj_data(2).q1, traj_data(2).q2, traj_data(2).q1_p, traj_data(2).q2_p, traj_data(2).tau_1, traj_data(2).tau_2];
+labels_test = [traj_data(2).q1_pp, traj_data(2).q2_pp];
+Mass_Cor_test = [traj_data(2).M_11, traj_data(2).M_12, traj_data(2).M_22, traj_data(2).C_1, traj_data(2).C_2, traj_data(2).g_1, traj_data(2).g_2];
 
-features_test = [traj_data(test_idx(1)).q1, traj_data(test_idx(1)).q2, traj_data(test_idx(1)).q1_p, traj_data(test_idx(1)).q2_p, traj_data(test_idx(1)).tau_1, traj_data(test_idx(1)).tau_2];
-labels_test = [traj_data(test_idx(1)).q1_pp, traj_data(test_idx(1)).q2_pp];
-Mass_Cor_test = [traj_data(test_idx(1)).M_11, traj_data(test_idx(1)).M_12, traj_data(test_idx(1)).M_22, traj_data(test_idx(1)).C_1, traj_data(test_idx(1)).C_2, traj_data(test_idx(1)).g_1, traj_data(test_idx(1)).g_2];
+% Trainingsdaten speichern
+features_training = [traj_data(1).q1, traj_data(1).q2, traj_data(1).q1_p, traj_data(1).q2_p, traj_data(1).tau_1, traj_data(1).tau_2];
+labels_training = [traj_data(1).q1_pp, traj_data(1).q2_pp];
+Mass_Cor_training = [traj_data(1).M_11, traj_data(1).M_12, traj_data(1).M_22, traj_data(1).C_1, traj_data(1).C_2, traj_data(1).g_1, traj_data(1).g_2];
 
-for i = test_idx(2:end)
-    % Features [q1, q2, q1_p, q2_p, tau_1, tau_2]
-    features_test = [features_test;
-        traj_data(i).q1, traj_data(i).q2, traj_data(i).q1_p, traj_data(i).q2_p, traj_data(i).tau_1, traj_data(i).tau_2];
-    % Labels [q1_pp, q2_pp]
-    labels_test = [labels_test;
-        traj_data(i).q1_pp, traj_data(i).q2_pp];
-    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2]
-    Mass_Cor_test = [Mass_Cor_test;
-        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2, traj_data(i).g_1, traj_data(i).g_2];
-end
-
-% Trainingsdaten auswählen und in Features und Labels aufteilen (80%)
-training_idx = setdiff((1:number_runs), test_idx);
-
-features_training = [traj_data(training_idx(1)).q1, traj_data(training_idx(1)).q2, traj_data(training_idx(1)).q1_p, traj_data(training_idx(1)).q2_p, traj_data(training_idx(1)).tau_1, traj_data(training_idx(1)).tau_2];
-labels_training = [traj_data(training_idx(1)).q1_pp, traj_data(training_idx(1)).q2_pp];
-Mass_Cor_training = [traj_data(training_idx(1)).M_11, traj_data(training_idx(1)).M_12, traj_data(training_idx(1)).M_22, traj_data(training_idx(1)).C_1, traj_data(training_idx(1)).C_2, traj_data(training_idx(1)).g_1, traj_data(training_idx(1)).g_2];
-
-for i = training_idx(2:end)
-    % Features [q1, q2, q1_p, q2_p, tau_1, tau_2]
-    features_training = [features_training;
-        traj_data(i).q1, traj_data(i).q2, traj_data(i).q1_p, traj_data(i).q2_p, traj_data(i).tau_1, traj_data(i).tau_2];
-    % Labels [q1_pp, q2_pp]
-    labels_training = [labels_training;
-        traj_data(i).q1_pp, traj_data(i).q2_pp];
-    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2]
-    Mass_Cor_training = [Mass_Cor_training;
-        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2,traj_data(i).g_1, traj_data(i).g_2];
-end
-
+% Daten speichern
 if savedata == true
     % Pfad dieses Skripts
     my_path = fileparts(mfilename('fullpath'));
@@ -294,21 +257,18 @@ end
 
 %% Ergebnisse Plotten (nur Trainingsdaten)
 
-% Zeitvektor über alle Trainingstrajektorien
-t_vec_ges = linspace(0, (number_runs - number_testdata) * move_time, (number_runs - number_testdata) * samples_per_run)';
-
 % Plot q1, q2
 figure('WindowState','maximized');
 
 subplot(2,3,1);
-plot(t_vec_ges, features_training(:, 1), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, features_training(:, 1), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('q1');
 grid on;
 title('q1(t)');
 
 subplot(2,3,4);
-plot(t_vec_ges, features_training(:, 2), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, features_training(:, 2), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('q2');
 grid on;
@@ -316,14 +276,14 @@ title('q2(t)');
 
 % Plot q1_p, q2_p
 subplot(2,3,2);
-plot(t_vec_ges, features_training(:, 3), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, features_training(:, 3), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('q1_p');
 grid on;
 title('q1p(t)');
 
 subplot(2,3,5);
-plot(t_vec_ges, features_training(:, 4), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, features_training(:, 4), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('q2_p');
 grid on;
@@ -331,14 +291,14 @@ title('q2p(t)');
 
 % Plot q1_pp, q2_pp
 subplot(2,3,3);
-plot(t_vec_ges, labels_training(:, 1), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, labels_training(:, 1), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('q1pp');
 grid on;
 title('q1pp(t)');
 
 subplot(2,3,6);
-plot(t_vec_ges, labels_training(:, 2), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, labels_training(:, 2), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('q2pp');
 grid on;
@@ -348,14 +308,14 @@ title('q2pp(t)');
 figure('WindowState','maximized');
 
 subplot(2,1,1);
-plot(t_vec_ges, features_training(:, 5), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, features_training(:, 5), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('tau_1');
 grid on;
 title('tau1(t)');
 
 subplot(2,1,2);
-plot(t_vec_ges, features_training(:, 6), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, features_training(:, 6), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('tau_2');
 grid on;
@@ -365,28 +325,28 @@ title('tau2(t)');
 figure('WindowState','maximized');
 
 subplot(2,4,1);
-plot(t_vec_ges, Mass_Cor_training(:, 1), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, Mass_Cor_training(:, 1), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('M11');
 grid on;
 title('M11(t)');
 
 subplot(2,4,5);
-plot(t_vec_ges, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('M12');
 grid on;
 title('M12(t)');
 
 subplot(2,4,2);
-plot(t_vec_ges, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('M12');
 grid on;
 title('M12(t)');
 
 subplot(2,4,6);
-plot(t_vec_ges, Mass_Cor_training(:, 3), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, Mass_Cor_training(:, 3), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('M22');
 grid on;
@@ -394,14 +354,14 @@ title('M22(t)');
 
 % Plott C_1, C_2
 subplot(2,4,3);
-plot(t_vec_ges, Mass_Cor_training(:, 4), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, Mass_Cor_training(:, 4), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('C1');
 grid on;
 title('C1(t)');
 
 subplot(2,4,7);
-plot(t_vec_ges, Mass_Cor_training(:, 5), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, Mass_Cor_training(:, 5), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('C2');
 grid on;
@@ -409,14 +369,14 @@ title('C2(t)');
 
 % Plott g_1, g_2
 subplot(2,4,4);
-plot(t_vec_ges, Mass_Cor_training(:, 6), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, Mass_Cor_training(:, 6), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('g1');
 grid on;
 title('g1(t)');
 
 subplot(2,4,8);
-plot(t_vec_ges, Mass_Cor_training(:, 7), 'b', 'LineWidth', 1.5);
+plot(t_vec_struct(1).t_vec, Mass_Cor_training(:, 7), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('g2');
 grid on;
