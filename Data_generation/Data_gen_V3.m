@@ -138,7 +138,7 @@ end
 
 % Bewegungszeit und Schrittweite
 samples_per_run = 100;
-move_time = 1;  % Vrogeschlagene Werte: Rob_Model = 1 (3s), Rob_Model = 2 (s)
+move_time = 2;  % Vrogeschlagene Werte: Rob_Model = 1 (3s), Rob_Model = 2 (s)
 t_vec = linspace(0, move_time, samples_per_run);
 
 % Zeitpunkte der Wegpunkte
@@ -170,12 +170,12 @@ if Rob_Model == 1
 
 elseif Rob_Model == 2
     % Startpunkte
-    q1_0 = random_init(number_runs, 0, 1/4*pi, true); % Bsp. Intervall phi_1 
-    q2_0 = random_init(number_runs, 0, 1/4*pi, true);  % Bsp. Intervall phi_2 
+    q1_0 = random_init(number_runs, 0, 1/8*pi, true); % Bsp. Intervall phi_1 
+    q2_0 = random_init(number_runs, 0, 1/8*pi, true);  % Bsp. Intervall phi_2 
     
     % Differenzen für Endpunkte
-    delta_q1 = random_init(number_runs, 1/5*pi, 1/4*pi, true); % Bsp. Intervall delta_phi_1 
-    delta_q2 = random_init(number_runs, 1/5*pi, 1/4*pi, true); % Bsp. Intervall delta_phi_2 
+    delta_q1 = random_init(number_runs, 1/3*pi, 1/2*pi, true); % Bsp. Intervall delta_phi_1 
+    delta_q2 = random_init(number_runs, 1/3*pi, 1/2*pi, true); % Bsp. Intervall delta_phi_2 
 
 end
 
