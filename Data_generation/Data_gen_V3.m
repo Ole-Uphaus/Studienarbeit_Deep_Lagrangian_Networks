@@ -89,6 +89,51 @@ function out = inv_dyn_2_FHG_Robot_1(traj_data)
 
 end
 
+% Diese funktion ist identisch zu inv_dyn_2_FHG_Robot_1, erweitert das
+% Modell jedoch um geschwindigkeitsproportionale Dämpfung.
+function out = inv_dyn_2_FHG_Robot_1_damping(traj_data)
+
+    % Systemparameter
+    m_kg = 5;   % Masse des Arms
+    mL_kg = 2;  % Masse der Last
+    J_kgm2 = 0.4;  % gesamte Rotationsträgheit
+    l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
+
+    dr_Nspm = 10;    % Dämpung der Linearachse
+    dphi_Ns = 5;  % Dämpfung der Rotationsachse
+
+    % Output definieren
+    out = struct();
+
+    % Daten aus Trajektoren extrahieren
+    r = traj_data.q1;
+    r_p = traj_data.q1_p;
+    r_pp = traj_data.q1_pp;
+
+    phi = traj_data.q2;
+    phi_p = traj_data.q2_p;
+    phi_pp = traj_data.q2_pp;
+
+    % Massenmatrix
+    out.M_11 = m_kg + mL_kg + r*0;    % Oberer linker Eintrag der Massenmatrix (r*0 damit Vektor herauskommt)
+    out.M_12 = r*0; % Oberer Rechter Eintrag der Massenmatrix (r*0 damit Vektor herauskommt)
+    out.M_22 = J_kgm2 + m_kg*(r - l_m).^2 + mL_kg*r.^2;    % Unterer rechter Eintrag der Massenmatrix
+
+    % Corioliskräfte
+    out.C_1 = -(mL_kg*r + m_kg*(r - l_m)).*phi_p.^2; % Erster Vektoreintrag
+    out.C_2 = 2*(m_kg*(r - l_m) + mL_kg*r).*r_p.*phi_p; % Zweiter Vektoreintrag
+
+    % Gewichtskräfte
+    out.g_1 = r*0;  % Erster Vektoreintrag
+    out.g_2 = r*0;  % Zweiter Vektoreintrag
+
+    % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
+    % eingesetzt) - Dämpfung hinzugefügt
+    out.tau_1 = out.M_11.*r_pp + out.C_1 + dr_Nspm*r_p;   % Eigentlich F
+    out.tau_2 = out.M_22.*phi_pp + out.C_2 + dphi_Ns*phi_p; % Eigentlich tau
+
+end
+
 % Diese funktion wertet bei gegebenen Trajektorien (q, q_p, q_pp) die
 % Inverse Dynamik des Robotermodells aus (Neues Modell)
 function out = inv_dyn_2_FHG_Robot_2(traj_data)
@@ -145,17 +190,20 @@ t_vec = linspace(0, move_time, samples_per_run);
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 10;
+number_runs = 30;
 
 % Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
 % Drehgelenken)
-Rob_Model = 2;
+Rob_Model = 1;
+
+% Soll Dämpfung berücksichtigt werden (bisher nur bei Robotermodell 1)
+damping = true;
 
 % Seed für reproduzierbare Ergebnisse
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = false;
+savedata = true;
 
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
@@ -211,7 +259,11 @@ for i = 1:number_runs
 
     % Ausgewähltes Modell nutzen
     if Rob_Model == 1
-        out = inv_dyn_2_FHG_Robot_1(traj_data(i));
+        if damping
+            out = inv_dyn_2_FHG_Robot_1_damping(traj_data(i));
+        else
+            out = inv_dyn_2_FHG_Robot_1(traj_data(i));
+        end
     elseif Rob_Model == 2
         out = inv_dyn_2_FHG_Robot_2(traj_data(i));
     end
@@ -284,11 +336,16 @@ if savedata == true
     target_folder = fullfile(my_path, '..', 'Training_Data', 'MATLAB_Simulation');
     target_folder = fullfile(target_folder); % Pfad normalisieren
 
-    % Datei speichern
+    % Datei speichern (Prüfen ob Dämpfung vorhanden)
     num_samples = num2str(length(features_test) + length(features_training));
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
-    dateiName = 'SimData_V3_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';
+    if damping
+        dateiName = 'SimData_V3_damping_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';
+    else
+        dateiName = 'SimData_V3_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';
+    end    
     full_path = fullfile(target_folder, dateiName);
+
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
 
