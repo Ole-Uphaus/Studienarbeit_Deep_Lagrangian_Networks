@@ -150,8 +150,8 @@ t_vec_struct(2).t_vec = (move_time*(1 - test_size) + zeitschritt):zeitschritt:mo
 % (variierende Frequenzen für Trainings- und Testdaten.
 A1 = pi/2;   % [rad]
 A2 = pi/2;   % [rad]
-f1 = [0.1, 0.16];   % [Hz] [Training, Test]
-f2 = [0.25, 0.38];   % [Hz] [Training, Test]
+f1 = [0.15, 0.15];   % [Hz] [Training, Test]
+f2 = [0.33, 0.33];   % [Hz] [Training, Test]
 M1 = pi/4;  % [rad]
 M2 = 0;     % [rad]
 
@@ -167,7 +167,7 @@ Rob_Model = 2;
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = true;
+savedata = false;
 
 %% Trajektorien generieren
 
