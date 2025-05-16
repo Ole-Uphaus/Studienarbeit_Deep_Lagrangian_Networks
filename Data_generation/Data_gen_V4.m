@@ -137,9 +137,9 @@ end
 %% Parameterdefinition
 
 % Bewegungszeit, Schrittweite, größe Testdatensatz
-move_time = 10;  % [s]
+move_time = 30;  % [s]
 zeitschritt = 0.01; % [s]
-test_size = 0.3;
+test_size = 0.2;
 
 % Trainings- und Testzeitvektor in einen Struct
 t_vec_struct(2) = struct();
@@ -147,10 +147,11 @@ t_vec_struct(1).t_vec = 0:zeitschritt:(move_time*(1 - test_size));    % Zeitvekt
 t_vec_struct(2).t_vec = (move_time*(1 - test_size) + zeitschritt):zeitschritt:move_time;    % Zeitvektor Testdaten
 
 % Amplituden, Frequenzen und Mittelwerte der Gelenktrajektorien
+% (variierende Frequenzen für Trainings- und Testdaten.
 A1 = pi/2;   % [rad]
 A2 = pi/2;   % [rad]
-f1 = 0.1;   % [Hz]
-f2 = 0.4;   % [Hz]
+f1 = [0.1, 0.16];   % [Hz] [Training, Test]
+f2 = [0.25, 0.38];   % [Hz] [Training, Test]
 M1 = pi/4;  % [rad]
 M2 = 0;     % [rad]
 
@@ -166,7 +167,7 @@ Rob_Model = 2;
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = false;
+savedata = true;
 
 %% Trajektorien generieren
 
@@ -175,16 +176,16 @@ traj_data(2) = struct();
 
 for i = 1:2
     % Gelenkpositionen
-    q1 = A1 * cos(w1 * t_vec_struct(i).t_vec) + M1;
-    q2 = A2 * cos(w2 * t_vec_struct(i).t_vec) + M2;
+    q1 = A1 * cos(w1(i) * t_vec_struct(i).t_vec) + M1;
+    q2 = A2 * cos(w2(i) * t_vec_struct(i).t_vec) + M2;
     
     % Gelenkgeschwindigkeiten
-    q1_p = -A1 * w1 * sin(w1 * t_vec_struct(i).t_vec);
-    q2_p = -A2 * w2 * sin(w2 * t_vec_struct(i).t_vec);
+    q1_p = -A1 * w1(i) * sin(w1(i) * t_vec_struct(i).t_vec);
+    q2_p = -A2 * w2(i) * sin(w2(i) * t_vec_struct(i).t_vec);
     
     % Gelenkbeschleunigungen
-    q1_pp = -A1 * w1^2 * cos(w1 * t_vec_struct(i).t_vec);
-    q2_pp = -A2 * w2^2 * cos(w2 * t_vec_struct(i).t_vec);
+    q1_pp = -A1 * w1(i)^2 * cos(w1(i) * t_vec_struct(i).t_vec);
+    q2_pp = -A2 * w2(i)^2 * cos(w2(i) * t_vec_struct(i).t_vec);
 
     % Daten in Struct speichern
     traj_data(i).q1 = q1';
@@ -250,7 +251,7 @@ if savedata == true
     % Datei speichern
     num_samples = num2str(length(features_test) + length(features_training));
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
-    dateiName = 'SimData_V3_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';
+    dateiName = 'SimData_V4_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';
     full_path = fullfile(target_folder, dateiName);
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
@@ -381,4 +382,3 @@ xlabel('Zeit [s]');
 ylabel('g2');
 grid on;
 title('g2(t)');
-
