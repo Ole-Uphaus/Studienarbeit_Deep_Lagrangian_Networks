@@ -99,8 +99,8 @@ function out = inv_dyn_2_FHG_Robot_1_damping(traj_data)
     J_kgm2 = 0.4;  % gesamte Rotationsträgheit
     l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 
-    dr_Nspm = 10;    % Dämpung der Linearachse
-    dphi_Ns = 5;  % Dämpfung der Rotationsachse
+    dr_Nspm = 1;    % Dämpung der Linearachse
+    dphi_Ns = 0.5;  % Dämpfung der Rotationsachse
 
     % Output definieren
     out = struct();
