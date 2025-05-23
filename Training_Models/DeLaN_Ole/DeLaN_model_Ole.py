@@ -125,7 +125,7 @@ class Deep_Lagrangian_Network(nn.Module):
         self.device = q.device
 
         # Eingänge q reshapen, damit Ausgangsdimension stimmt
-        q = q.view((-1, self.n_dof))    # q.shape = (batch_size, 1)
+        q = q.view((-1, self.n_dof))    # q.shape = (batch_size, n_dof)
         qd = qd.view((-1, self.n_dof))
         qdd = qdd.view((-1, self.n_dof))
 
