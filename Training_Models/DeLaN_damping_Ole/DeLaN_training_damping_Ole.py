@@ -44,14 +44,14 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 2000,
+    'n_epoch': 5000,
 
     # Sonstiges
     'save_model': False}
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat')  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_23_10_32_13_Samples_3000.mat')  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_23_10_32_13_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -148,6 +148,7 @@ tau_hat_test = out_test[0].cpu().detach().numpy()   # Tesnoren auf cpu legen, gr
 H_test = out_test[1].cpu().detach().numpy()
 c_test = out_test[2].cpu().detach().numpy()
 g_test = out_test[3].cpu().detach().numpy()
+tau_damp_test = out_test[4].cpu().detach().numpy()
 
 # Test loss berechnen (um mit Training zu vergleichen)
 err_inv_dyn_test = np.sum((tau_hat_test - tau_test)**2, axis=1)
@@ -268,6 +269,29 @@ plt.plot(samples_vec, tau_test[:, 1] ,label='tau2 Analytic')
 plt.title('tau2')
 plt.xlabel('Samples')
 plt.ylabel('tau')
+plt.grid(True)
+plt.legend()
+
+plt.tight_layout()
+
+# Dämpfung
+plt.figure()
+
+plt.subplot(2, 1, 1)
+plt.plot(samples_vec, tau_damp_test[:, 0], label='d1 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 7] ,label='d1 Analytic')
+plt.title('d1')
+plt.xlabel('Samples')
+plt.ylabel('d1')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 1, 2)
+plt.plot(samples_vec, tau_damp_test[:, 1], label='d2 DeLaN')
+plt.plot(samples_vec, Mass_Cor_test[:, 8], label='d2 Analytic')
+plt.title('d2')
+plt.xlabel('Samples')
+plt.ylabel('d2')
 plt.grid(True)
 plt.legend()
 
