@@ -125,7 +125,7 @@ class Deep_Lagrangian_Network(nn.Module):
         self.device = q.device
 
         # Eingänge q reshapen, damit Ausgangsdimension stimmt
-        q = q.view((-1, self.n_dof))    # q.shape = (batch_size, 1)
+        q = q.view((-1, self.n_dof))    # q.shape = (batch_size, n_dof)
         qd = qd.view((-1, self.n_dof))
         qdd = qdd.view((-1, self.n_dof))
 
@@ -170,10 +170,14 @@ class Deep_Lagrangian_Network(nn.Module):
         # Coriolisterme berechnen (H_dt * qd - 0.5 * qdT_H_dq_qd)
         c = torch.einsum('bij,bj->bi', H_dt, qd) - 0.5 * qdT_H_dq_qd    # c.shape(batch_size, n_dof)
 
-        # Inverse Dynamik auswerten
-        tau_pred = torch.einsum('bij,bj->bi', H, qdd) + c + output_g
+        # Dämpfung mit einbeziehen (Dämpfungskoeffizienten als lernbare Netzparameter)
+        self.d = nn.Parameter(torch.ones(self.n_dof))
+        tau_damp = qd * self.d
 
-        return tau_pred, H, c, output_g
+        # Inverse Dynamik auswerten
+        tau_pred = torch.einsum('bij,bj->bi', H, qdd) + c + output_g + tau_damp
+
+        return tau_pred, H, c, output_g, tau_damp
     
     def compute_Jacobian_batched(self, output_L, input_q):
         # Dimensionen des Outputs bekommen
@@ -234,6 +238,6 @@ class Deep_Lagrangian_Network(nn.Module):
         H_inv = torch.linalg.inv(H)
 
         # Forwärts Dynamik auswerten (H^-1*(tau - g - c))
-        q_pred = torch.einsum('bij,bj->bi', H_inv, (tau - q - c))
+        q_pred = torch.einsum('bij,bj->bi', H_inv, (tau - g - c))
 
         return q_pred, H, c, g

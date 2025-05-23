@@ -60,22 +60,27 @@ print('Test Input q: \n', test_q)
 print('Test Input qd: \n', test_qd)
 print('Test Input qdd: \n', test_qdd)
 print()
-# # Inverse Dynamik auswerten
-# output_inv = test_net(test_q, test_qd, test_qdd)
 
-# # Outputs ansehen
-# print('Massenmatrix H: \n', output_inv[1])
-# print()
-# print('Corioliskräfte c: \n', output_inv[2])
-# print()
-
-# Vorwärts Dynamik auswerten
-output_for = test_net.forward_dynamics(test_q, test_qd, test_tau)
+# Inverse Dynamik auswerten
+output_inv = test_net(test_q, test_qd, test_qdd)
 
 # Outputs ansehen
-print('Massenmatrix H: \n', output_for[1])
+print('Tau prädiziert: \n', output_inv[0])
 print()
-print('Corioliskräfte c: \n', output_for[2])
+print('Massenmatrix H: \n', output_inv[1])
 print()
-print('q_pp: \n', output_for[0])
+print('Corioliskräfte c: \n', output_inv[2])
 print()
+print('tau damp: \n', output_inv[4])
+
+# # Vorwärts Dynamik auswerten
+# output_for = test_net.forward_dynamics(test_q, test_qd, test_tau)
+
+# # Outputs ansehen
+# print('Massenmatrix H: \n', output_for[1])
+# print()
+# print('Corioliskräfte c: \n', output_for[2])
+# print()
+# print('q_pp: \n', output_for[0])
+# print()
+
