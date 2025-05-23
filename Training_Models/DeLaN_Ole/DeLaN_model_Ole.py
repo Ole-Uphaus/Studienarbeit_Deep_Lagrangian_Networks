@@ -234,6 +234,6 @@ class Deep_Lagrangian_Network(nn.Module):
         H_inv = torch.linalg.inv(H)
 
         # Forwärts Dynamik auswerten (H^-1*(tau - g - c))
-        q_pred = torch.einsum('bij,bj->bi', H_inv, (tau - q - c))
+        q_pred = torch.einsum('bij,bj->bi', H_inv, (tau - g - c))
 
         return q_pred, H, c, g
