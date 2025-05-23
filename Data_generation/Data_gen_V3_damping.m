@@ -1,13 +1,9 @@
 % -------------------------------------------------------------
 % Autor:      Ole Uphaus
-% Datum:      17.04.2025
+% Datum:      23.05.2025
 % Beschreibung:
-% Dies ist eine komplett neue Version des Skriptes zur Generierung der
-% Trainingsdaten. Ich werde in diesem skript nicht so viel dem Zufall
-% überlassen und Solltrajektorien für r und phi vorgeben (mit einem
-% gewissen Zufallsanteil). Aus diesen Solltrajektorien werde ich
-% anschließend die Ableitungen berechnen und die inverse Dynamik auswerten.
-% Zur Generierung der Trainingsdaten muss somit keine ODE gelöst werden.
+% Dies ist eine leicht abgeänderte Version von Data gen V3. Es werden hier
+% lediglich Robotermodelle mit Dämpfung berücksichtigt.
 % -------------------------------------------------------------
 
 clc
@@ -47,48 +43,6 @@ function x_0 = random_init(n, lower_barrier, upper_barrier, random_signum)
     end
 end
 
-% Diese funktion wertet bei gegebenen Trajektorien (q, q_p, q_pp) die
-% Inverse Dynamik des Robotermodells aus (Ursprüngliches Modell)
-function out = inv_dyn_2_FHG_Robot_1(traj_data)
-
-    % Systemparameter
-    m_kg = 5;   % Masse des Arms
-    mL_kg = 2;  % Masse der Last
-    J_kgm2 = 0.4;  % gesamte Rotationsträgheit
-    l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
-
-    % Output definieren
-    out = struct();
-
-    % Daten aus Trajektoren extrahieren
-    r = traj_data.q1;
-    r_p = traj_data.q1_p;
-    r_pp = traj_data.q1_pp;
-
-    phi = traj_data.q2;
-    phi_p = traj_data.q2_p;
-    phi_pp = traj_data.q2_pp;
-
-    % Massenmatrix
-    out.M_11 = m_kg + mL_kg + r*0;    % Oberer linker Eintrag der Massenmatrix (r*0 damit Vektor herauskommt)
-    out.M_12 = r*0; % Oberer Rechter Eintrag der Massenmatrix (r*0 damit Vektor herauskommt)
-    out.M_22 = J_kgm2 + m_kg*(r - l_m).^2 + mL_kg*r.^2;    % Unterer rechter Eintrag der Massenmatrix
-
-    % Corioliskräfte
-    out.C_1 = -(mL_kg*r + m_kg*(r - l_m)).*phi_p.^2; % Erster Vektoreintrag
-    out.C_2 = 2*(m_kg*(r - l_m) + mL_kg*r).*r_p.*phi_p; % Zweiter Vektoreintrag
-
-    % Gewichtskräfte
-    out.g_1 = r*0;  % Erster Vektoreintrag
-    out.g_2 = r*0;  % Zweiter Vektoreintrag
-
-    % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
-    % eingesetzt)
-    out.tau_1 = out.M_11.*r_pp + out.C_1;   % Eigentlich F
-    out.tau_2 = out.M_22.*phi_pp + out.C_2; % Eigentlich tau
-
-end
-
 % Diese funktion ist identisch zu inv_dyn_2_FHG_Robot_1, erweitert das
 % Modell jedoch um geschwindigkeitsproportionale Dämpfung.
 function out = inv_dyn_2_FHG_Robot_1_damping(traj_data)
@@ -99,8 +53,8 @@ function out = inv_dyn_2_FHG_Robot_1_damping(traj_data)
     J_kgm2 = 0.4;  % gesamte Rotationsträgheit
     l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 
-    dr_Nspm = 1;    % Dämpung der Linearachse
-    dphi_Ns = 0.5;  % Dämpfung der Rotationsachse
+    dr_Nspm = 5;    % Dämpung der Linearachse
+    dphi_Ns = 2.5;  % Dämpfung der Rotationsachse
 
     % Output definieren
     out = struct();
@@ -127,55 +81,14 @@ function out = inv_dyn_2_FHG_Robot_1_damping(traj_data)
     out.g_1 = r*0;  % Erster Vektoreintrag
     out.g_2 = r*0;  % Zweiter Vektoreintrag
 
+    % Dämpfungskräfte
+    out.d_1 = dr_Nspm*r_p;
+    out.d_2 = dphi_Ns*phi_p;
+
     % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
     % eingesetzt) - Dämpfung hinzugefügt
-    out.tau_1 = out.M_11.*r_pp + out.C_1 + dr_Nspm*r_p;   % Eigentlich F
-    out.tau_2 = out.M_22.*phi_pp + out.C_2 + dphi_Ns*phi_p; % Eigentlich tau
-
-end
-
-% Diese funktion wertet bei gegebenen Trajektorien (q, q_p, q_pp) die
-% Inverse Dynamik des Robotermodells aus (Neues Modell)
-function out = inv_dyn_2_FHG_Robot_2(traj_data)
-
-    % Systemparameter
-    m1_kg = 1;  % Masse Arm 1
-    m2_kg = 0.5;  % Masse Arm 2
-    l1_m = 0.3; % Länge Arm 1
-    l2_m = 0.3; % Länge Arm 2
-    J1_kgm2 = 1;  % Rotationsträgheit Arm 1
-    J2_kgm2 = 1;  % Rotationsträgheit Arm 2
-    g_mps2 = 9.81;  % Gravitationskonstante
-
-    % Output definieren
-    out = struct();
-
-    % Daten aus Trajektoren extrahieren
-    phi_1 = traj_data.q1;
-    phi_1_p = traj_data.q1_p;
-    phi_1_pp = traj_data.q1_pp;
-
-    phi_2 = traj_data.q2;
-    phi_2_p = traj_data.q2_p;
-    phi_2_pp = traj_data.q2_pp;
-
-    % Massenmatrix
-    out.M_11 = J1_kgm2 + J2_kgm2 + (l1_m^2*m1_kg)/4 + l1_m^2*m2_kg + (l2_m^2*m2_kg)/4 + l1_m*l2_m*m2_kg.*cos(phi_2);   % Oberer linker Eintrag der Massenmatrix
-    out.M_12 = (m2_kg*l2_m^2)/4 + (l1_m*m2_kg.*cos(phi_2).*l2_m)/2 + J2_kgm2;      % Oberer Rechter Eintrag der Massenmatrix
-    out.M_22 = (m2_kg*l2_m^2)/4 + J2_kgm2 + phi_1*0;    % Unterer rechter Eintrag der Massenmatrix
-
-    % Corioliskräfte
-    out.C_1 = -(l1_m*l2_m*m2_kg.*phi_2_p.*sin(phi_2).*(2.*phi_1_p + phi_2_p))/2;     % Erster Vektoreintrag
-    out.C_2 = (l1_m*l2_m*m2_kg.*phi_1_p.^2.*sin(phi_2))/2;    % Zweiter Vektoreintrag
-
-    % Gewichtskräfte
-    out.g_1 = g_mps2*m2_kg.*((l2_m.*sin(phi_1 + phi_2))/2 + l1_m.*sin(phi_1)) + (g_mps2*l1_m*m1_kg.*sin(phi_1))/2;  % Erster Vektoreintrag
-    out.g_2 = (g_mps2*l2_m*m2_kg.*sin(phi_1 + phi_2))/2;  % Zweiter Vektoreintrag
-
-    % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
-    % eingesetzt)
-    out.tau_1 = out.M_11.*phi_1_pp + out.M_12.*phi_2_pp + out.C_1 + out.g_1;    % tau_1
-    out.tau_2 = out.M_22.*phi_2_pp + out.M_12.*phi_1_pp + out.C_2 + out.g_2;    % tau_2
+    out.tau_1 = out.M_11.*r_pp + out.C_1 + out.d_1;   % Eigentlich F
+    out.tau_2 = out.M_22.*phi_pp + out.C_2 + out.d_2; % Eigentlich tau
 
 end
 
@@ -192,18 +105,14 @@ waypointTimes = [0 move_time];
 % Anzahl der voneinander unabhängigen Bewegungen
 number_runs = 30;
 
-% Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
-% Drehgelenken)
+% Robotermodell auswählen (altuell nur Robotermodell 1 möglich)
 Rob_Model = 1;
-
-% Soll Dämpfung berücksichtigt werden (bisher nur bei Robotermodell 1)
-damping = true;
 
 % Seed für reproduzierbare Ergebnisse
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = true;
+savedata = false;
 
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
@@ -259,11 +168,7 @@ for i = 1:number_runs
 
     % Ausgewähltes Modell nutzen
     if Rob_Model == 1
-        if damping
-            out = inv_dyn_2_FHG_Robot_1_damping(traj_data(i));
-        else
-            out = inv_dyn_2_FHG_Robot_1(traj_data(i));
-        end
+        out = inv_dyn_2_FHG_Robot_1_damping(traj_data(i));
     elseif Rob_Model == 2
         out = inv_dyn_2_FHG_Robot_2(traj_data(i));
     end
@@ -281,6 +186,10 @@ for i = 1:number_runs
     traj_data(i).g_1 = out.g_1;
     traj_data(i).g_2 = out.g_2;
 
+    % Dämpfungsterme
+    traj_data(i).d_1 = out.d_1;
+    traj_data(i).d_2 = out.d_2;
+
     % Eingeprägte Kräfte/Momente 
     traj_data(i).tau_1 = out.tau_1;
     traj_data(i).tau_2 = out.tau_2;
@@ -295,7 +204,7 @@ test_idx = randperm((number_runs), number_testdata);   % Zufällige Indizees fü
 
 features_test = [traj_data(test_idx(1)).q1, traj_data(test_idx(1)).q2, traj_data(test_idx(1)).q1_p, traj_data(test_idx(1)).q2_p, traj_data(test_idx(1)).tau_1, traj_data(test_idx(1)).tau_2];
 labels_test = [traj_data(test_idx(1)).q1_pp, traj_data(test_idx(1)).q2_pp];
-Mass_Cor_test = [traj_data(test_idx(1)).M_11, traj_data(test_idx(1)).M_12, traj_data(test_idx(1)).M_22, traj_data(test_idx(1)).C_1, traj_data(test_idx(1)).C_2, traj_data(test_idx(1)).g_1, traj_data(test_idx(1)).g_2];
+Mass_Cor_test = [traj_data(test_idx(1)).M_11, traj_data(test_idx(1)).M_12, traj_data(test_idx(1)).M_22, traj_data(test_idx(1)).C_1, traj_data(test_idx(1)).C_2, traj_data(test_idx(1)).g_1, traj_data(test_idx(1)).g_2, traj_data(test_idx(1)).d_1, traj_data(test_idx(1)).d_2];
 
 for i = test_idx(2:end)
     % Features [q1, q2, q1_p, q2_p, tau_1, tau_2]
@@ -304,9 +213,9 @@ for i = test_idx(2:end)
     % Labels [q1_pp, q2_pp]
     labels_test = [labels_test;
         traj_data(i).q1_pp, traj_data(i).q2_pp];
-    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2]
+    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2, d_1, d_2]
     Mass_Cor_test = [Mass_Cor_test;
-        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2, traj_data(i).g_1, traj_data(i).g_2];
+        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2, traj_data(i).g_1, traj_data(i).g_2, traj_data(i).d_1, traj_data(i).d_2];
 end
 
 % Trainingsdaten auswählen und in Features und Labels aufteilen (80%)
@@ -314,7 +223,7 @@ training_idx = setdiff((1:number_runs), test_idx);
 
 features_training = [traj_data(training_idx(1)).q1, traj_data(training_idx(1)).q2, traj_data(training_idx(1)).q1_p, traj_data(training_idx(1)).q2_p, traj_data(training_idx(1)).tau_1, traj_data(training_idx(1)).tau_2];
 labels_training = [traj_data(training_idx(1)).q1_pp, traj_data(training_idx(1)).q2_pp];
-Mass_Cor_training = [traj_data(training_idx(1)).M_11, traj_data(training_idx(1)).M_12, traj_data(training_idx(1)).M_22, traj_data(training_idx(1)).C_1, traj_data(training_idx(1)).C_2, traj_data(training_idx(1)).g_1, traj_data(training_idx(1)).g_2];
+Mass_Cor_training = [traj_data(training_idx(1)).M_11, traj_data(training_idx(1)).M_12, traj_data(training_idx(1)).M_22, traj_data(training_idx(1)).C_1, traj_data(training_idx(1)).C_2, traj_data(training_idx(1)).g_1, traj_data(training_idx(1)).g_2, traj_data(training_idx(1)).d_1, traj_data(training_idx(1)).d_2];
 
 for i = training_idx(2:end)
     % Features [q1, q2, q1_p, q2_p, tau_1, tau_2]
@@ -323,9 +232,9 @@ for i = training_idx(2:end)
     % Labels [q1_pp, q2_pp]
     labels_training = [labels_training;
         traj_data(i).q1_pp, traj_data(i).q2_pp];
-    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2]
+    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2, d_1, d_2]
     Mass_Cor_training = [Mass_Cor_training;
-        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2,traj_data(i).g_1, traj_data(i).g_2];
+        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2,traj_data(i).g_1, traj_data(i).g_2, traj_data(i).d_1, traj_data(i).d_2];
 end
 
 if savedata == true
@@ -339,13 +248,8 @@ if savedata == true
     % Datei speichern (Prüfen ob Dämpfung vorhanden)
     num_samples = num2str(length(features_test) + length(features_training));
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
-    if damping
-        dateiName = 'SimData_V3_damping_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';
-    else
-        dateiName = 'SimData_V3_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';
-    end    
+    dateiName = 'SimData_V3_damping_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';   
     full_path = fullfile(target_folder, dateiName);
-
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
 
@@ -401,22 +305,36 @@ ylabel('q2pp');
 grid on;
 title('q2pp(t)');
 
-% Plot F, tau
+% Plot F, tau, Dämpfung
 figure('WindowState','maximized');
 
-subplot(2,1,1);
+subplot(2,2,1);
 plot(t_vec_ges, features_training(:, 5), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('tau_1');
 grid on;
 title('tau1(t)');
 
-subplot(2,1,2);
+subplot(2,2,3);
 plot(t_vec_ges, features_training(:, 6), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('tau_2');
 grid on;
 title('tau2(t)');
+
+subplot(2,2,2);
+plot(t_vec_ges, Mass_Cor_training(:, 8), 'b', 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('d1');
+grid on;
+title('d1(t)');
+
+subplot(2,2,4);
+plot(t_vec_ges, Mass_Cor_training(:, 9), 'b', 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('d2');
+grid on;
+title('d2(t)');
 
 % Plott M_11, M_12, M_22
 figure('WindowState','maximized');
