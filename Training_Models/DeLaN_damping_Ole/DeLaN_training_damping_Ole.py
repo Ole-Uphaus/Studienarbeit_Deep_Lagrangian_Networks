@@ -11,7 +11,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-from DeLaN_model_Ole import Deep_Lagrangian_Network
+from DeLaN_model_damping_Ole import Deep_Lagrangian_Network
 from DeLaN_functions_Ole import *
 
 # Checken, ob Cuda verfügbar und festlegen des devices, auf dem trainiert werden soll
@@ -50,8 +50,8 @@ hyper_param = {
     'save_model': False}
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_16_11_14_58_Samples_3000.mat')  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_16_11_14_58_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat')  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -103,7 +103,7 @@ for epoch in range(hyper_param['n_epoch']):
         tau = batch_labels.to(device)
 
         # Forward pass
-        tau_hat, _, _, _ = DeLaN_network(q, qd, qdd)
+        tau_hat, _, _, _, _ = DeLaN_network(q, qd, qdd)
 
         # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
         err_inv_dyn = torch.sum((tau_hat - tau)**2, dim=1)

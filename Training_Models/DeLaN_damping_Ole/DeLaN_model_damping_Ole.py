@@ -116,6 +116,9 @@ class Deep_Lagrangian_Network(nn.Module):
         self.n_dof = n_dof
         self.L_diagonal_offset = hyper_param['L_diagonal_offset']
 
+        # Dämpfungskoeffizienten als lernbare Netzwerkparameter definieren
+        self.d = nn.Parameter(torch.zeros(self.n_dof))
+
     def forward(self, q, qd, qdd):
 
         return self.lagrangian_dynamics(q, qd, qdd)
@@ -170,8 +173,7 @@ class Deep_Lagrangian_Network(nn.Module):
         # Coriolisterme berechnen (H_dt * qd - 0.5 * qdT_H_dq_qd)
         c = torch.einsum('bij,bj->bi', H_dt, qd) - 0.5 * qdT_H_dq_qd    # c.shape(batch_size, n_dof)
 
-        # Dämpfung mit einbeziehen (Dämpfungskoeffizienten als lernbare Netzparameter)
-        self.d = nn.Parameter(torch.ones(self.n_dof))
+        # Dämpfungskräfte berechnen
         tau_damp = qd * self.d
 
         # Inverse Dynamik auswerten
