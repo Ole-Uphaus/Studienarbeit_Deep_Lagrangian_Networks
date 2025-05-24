@@ -50,7 +50,36 @@ q_p_matlab = features_training[:, [2, 3]]
 q_pp_matlab = features_training[:, [4, 5]]
 tau_matlab = labels_training
 
+# XML Modell laden
+xml_name = '2_FHG_Rob_Model_1.xml'
+script_path = os.path.dirname(os.path.abspath(__file__))
+xml_path = os.path.join(script_path, '..', 'Models', xml_name)
 
+model = mujoco.MjModel.from_xml_path(xml_path)
+data = mujoco.MjData(model)
+
+# Inverse Dynamik mit Mujoco Modell auswerten (Aufpassen weil q_matlab = [r, phi] und q_mujoco = [phi, r])
+tau_mujoco = []
+for i in range(q_matlab.shape[0]):
+    # Position
+    data.qpos[0] = q_matlab[i, 1] 
+    data.qpos[1] = q_matlab[i, 0]
+
+    # Geschwindigkeit
+    data.qvel[0] = q_p_matlab[i, 1] 
+    data.qvel[1] = q_p_matlab[i, 0]
+
+    # Geschwindigkeit
+    data.qacc[0] = q_pp_matlab[i, 1] 
+    data.qacc[1] = q_pp_matlab[i, 0]
+
+    # Inverses Modell auswerten
+    mujoco.mj_inverse(model, data)
+
+    # Auswertung der inversen Dynamik speichern (hier wieder Vertauschung vornehmen)
+    tau_mujoco.append([data.qfrc_inverse.copy()[1], data.qfrc_inverse.copy()[0]])
+
+tau_mujoco = np.array(tau_mujoco)
 
 # Verläufe plotten
 samples_vec = np.arange(1, q_matlab.shape[0] + 1)
@@ -116,6 +145,7 @@ plt.figure()
 
 plt.subplot(2, 1, 1)
 plt.plot(samples_vec, tau_matlab[:, 0], label='tau1 matlab')
+plt.plot(samples_vec, tau_mujoco[:, 0], label='tau1 mujoco')
 plt.title('tau1')
 plt.xlabel('Samples')
 plt.ylabel('tau1')
@@ -124,6 +154,7 @@ plt.legend()
 
 plt.subplot(2, 1, 2)
 plt.plot(samples_vec, tau_matlab[:, 1], label='tau2 matlab')
+plt.plot(samples_vec, tau_mujoco[:, 1], label='tau2 mujoco')
 plt.title('tau2')
 plt.xlabel('Samples')
 plt.ylabel('tau2')
