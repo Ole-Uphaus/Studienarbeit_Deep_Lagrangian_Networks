@@ -23,8 +23,8 @@ Anmerkungen zur Geometrie (Verbindung zum analytischen Modell):
   <option timestep='0.01' gravity="0 0 0"/>
 
   <worldbody>
-    <geom name='floor' pos='0 0 -1' size='4 4 4' type='plane' />
-    <light name="main_light" pos="0 0 2" dir="0 0 -1" diffuse="1 1 1" specular="0.5 0.5 0.5" />
+    <geom name='floor' pos='0 0 -0.1' size='4 4 4' type='plane' />
+    <light name="main_light" pos="0 0 5" dir="0 0 -1" diffuse="1 1 1" specular="0.5 0.5 0.5" />
 
     <!-- Rotationsgelenk mit starrem Arm -->
     <body name="rotating_arm" pos="0 0 0">
@@ -57,7 +57,7 @@ Anmerkungen zur Geometrie (Verbindung zum analytischen Modell):
   <!-- Moment Rotationsgelenk -->
   <motor name="motor_joint1" joint="joint1" gear="1"/>
 
-  <!-- Krafts Schubgelenk -->
+  <!-- Kraft Schubgelenk -->
   <motor name="motor_joint2" joint="joint2" gear="1"/>
 </actuator>
 
