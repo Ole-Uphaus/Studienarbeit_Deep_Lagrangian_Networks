@@ -37,20 +37,20 @@ Anmerkungen zur Geometrie (Verbindung zum analytischen Modell):
       <geom type="box" size="0.3 0.075 0.05" pos="0.3 0 0" rgba="0.4 0.8 0.4 1"/>
       <geom type="cylinder" size="0.10 0.05" pos="0 0 0" rgba="0.4 0.8 0.4 1"/>
 
-      <inertial pos="0 0 0" mass="0.0001" diaginertia="1 1 1"/>
+      <inertial pos="0 0 0" mass="0.0001" diaginertia="0.4 0.4 0.4"/>
 
       <!-- Endmasse -->
       <body name="end_mass" pos="0 0 0">
         <geom type="box" size="0.05 0.075 0.05" pos="0 0 0" rgba="0.4 0.4 0.8 1"/>
         <joint name="joint2" type="slide" axis="1 0 0" limited="false"/>
 
-        <inertial pos="0 0 0" mass="0.02" diaginertia="0.0001 0.0001 0.0001"/>
+        <inertial pos="0 0 0" mass="2" diaginertia="0.0001 0.0001 0.0001"/>
 
         <!-- Teleskoparm -->
-        <body name="telescopic_link" pos="-0.35 0 0">
+        <body name="telescopic_link" pos="-0.25 0 0">
           <geom type="box" size="0.3 0.055 0.035" pos="0 0 0" rgba="0.4 0.4 0.8 1"/>
 
-          <inertial pos="0 0 0" mass="0.05" diaginertia="0.0001 0.0001 0.0001"/>
+          <inertial pos="0 0 0" mass="5" diaginertia="0.0001 0.0001 0.0001"/>
 
         </body>
       </body>
