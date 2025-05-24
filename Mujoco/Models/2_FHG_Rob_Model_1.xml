@@ -1,0 +1,30 @@
+<!-- Modell 2 FHG Roboter
+
+Autor:      Ole Uphaus
+Datum:      24.05.2025
+Beschreibung: Dies ist ein Robotermodell des 2 FHG Roboters aus NLRS. Es gibt keine Schwerkraft und es gibt ein Drehgelenk und ein Schubgelenk.
+
+-->
+<mujoco model='2_FHG_Rob_Model_1'>
+
+  <compiler coordinate='local'/>
+  <option timestep='0.01' gravity="0 0 -9.81"/>
+
+  <worldbody>
+    <geom name='floor' pos='0 0 -1' size='4 4 4' type='plane' />
+
+    <!-- Rotationsgelenk mit starrem Arm -->
+    <body name="rotating_arm" pos="0 0 0">
+      <joint name="joint1" type="hinge" axis="0 0 1" limited="true" range="-3.14 3.14"/>
+      <geom type="box" size="0.3 0.075 0.05" pos="0.3 0 0" rgba="0.4 0.8 0.4 1"/>
+      <geom type="cylinder" size="0.10 0.05" pos="0 0 0" rgba="0.4 0.8 0.4 1"/>
+
+      
+
+
+
+    
+    </body>
+  </worldbody>
+
+</mujoco>
