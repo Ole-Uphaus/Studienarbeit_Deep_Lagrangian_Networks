@@ -53,4 +53,12 @@ Anmerkungen zur Geometrie (Verbindung zum analytischen Modell):
     </body>
   </worldbody>
 
+  <actuator>
+  <!-- Moment Rotationsgelenk -->
+  <motor name="motor_joint1" joint="joint1" gear="1"/>
+
+  <!-- Krafts Schubgelenk -->
+  <motor name="motor_joint2" joint="joint2" gear="1"/>
+</actuator>
+
 </mujoco>
