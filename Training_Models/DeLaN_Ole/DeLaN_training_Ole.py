@@ -28,8 +28,8 @@ torch.cuda.manual_seed_all(seed)
 # Parameter festlegen
 hyper_param = {
     # Netzparameter
-    'hidden_width': 64,
-    'hidden_depth': 2,
+    'hidden_width': 128,
+    'hidden_depth': 3,
     'activation_fnc': 'elu',
 
     # Initialisierung
@@ -50,8 +50,8 @@ hyper_param = {
     'save_model': False}
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_23_10_32_13_Samples_3000.mat')  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_23_10_32_13_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_2_2025_05_25_10_06_55_Samples_3000.mat')  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_2_2025_05_25_10_06_55_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
