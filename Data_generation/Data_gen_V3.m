@@ -138,7 +138,7 @@ end
 
 % Bewegungszeit und Schrittweite
 samples_per_run = 100;
-move_time = 2;  % Vrogeschlagene Werte: Rob_Model = 1 (3s), Rob_Model = 2 (s)
+move_time = 1;  % Vrogeschlagene Werte: Rob_Model = 1 (3s), Rob_Model = 2 (s)
 t_vec = linspace(0, move_time, samples_per_run);
 
 % Zeitpunkte der Wegpunkte
@@ -149,13 +149,13 @@ number_runs = 30;
 
 % Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
 % Drehgelenken)
-Rob_Model = 1;
+Rob_Model = 2;
 
 % Seed für reproduzierbare Ergebnisse
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = false;
+savedata = true;
 
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
@@ -171,7 +171,7 @@ if Rob_Model == 1
 elseif Rob_Model == 2
     % Startpunkte
     q1_0 = random_init(number_runs, 1/4*pi, 1/2*pi, true); % Bsp. Intervall phi_1 
-    q2_0 = random_init(number_runs, 0, 1/8*pi, true);  % Bsp. Intervall phi_2 
+    q2_0 = random_init(number_runs, 1/4*pi, 1/2*pi, true);  % Bsp. Intervall phi_2 
     
     % Differenzen für Endpunkte
     delta_q1 = random_init(number_runs, 1/3*pi, 1/2*pi, true); % Bsp. Intervall delta_phi_1 
