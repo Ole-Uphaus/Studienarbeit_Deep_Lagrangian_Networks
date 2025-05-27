@@ -38,3 +38,19 @@ def extract_training_data(file_name):
     labels_test_delan = features_test[:, 4:]
 
     return features_training_delan, labels_training_delan, features_test_delan, labels_test_delan, Mass_Cor_test
+
+def model_evaluation(model, q_test, qd_test, qdd_test, tau_test):
+    # Forward pass
+    out_eval = model(q_test, qd_test, qdd_test, )
+
+    tau_hat_eval = out_eval[0].cpu().detach().numpy()   # Tesnoren auf cpu legen, gradienten entfernen, un numpy arrays umwandeln
+    H_eval = out_eval[1].cpu().detach().numpy()
+    c_eval = out_eval[2].cpu().detach().numpy()
+    g_eval = out_eval[3].cpu().detach().numpy()
+    tau_damp_eval = out_eval[4].cpu().detach().numpy()
+
+    # Evaluierungs Loss berechnen (um mit Training zu vergleichen)
+    err_inv_dyn_test = np.sum((tau_hat_eval - tau_test)**2, axis=1)
+    mean_err_inv_dyn_eval = np.mean(err_inv_dyn_test)
+
+    return mean_err_inv_dyn_eval, tau_hat_eval, H_eval, c_eval, g_eval, tau_damp_eval

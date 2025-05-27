@@ -12,7 +12,7 @@ import time
 import matplotlib.pyplot as plt
 
 from DeLaN_model_damping_Ole import Deep_Lagrangian_Network
-from DeLaN_functions_Ole import *
+from DeLaN_functions_damping_Ole import *
 
 # Checken, ob Cuda verfügbar und festlegen des devices, auf dem trainiert werden soll
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -65,6 +65,12 @@ dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch
 features_test_tensor = torch.tensor(features_test, dtype=torch.float32)
 labels_test_tensor = torch.tensor(labels_test, dtype=torch.float32)
 
+# Testdaten zuordnen und auf device verschieben
+q_test = features_test_tensor[:, (0, 1)].to(device)
+qd_test = features_test_tensor[:, (2, 3)].to(device)
+qdd_test = features_test_tensor[:, (4, 5)].to(device)
+tau_test = labels_test_tensor.cpu().numpy()    # Diesen Tensor direkt auf cpu schieben, damit damit nachher der loss berechnet werden kann
+
 # Ausgabe Datendimensionen
 print('Datenpunkte Training: ', features_training.shape[0])
 print('Datenpunkte Evaluierung: ', features_test.shape[0])
@@ -86,7 +92,9 @@ print()
 start_time = time.time()
 
 # Training des Netzwerks
-loss_history = []
+training_loss_history = []
+test_loss_history = []
+
 for epoch in range(hyper_param['n_epoch']):
     # Modell in den Trainingsmodeus versetzen und loss Summe initialisieren
     DeLaN_network.train()
@@ -122,49 +130,38 @@ for epoch in range(hyper_param['n_epoch']):
     loss_mean_batch = loss_sum/len(dataloader_training)
 
     # Loss an Loss history anhängen
-    loss_history.append([epoch + 1, loss_mean_batch])
+    training_loss_history.append([epoch + 1, loss_mean_batch])
 
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
+        # Model Evaluieren
+        test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test)
+
+        # Loss an Loss history anhängen
+        test_loss_history.append([epoch + 1, test_loss])
+
         # Ausgabe während des Trainings
-        print(f'Epoch [{epoch + 1}/{hyper_param['n_epoch']}], Training-Loss: {loss_mean_batch:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
+        print(f'Epoch [{epoch + 1}/{hyper_param['n_epoch']}], Training-Loss: {loss_mean_batch:.3e}, Test-Loss: {test_loss:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
 
 # Modell evaluieren (kein torch.nograd(), da interne Gradienten benötigt werden)
 DeLaN_network.eval()
-
-# Testdaten zuordnen und auf device verschieben
-q_test = features_test_tensor[:, (0, 1)].to(device)
-qd_test = features_test_tensor[:, (2, 3)].to(device)
-qdd_test = features_test_tensor[:, (4, 5)].to(device)
-tau_test = labels_test_tensor.cpu().numpy()    # Diesen Tensor direkt auf cpu schieben, damit damit nachher der loss berechnet werden kann
 
 # Prädiktion
 print()
 print('Evaluierung...')
 
-# Forward pass
-out_test = DeLaN_network(q_test, qd_test, qdd_test)
-
-tau_hat_test = out_test[0].cpu().detach().numpy()   # Tesnoren auf cpu legen, gradienten entfernen, un numpy arrays umwandeln
-H_test = out_test[1].cpu().detach().numpy()
-c_test = out_test[2].cpu().detach().numpy()
-g_test = out_test[3].cpu().detach().numpy()
-tau_damp_test = out_test[4].cpu().detach().numpy()
-
-# Test loss berechnen (um mit Training zu vergleichen)
-err_inv_dyn_test = np.sum((tau_hat_test - tau_test)**2, axis=1)
-mean_err_inv_dyn_test = np.mean(err_inv_dyn_test)
-
-# Ausgabe loss
-print(f'Test-Loss: {mean_err_inv_dyn_test:.3e}')
-print()
+# Evaluierung
+_, tau_hat_test, H_test, c_test, g_test, tau_damp_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test)
 
 # Plotten
 samples_vec = np.arange(1, H_test.shape[0] + 1)
 
 # Loss Entwicklung plotten
-loss_history = np.array(loss_history)
+training_loss_history = np.array(training_loss_history)
+test_loss_history = np.array(test_loss_history)
+
 plt.figure()
-plt.semilogy(loss_history[:, 0], loss_history[:, 1], label='Training Loss')
+plt.semilogy(training_loss_history[:, 0], training_loss_history[:, 1], label='Training Loss')
+plt.semilogy(test_loss_history[:, 0], test_loss_history[:, 1], label='Test Loss')
 plt.xlabel('Epoche')
 plt.ylabel('Loss')
 plt.title('Loss-Verlauf während des Trainings')
