@@ -24,7 +24,7 @@ max_seed = 100
 seed_vec = np.arange(1, max_seed + 1)
 
 # Ergebnisvektor
-seed_loss_vec = np.zeros([max_seed, 2])
+seed_loss_vec = np.zeros([max_seed, 3])
 seed_loss_vec[:, 0] = seed_vec
 
 # Loop, um mehrere Seeds auszuprobieren
@@ -41,8 +41,8 @@ for i_seed in seed_vec:
     # Parameter festlegen
     hyper_param = {
         # Netzparameter
-        'hidden_width': 32,
-        'hidden_depth': 3,
+        'hidden_width': 64,
+        'hidden_depth': 2,
         'activation_fnc': 'elu',
 
         # Initialisierung
@@ -57,14 +57,14 @@ for i_seed in seed_vec:
         'batch_size': 512,
         'learning_rate': 5.e-4,
         'weight_decay': 1.e-4,
-        'n_epoch': 2000,
+        'n_epoch': 5,
 
         # Sonstiges
         'save_model': False}
 
     # Trainings- und Testdaten laden 
-    features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat')  # Mein Modell Trainingsdaten
-    _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+    features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_06_01_12_00_30_Samples_4096.mat')  # Mein Modell Trainingsdaten
+    _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_06_01_12_00_30_Samples_4096.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
     # Torch Tensoren der Trainingsdaten erstellen
     features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -169,16 +169,19 @@ for i_seed in seed_vec:
 
     # Fehler abspeichern
     seed_loss_vec[i_seed - 1, 1] = mean_err_inv_dyn_test
+    seed_loss_vec[i_seed - 1, 2] = loss_mean_batch
 
 print(seed_loss_vec)
 
 # Fehler Visualisieren
 plt.figure()
-plt.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 1])
+plt.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 1], label='Test-Loss')
+plt.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 2], label='Training-Loss')
 plt.xscale("linear")
 plt.yscale("log") 
 plt.xlabel("Seed")
 plt.ylabel("Fehler MSE")
 plt.title("Zusammenhang zwischen Seed und Fehler")
 plt.grid(True)
+plt.legend()
 plt.show()
