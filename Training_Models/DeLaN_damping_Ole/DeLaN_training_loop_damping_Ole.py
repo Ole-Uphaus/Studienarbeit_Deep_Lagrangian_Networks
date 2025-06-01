@@ -12,7 +12,7 @@ import time
 import matplotlib.pyplot as plt
 
 from DeLaN_model_damping_Ole import Deep_Lagrangian_Network
-from DeLaN_functions_Ole import *
+from DeLaN_functions_damping_Ole import *
 
 # Checken, ob Cuda verfügbar und festlegen des devices, auf dem trainiert werden soll
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,7 +24,7 @@ max_seed = 100
 seed_vec = np.arange(1, max_seed + 1)
 
 # Ergebnisvektor
-seed_loss_vec = np.zeros([max_seed, 2])
+seed_loss_vec = np.zeros([max_seed, 3])
 seed_loss_vec[:, 0] = seed_vec
 
 # Loop, um mehrere Seeds auszuprobieren
@@ -169,16 +169,19 @@ for i_seed in seed_vec:
 
     # Fehler abspeichern
     seed_loss_vec[i_seed - 1, 1] = mean_err_inv_dyn_test
+    seed_loss_vec[i_seed - 1, 2] = loss_mean_batch
 
 print(seed_loss_vec)
 
 # Fehler Visualisieren
 plt.figure()
-plt.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 1])
+plt.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 1], label='Test-Loss')
+plt.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 2], label='Training-Loss')
 plt.xscale("linear")
 plt.yscale("log") 
 plt.xlabel("Seed")
 plt.ylabel("Fehler MSE")
 plt.title("Zusammenhang zwischen Seed und Fehler")
 plt.grid(True)
+plt.legend()
 plt.show()
