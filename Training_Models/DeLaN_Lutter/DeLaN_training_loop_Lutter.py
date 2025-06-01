@@ -137,7 +137,7 @@ for i_seed in seed_vec:
             'n_minibatch': 512,
             'learning_rate': 5.e-04,
             'weight_decay': 1.e-5,
-            'max_epoch': 5,
+            'max_epoch': 2000,
             'save_model': False}
 
     # Checken, ob Cuda verfügbar
@@ -183,7 +183,7 @@ for i_seed in seed_vec:
         cuda = False
 
     mem_dim = ((n_dof, ), (n_dof, ), (n_dof, ), (n_dof, ))
-    mem = PyTorchReplayMemory(train_qp.shape[0], hyper["n_minibatch"], mem_dim, cuda)
+    mem = PyTorchReplayMemory(train1_qp.shape[0], hyper["n_minibatch"], mem_dim, cuda)
     mem.add_samples([train1_qp, train1_qv, train1_qa, train1_tau])
 
     # Optimierung (Lernprozess)
