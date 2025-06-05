@@ -9,7 +9,7 @@ from scipy.io import savemat
 
 
 # Specify model to be loaded
-model_xml_file = os.path.join(os.getcwd(), 'Mujoco', 'Minimalbeispiel', 'cartpole_minimal.xml')
+model_xml_file = os.path.join(os.getcwd(), 'Mujoco', 'Minimalbeispiel_Sven', 'cartpole_minimal.xml')
 
 # Load xml file from given path to obtain the mjModel file
 model = mujoco.MjModel.from_xml_path(model_xml_file)
