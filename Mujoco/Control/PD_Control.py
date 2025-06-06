@@ -123,6 +123,18 @@ with viewer.launch_passive(model, data) as v:
 end_mass_pos_vec = np.array(end_mass_pos_vec)
 q_vec = np.array(q_vec)
 
+# Trajektorienfolgefehler berechnen
+error_phi = phi_des_traj - q_vec[:, 0]
+error_r = r_des_traj - q_vec[:, 1]
+
+# Mittelwert der quadrierten Fehler (MSE)
+mse_phi = np.mean(error_phi**2)
+mse_r = np.mean(error_r**2)
+
+# Ausgabe
+print(f"MSE für phi: {mse_phi:.4e}")
+print(f"MSE für r: {mse_r:.4e}")
+
 # Soll vs. Ist Trajektorie plotten
 plt.figure()
 
@@ -139,7 +151,7 @@ plt.legend()
 # Soll vs. Ist Gelenkkoordinaten
 plt.figure()
 
-plt.subplot(2, 1, 1)
+plt.subplot(2, 2, 1)
 plt.plot(t_vec, phi_des_traj, label='phi soll')
 plt.plot(t_vec, q_vec[:, 0], label='phi ist')
 plt.title('phi')
@@ -148,7 +160,7 @@ plt.ylabel('phi')
 plt.grid(True)
 plt.legend()
 
-plt.subplot(2, 1, 2)
+plt.subplot(2, 2, 3)
 plt.plot(t_vec, r_des_traj, label='r soll')
 plt.plot(t_vec, q_vec[:, 1], label='r ist')
 plt.title('r')
@@ -156,5 +168,23 @@ plt.xlabel('t')
 plt.ylabel('r')
 plt.grid(True)
 plt.legend()
+
+plt.subplot(2, 2, 2)
+plt.plot(t_vec, error_phi, label='error phi')
+plt.title('Folgefehler phi')
+plt.xlabel('t')
+plt.ylabel('phi')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 4)
+plt.plot(t_vec, error_r, label='error r')
+plt.title('Folgefehler r')
+plt.xlabel('t')
+plt.ylabel('r')
+plt.grid(True)
+plt.legend()
+
+plt.tight_layout()
 
 plt.show()
