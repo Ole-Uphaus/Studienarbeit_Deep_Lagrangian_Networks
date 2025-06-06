@@ -12,32 +12,29 @@ import os
 import matplotlib.pyplot as plt
 import time
 
-# In diesem Fall lässt sich die inverse Kinematik eindeutig auflösen
-def inverse_kinematics_2_DOF(x_e, y_e):
-    # Berechnung von phi
-    phi = np.arctan2(y_e, x_e)
-
-    # Berechnung von r
-    r = x_e/np.cos(phi)
-
-    return r, phi
-
-# Parameter Trajektorie (Lemniskate)
-amp_x = 0.2
-amp_y = 0.1
+# Parameter Trajektorie 
+amp_phi = 0.1
+amp_r = 0.2
 T = 5
 dt = 0.01
 omega = 2 * np.pi / T   # Frequenz so anpassen, dass eine Umdrehung in gegebener Zeit durchgeführt wird
 
-offset_x = 1
-offset_y = 0.2
+offset_phi = 0.2
+offset_r = 1.0
 
 # Zeitvektor
 t_vec = np.arange(0, T, dt)
 
-# Parametrisierung der 8 (Lemniskate)
-x_traj = amp_x * np.sin(omega * t_vec) + offset_x
-y_traj = amp_y * np.sin(omega * t_vec) * np.cos(omega * t_vec) + offset_y
+# Trajektorien für r und phi festlegen (+ Ableitung)
+phi_des_traj = amp_phi * np.sin(2 * omega * t_vec) + offset_phi
+r_des_traj = amp_r * np.sin(omega * t_vec) + offset_r
+
+phi_p_des_traj = amp_phi * 2 * omega * np.cos(2 * omega * t_vec)
+r_p_des_traj = amp_r * omega * np.cos(omega * t_vec)
+
+# x und y Koordinaten ableiten
+x_des_traj = r_des_traj * np.cos(phi_des_traj)
+y_des_traj = r_des_traj * np.sin(phi_des_traj)
 
 # XML Modell laden
 xml_name = '2_FHG_Rob_Model_1.xml'
@@ -48,21 +45,18 @@ model = mujoco.MjModel.from_xml_path(xml_path)
 data = mujoco.MjData(model)
 
 # Initiale Position einnehmen
-r_init, phi_init = inverse_kinematics_2_DOF(x_traj[0], y_traj[0])
-
-data.qpos[0] = phi_init
-data.qpos[1] = r_init
+data.qpos[0] = phi_des_traj[0] + np.pi/40
+data.qpos[1] = r_des_traj[0] - 0.05
 
 # Reglerparameter setzen
-Kp_phi = 10
-Kp_r = 10
+Kp = np.array([[200, 0],
+               [0, 200]])
 
-Kd_phi = 1
-Kd_r = 1
+Kd = np.array([[50, 0],
+               [0, 50]])
 
 # Listen zum Tracken der Trajektorien
 end_mass_pos_vec = []
-q_des_vec = []
 q_vec = []
 
 # Viewer starten
@@ -78,23 +72,33 @@ with viewer.launch_passive(model, data) as v:
 
     # Simulation beginnen
     for t in range(len(t_vec)):
-        # inverse Kinematik auswerten
-        r_des, phi_des = inverse_kinematics_2_DOF(x_traj[t], y_traj[t])
+        # Sollwerte auslesen
+        phi_des = phi_des_traj[t]
+        r_des = r_des_traj[t]
+
+        phi_p_des = phi_p_des_traj[t]
+        r_p_des = r_p_des_traj[t]
 
         # Ist-Werte auslesen
         phi = data.qpos[0]
         r = data.qpos[1]
 
-        phi_dot = data.qvel[0]
-        r_dot = data.qvel[1]
+        phi_p = data.qvel[0]
+        r_p = data.qvel[1]
+
+        # Fehler berechnen
+        e = np.array([[phi_des - phi],
+                      [r_des - r]])
+        
+        e_p = np.array([[phi_p_des - phi_p],
+                      [r_p_des - r_p]])
 
         # PD-Regelung berechnen
-        tau_phi = Kp_phi*(phi_des - phi) - Kd_phi*phi_dot
-        tau_r = Kp_r*(r_des - r) - Kd_r*r_dot
+        tau = np.matmul(Kp, e) + np.matmul(Kd, e_p)
 
         # Steuergrößen setzen
-        data.ctrl[0] = tau_phi 
-        data.ctrl[1] = tau_r    
+        data.ctrl[0] = tau[0].item()
+        data.ctrl[1] = tau[1].item()  
 
         # Kinematik und Dynamik berechnen
         mujoco.mj_step(model, data)
@@ -102,9 +106,6 @@ with viewer.launch_passive(model, data) as v:
         # Messwerte abspeichern
         # Endeffektor Position auslesen
         end_mass_pos_vec.append(data.site_xpos[0].copy())
-
-        # Sollgelenkwinkel auslesen
-        q_des_vec.append([phi_des, r_des])
 
         # Istgelenkwonkel auslesen
         q_vec.append(data.qpos.copy())
@@ -120,19 +121,18 @@ with viewer.launch_passive(model, data) as v:
 
 # Messwerte in np array umwandeln
 end_mass_pos_vec = np.array(end_mass_pos_vec)
-q_des_vec = np.array(q_des_vec)
 q_vec = np.array(q_vec)
 
 # Soll vs. Ist Trajektorie plotten
 plt.figure()
 
-plt.plot(x_traj, y_traj, label="Solltrajektorie")
+plt.plot(x_des_traj, y_des_traj, label="Solltrajektorie")
 plt.plot(end_mass_pos_vec[:, 0], end_mass_pos_vec[:, 1], label="Ist-Trajektorie")
 plt.xlabel("x [m]")
 plt.ylabel("y [m]")
-plt.title("Solltrajektorie - Lemniskate")
-plt.xlim(-0.2, 1.5)
-plt.ylim(-0.2, 0.6)
+plt.title("Solltrajektorie")
+plt.xlim(0.4, 1.4)
+plt.ylim(-0.1, 0.5)
 plt.grid(True)
 plt.legend()
 
@@ -140,8 +140,8 @@ plt.legend()
 plt.figure()
 
 plt.subplot(2, 1, 1)
-plt.plot(t_vec, q_des_vec[:, 0], label='phi soll')
-plt.plot(t_vec, q_vec[:, 0] ,label='phi ist')
+plt.plot(t_vec, phi_des_traj, label='phi soll')
+plt.plot(t_vec, q_vec[:, 0], label='phi ist')
 plt.title('phi')
 plt.xlabel('t')
 plt.ylabel('phi')
@@ -149,8 +149,8 @@ plt.grid(True)
 plt.legend()
 
 plt.subplot(2, 1, 2)
-plt.plot(t_vec, q_des_vec[:, 1], label='r soll')
-plt.plot(t_vec, q_vec[:, 1] ,label='r ist')
+plt.plot(t_vec, r_des_traj, label='r soll')
+plt.plot(t_vec, q_vec[:, 1], label='r ist')
 plt.title('r')
 plt.xlabel('t')
 plt.ylabel('r')
