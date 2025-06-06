@@ -1,0 +1,223 @@
+'''
+Autor:      Ole Uphaus
+Datum:     05.06.2025
+Beschreibung:
+In diesem Skript Werde ich für das Mujoco modell eine analytische computed Torque Regelung bauen. In dieser Regelung ist das DeLaN Modell noch nicht implementiert.
+'''
+
+import mujoco
+from mujoco import viewer
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+import time
+
+# Funktion zur Auswertung der inversen Dynamik 
+def inv_dyn_2_FHG_Robot(v, phi, phi_p, r, r_p):
+    # Systemparameter
+    m_kg = 5
+    mL_kg = 2
+    J_kgm2 = 0.4
+    l_m = 0.25
+
+    # Massenmatrix
+    M = np.array([[m_kg, 0],
+                  [0, J_kgm2 + m_kg*(r - l_m)**2 + mL_kg*r**2]])
+    
+    # Coriolisterme
+    c = np.array([[-(mL_kg*r + m_kg*(r - l_m))*phi_p**2],
+                  [2*(m_kg*(r - l_m) + mL_kg*r)*r_p*phi_p]])
+    
+    # Gewichtskräfte
+    g = np.zeros_like(c)
+
+    # Stellgrößen berechnen
+    tau = np.matmul(M, v) + c + g
+
+    return tau
+
+# Parameter Trajektorie 
+amp_phi = 0.1
+amp_r = 0.2
+T = 5
+dt = 0.002
+omega = 2 * np.pi / T   # Frequenz so anpassen, dass eine Umdrehung in gegebener Zeit durchgeführt wird
+
+offset_phi = 0.2
+offset_r = 1.0
+
+# Zeitvektor
+t_vec = np.arange(0, T, dt)
+
+# Trajektorien für r und phi festlegen (+ Ableitung)
+phi_des_traj = amp_phi * np.sin(2 * omega * t_vec) + offset_phi
+r_des_traj = amp_r * np.sin(omega * t_vec) + offset_r
+
+phi_p_des_traj = amp_phi * 2 * omega * np.cos(2 * omega * t_vec)
+r_p_des_traj = amp_r * omega * np.cos(omega * t_vec)
+
+phi_pp_des_traj = -amp_phi * (2 * omega)**2 * np.sin(2 * omega * t_vec)
+r_pp_des_traj = -amp_r * omega**2 * np.sin(omega * t_vec)
+
+# x und y Koordinaten ableiten
+x_des_traj = r_des_traj * np.cos(phi_des_traj)
+y_des_traj = r_des_traj * np.sin(phi_des_traj)
+
+# XML Modell laden
+xml_name = '2_FHG_Rob_Model_1.xml'
+script_path = os.path.dirname(os.path.abspath(__file__))
+xml_path = os.path.join(script_path, '..', 'Models', xml_name)
+
+model = mujoco.MjModel.from_xml_path(xml_path)
+data = mujoco.MjData(model)
+
+# Initiale Position einnehmen
+data.qpos[0] = phi_des_traj[0] + np.pi/40
+data.qpos[1] = r_des_traj[0] - 0.05
+
+# Reglerparameter setzen
+Kp = np.array([[200, 0],
+               [0, 200]])
+
+Kv = np.array([[25, 0],
+               [0, 25]])
+
+# Listen zum Tracken der Trajektorien
+end_mass_pos_vec = []
+q_vec = []
+
+# Viewer starten
+with viewer.launch_passive(model, data) as view:
+    # Kamera konfigurieren
+    view.cam.lookat[:] = [0.5, 0, 0]   # Zentrum deiner Szene
+    view.cam.distance = 3.0                # Nähe
+    view.cam.azimuth = 90
+    view.cam.elevation = -70
+
+    # kurz warten am Anfang
+    time.sleep(1)
+
+    # Simulation beginnen
+    for t in range(len(t_vec)):
+        # Sollwerte auslesen
+        phi_des = phi_des_traj[t]
+        r_des = r_des_traj[t]
+
+        phi_p_des = phi_p_des_traj[t]
+        r_p_des = r_p_des_traj[t]
+
+        phi_pp_des = phi_pp_des_traj[t]
+        r_pp_des = r_pp_des_traj[t]
+
+        # Ist-Werte auslesen
+        phi = data.qpos[0]
+        r = data.qpos[1]
+
+        phi_p = data.qvel[0]
+        r_p = data.qvel[1]
+
+        # Fehler berechnen
+        e = np.array([[phi_des - phi],
+                      [r_des - r]])
+        
+        e_p = np.array([[phi_p_des - phi_p],
+                      [r_p_des - r_p]])
+        
+        # Regelgesetz festlegen
+        v = np.array([[phi_pp_des], [r_pp_des]]) + np.matmul(Kp, e) + np.matmul(Kv, e_p)
+
+        # Inverse Dynamik auswerten
+        tau = inv_dyn_2_FHG_Robot(v, phi, phi_p, r, r_p)
+
+        # Steuergrößen setzen
+        data.ctrl[0] = tau[0, 0]
+        data.ctrl[1] = tau[1, 0] 
+
+        # Kinematik und Dynamik berechnen
+        mujoco.mj_step(model, data)
+
+        # Messwerte abspeichern
+        # Endeffektor Position auslesen
+        end_mass_pos_vec.append(data.site_xpos[0].copy())
+
+        # Istgelenkwonkel auslesen
+        q_vec.append(data.qpos.copy())
+
+        # Bild aktualisieren
+        view.sync()
+
+        # Zeitschritt abwarten
+        time.sleep(dt)
+
+    # kurz warten am Ende
+    time.sleep(1)
+
+# Messwerte in np array umwandeln
+end_mass_pos_vec = np.array(end_mass_pos_vec)
+q_vec = np.array(q_vec)
+
+# Trajektorienfolgefehler berechnen
+error_phi = phi_des_traj - q_vec[:, 0]
+error_r = r_des_traj - q_vec[:, 1]
+
+# Mittelwert der quadrierten Fehler (MSE)
+mse_phi = np.mean(error_phi**2)
+mse_r = np.mean(error_r**2)
+
+# Ausgabe
+print(f"MSE für phi: {mse_phi:.4e}")
+print(f"MSE für r: {mse_r:.4e}")
+
+# Soll vs. Ist Trajektorie plotten
+plt.figure()
+
+plt.plot(x_des_traj, y_des_traj, label="Solltrajektorie")
+plt.plot(end_mass_pos_vec[:, 0], end_mass_pos_vec[:, 1], label="Ist-Trajektorie")
+plt.xlabel("x [m]")
+plt.ylabel("y [m]")
+plt.title("Solltrajektorie")
+plt.xlim(0.4, 1.4)
+plt.ylim(-0.1, 0.5)
+plt.grid(True)
+plt.legend()
+
+# Soll vs. Ist Gelenkkoordinaten
+plt.figure()
+
+plt.subplot(2, 2, 1)
+plt.plot(t_vec, phi_des_traj, label='phi soll')
+plt.plot(t_vec, q_vec[:, 0], label='phi ist')
+plt.title('phi')
+plt.xlabel('t')
+plt.ylabel('phi')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 3)
+plt.plot(t_vec, r_des_traj, label='r soll')
+plt.plot(t_vec, q_vec[:, 1], label='r ist')
+plt.title('r')
+plt.xlabel('t')
+plt.ylabel('r')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 2)
+plt.plot(t_vec, error_phi, label='error phi')
+plt.title('Folgefehler phi')
+plt.xlabel('t')
+plt.ylabel('phi')
+plt.grid(True)
+plt.legend()
+
+plt.subplot(2, 2, 4)
+plt.plot(t_vec, error_r, label='error r')
+plt.title('Folgefehler r')
+plt.xlabel('t')
+plt.ylabel('r')
+plt.grid(True)
+plt.legend()
+
+plt.tight_layout()
+
+plt.show()
