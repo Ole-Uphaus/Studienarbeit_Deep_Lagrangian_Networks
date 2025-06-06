@@ -16,7 +16,7 @@ import time
 amp_phi = 0.1
 amp_r = 0.2
 T = 5
-dt = 0.01
+dt = 0.002
 omega = 2 * np.pi / T   # Frequenz so anpassen, dass eine Umdrehung in gegebener Zeit durchgeführt wird
 
 offset_phi = 0.2
