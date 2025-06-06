@@ -97,8 +97,8 @@ with viewer.launch_passive(model, data) as v:
         tau = np.matmul(Kp, e) + np.matmul(Kd, e_p)
 
         # Steuergrößen setzen
-        data.ctrl[0] = tau[0].item()
-        data.ctrl[1] = tau[1].item()  
+        data.ctrl[0] = tau[0, 0]
+        data.ctrl[1] = tau[1, 0] 
 
         # Kinematik und Dynamik berechnen
         mujoco.mj_step(model, data)
