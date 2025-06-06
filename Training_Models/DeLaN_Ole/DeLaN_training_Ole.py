@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 from DeLaN_model_Ole import Deep_Lagrangian_Network
 from DeLaN_functions_Ole import *
@@ -44,7 +45,7 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 500,
+    'n_epoch': 10,
 
     # Sonstiges
     'save_model': False}
@@ -147,6 +148,21 @@ DeLaN_network.eval()
 
 # Evaluierung
 _, tau_hat_test, H_test, c_test, g_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test)
+
+# Modell abspeichern
+if hyper_param['save_model'] == True:
+        
+    # Aktueller Zeitstempel
+    timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
+
+    # Speichern
+    torch.save({
+        'state_dict': DeLaN_network.state_dict(),
+        'hyper_param': hyper_param,
+        'n_dof': n_dof
+    }, model_path)
 
 # Plotten
 samples_vec = np.arange(1, H_test.shape[0] + 1)
