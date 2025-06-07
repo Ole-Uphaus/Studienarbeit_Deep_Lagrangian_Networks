@@ -40,7 +40,7 @@ def extract_training_data(file_name):
     return features_training_delan, labels_training_delan, features_test_delan, labels_test_delan, Mass_Cor_test
 
 # Trainings- und Testdaten laden 
-features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat')  # Mein Modell
+features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat')  # Mein Modell
 
 # Anzahl der Samples 
 samples_training = np.arange(1, features_training.shape[0] + 1)
