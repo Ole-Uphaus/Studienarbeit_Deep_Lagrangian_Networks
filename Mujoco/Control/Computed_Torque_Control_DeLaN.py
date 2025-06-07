@@ -76,7 +76,7 @@ model = mujoco.MjModel.from_xml_path(xml_path)
 data = mujoco.MjData(model)
 
 # DeLaN Modell Daten laden
-DeLaN_name = "DeLaN_model_2025_06_07_09_24_56_Epochen_2000.pth"
+DeLaN_name = "DeLaN_model_2025_06_07_10_17_32_Epochen_600.pth"
 DeLaN_path = os.path.join(script_path, '..', '..', 'Training_Models', 'DeLaN_Ole', 'Saved_Models', DeLaN_name)
 DeLaN_data = torch.load(DeLaN_path, map_location=torch.device('cpu'))
 
