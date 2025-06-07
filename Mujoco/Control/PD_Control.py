@@ -72,6 +72,9 @@ with viewer.launch_passive(model, data) as v:
 
     # Simulation beginnen
     for t in range(len(t_vec)):
+        # Startzeit
+        loop_start = time.time()
+
         # Sollwerte auslesen
         phi_des = phi_des_traj[t]
         r_des = r_des_traj[t]
@@ -113,8 +116,13 @@ with viewer.launch_passive(model, data) as v:
         # Bild aktualisieren
         v.sync()
 
-        # Zeitschritt abwarten
-        time.sleep(dt)
+        # Echtzeit synchronisieren
+        elapsed = time.time() - loop_start
+        sleep_time = dt - elapsed
+        if sleep_time > 0:
+            time.sleep(sleep_time)
+        else:
+            print(f"Echtzeit überschritten bei t={t_vec[t]:.3f}s um {-sleep_time:.4f}s")
 
     # kurz warten am Ende
     time.sleep(1)
