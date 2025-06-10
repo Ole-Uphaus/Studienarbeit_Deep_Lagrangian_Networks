@@ -20,7 +20,7 @@ Anmerkungen zur Geometrie (Verbindung zum analytischen Modell):
 <mujoco model='2_FHG_Rob_Model_1'>
 
   <compiler coordinate='local'/>
-  <option timestep='0.002' gravity="0 0 0"/>
+  <option timestep='0.03' gravity="0 0 0"/>
 
   <!-- Anfangspositionen definieren (zum Test) -->
   <keyframe>
