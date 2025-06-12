@@ -11,8 +11,13 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import time
+from scipy.io import savemat
+from datetime import datetime
 
 from DeLaN_functions_Ole import *
+
+# Sollen Trainingsdaten erstellt werden
+save_data = True
 
 # Trainings- und Testdaten aus MATLAB File (es werden hier nur die Sollpositionen und Geschwindigkeiten benötigt)
 features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat')  # Mein Modell Trainingsdaten
@@ -200,6 +205,30 @@ q_p_vec = np.array(q_p_vec)
 q_pp_vec = np.array(q_pp_vec)
 
 tau_vec = np.array(tau_vec)
+
+# Daten bei Bedarf abspeichern
+if save_data:
+    # Zusammensetzen der Vektoren (Damit alles identisch wie in Matlab Simulation)
+    features_training_PD = np.concatenate([q_vec[:, 1].reshape(-1, 1), q_vec[:, 0].reshape(-1, 1),
+                                           q_p_vec[:, 1].reshape(-1, 1), q_p_vec[:, 0].reshape(-1, 1), 
+                                           q_pp_vec[:, 1].reshape(-1, 1), q_pp_vec[:, 0].reshape(-1, 1)], axis=1) # Reihenfolge von r und phi vertauschen
+    labels_training_PD = np.concatenate([tau_vec[:, 1].reshape(-1, 1), tau_vec[:, 0].reshape(-1, 1)], axis=1)    # Reihenfolge von r und phi vertauschen
+
+    # Dictionary erstellen
+    save_dict = {
+        'features_training': features_training_PD,
+        'labels_training': labels_training_PD,
+        'features_test': features_test,
+        'labels_test': labels_test,
+        'Mass_Cor_test': Mass_Cor_test
+    }
+
+    # Pfad zum Speichern erstellen
+    timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    save_path = os.path.join(script_path, '..', '..', 'Training_Data', 'Mujoco_Simulation', f"SimData_Mujoco_PD_{timestamp}.mat")
+
+    # .mat file erstellen
+    savemat(save_path, save_dict)
 
 # Gesamtzeitvektor erstellen
 t_vec_ges = np.linspace(0, int(move_time*counter/2), int(r_des_traj_divided.shape[1]*counter/2))
