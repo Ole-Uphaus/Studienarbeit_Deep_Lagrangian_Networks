@@ -211,8 +211,12 @@ if save_data:
     # Zusammensetzen der Vektoren (Damit alles identisch wie in Matlab Simulation)
     features_training_PD = np.concatenate([q_vec[:, 1].reshape(-1, 1), q_vec[:, 0].reshape(-1, 1),
                                            q_p_vec[:, 1].reshape(-1, 1), q_p_vec[:, 0].reshape(-1, 1), 
-                                           q_pp_vec[:, 1].reshape(-1, 1), q_pp_vec[:, 0].reshape(-1, 1)], axis=1) # Reihenfolge von r und phi vertauschen
-    labels_training_PD = np.concatenate([tau_vec[:, 1].reshape(-1, 1), tau_vec[:, 0].reshape(-1, 1)], axis=1)    # Reihenfolge von r und phi vertauschen
+                                           tau_vec[:, 1].reshape(-1, 1), tau_vec[:, 0].reshape(-1, 1)], axis=1) # Reihenfolge von r und phi vertauschen
+    labels_training_PD = np.concatenate([q_pp_vec[:, 1].reshape(-1, 1), q_pp_vec[:, 0].reshape(-1, 1)], axis=1)    # Reihenfolge von r und phi vertauschen
+
+    # Vektoren nun wieder so zusammensetzen wie ursprünglich in matlab
+    features_test = np.concatenate([features_test[:, :4], labels_test], axis=1)
+    labels_test = features_test[:, 4:]
 
     # Dictionary erstellen
     save_dict = {
