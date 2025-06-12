@@ -215,15 +215,15 @@ if save_data:
     labels_training_PD = np.concatenate([q_pp_vec[:, 1].reshape(-1, 1), q_pp_vec[:, 0].reshape(-1, 1)], axis=1)    # Reihenfolge von r und phi vertauschen
 
     # Vektoren nun wieder so zusammensetzen wie ursprünglich in matlab
-    features_test = np.concatenate([features_test[:, :4], labels_test], axis=1)
-    labels_test = features_test[:, 4:]
+    features_test_PD = np.concatenate([features_test[:, :4], labels_test], axis=1)
+    labels_test_PD = features_test[:, 4:]
 
     # Dictionary erstellen
     save_dict = {
         'features_training': features_training_PD,
         'labels_training': labels_training_PD,
-        'features_test': features_test,
-        'labels_test': labels_test,
+        'features_test': features_test_PD,
+        'labels_test': labels_test_PD,
         'Mass_Cor_test': Mass_Cor_test
     }
 
