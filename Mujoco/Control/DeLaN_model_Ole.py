@@ -19,7 +19,12 @@ class Intern_NN(nn.Module):
 
         # Aktivierungsfunktion festlegen
         self.activation_fnc = self.get_activation_fnc(hyper_param['activation_fnc'])
-        self.ReLu = nn.ReLU()   # Aktivierungsfunktion für Output
+        if hyper_param['activation_fnc_diag'] == 'relu':    # Aktivierungsfunktion für Diagonalelemente festlegen
+            self.activation_fnc_diag = nn.ReLU()
+        elif hyper_param['activation_fnc_diag'] == 'softplus':
+            self.activation_fnc_diag = nn.Softplus()
+        else:
+            self.activation_fnc_diag = nn.ReLU()
 
         # Dropout festlegen
         self.dropout = nn.Dropout(hyper_param['dropuot'])
@@ -102,9 +107,8 @@ class Intern_NN(nn.Module):
             q = self.dropout(q)
 
         # Jeweils die Netzwerk Outputs einzeln berechnen und zurückgeben
-        return self.output_g(q), self.ReLu(self.output_L_diag(q)), self.output_L_tril(q)
-    
-    
+        return self.output_g(q), self.activation_fnc_diag(self.output_L_diag(q)), self.output_L_tril(q)
+      
 class Deep_Lagrangian_Network(nn.Module):
     def __init__(self, n_dof, **hyper_param):
         super(Deep_Lagrangian_Network, self).__init__()
