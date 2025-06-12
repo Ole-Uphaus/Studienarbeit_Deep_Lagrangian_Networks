@@ -48,7 +48,7 @@ hyper_param = {
     'n_epoch': 2000,
 
     # Sonstiges
-    'save_model': False}
+    'save_model': True}
 
 # Trainings- und Testdaten laden
 target_folder = 'Mujoco_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
@@ -156,7 +156,11 @@ if hyper_param['save_model'] == True:
     # Aktueller Zeitstempel
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     script_path = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
+
+    if target_folder == 'MATLAB_Simulation':
+        model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
+    else:
+        model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_MJ_Sim_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
 
     # Speichern
     torch.save({
