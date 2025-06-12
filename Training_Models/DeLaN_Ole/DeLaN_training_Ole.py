@@ -45,14 +45,15 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 600,
+    'n_epoch': 2000,
 
     # Sonstiges
-    'save_model': True}
+    'save_model': False}
 
-# Trainings- und Testdaten laden 
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_16_52_Samples_6000.mat')  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+# Trainings- und Testdaten laden
+target_folder = 'Mujoco_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
+features_training, labels_training, _, _, _ = extract_training_data('SimData_Mujoco_PD_2025_06_12_11_13_13.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_Mujoco_PD_2025_06_12_11_13_13.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)

@@ -10,13 +10,13 @@ import os
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
-def extract_training_data(file_name):
+def extract_training_data(file_name, target_folder):
     # Pfad des aktuellen Skriptes
     script_path = os.path.dirname(os.path.abspath(__file__))
 
     # Relativer Pfad zum Datenordner von hier aus
     # Wir müssen zwei Ebenen hoch und dann in den Zielordner
-    data_path = os.path.join(script_path, '..', '..', 'Training_Data', 'MATLAB_Simulation', file_name)
+    data_path = os.path.join(script_path, '..', '..', 'Training_Data', target_folder, file_name)
 
     # Pfad normieren
     data_path = os.path.normpath(data_path)
