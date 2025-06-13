@@ -53,8 +53,15 @@ function out = inv_dyn_2_FHG_Robot_1_damping(traj_data)
     J_kgm2 = 0.4;  % gesamte Rotationsträgheit
     l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
 
-    dr_Nspm = 5;    % Dämpung der Linearachse
-    dphi_Ns = 2.5;  % Dämpfung der Rotationsachse
+    dr_Nspm = 2;    % Dämpung der Linearachse
+    taur_c_N = 2;   % Coulomb-Reibkraft
+    taur_s_N = 3;   % zusätzlicher statischer Anteil
+    nur_ms = 0.005;
+
+    dphi_Ns = 0.3;  % Dämpfung der Rotationsachse
+    tauphi_c_N = 1; % Coulomb-Reibkraft
+    tauphi_s_N = 2; % zusätzlicher statischer Anteil
+    nuphi_ms = 0.005;
 
     % Output definieren
     out = struct();
@@ -81,14 +88,14 @@ function out = inv_dyn_2_FHG_Robot_1_damping(traj_data)
     out.g_1 = r*0;  % Erster Vektoreintrag
     out.g_2 = r*0;  % Zweiter Vektoreintrag
 
-    % Dämpfungskräfte
-    out.d_1 = dr_Nspm*r_p;
-    out.d_2 = dphi_Ns*phi_p;
+    % Reibungskräfte
+    out.fric_1 = (taur_c_N + taur_s_N .* exp(-r_p.^2 ./ nur_ms)) .* sign(r_p) + dr_Nspm .* r_p;
+    out.fric_2 = (tauphi_c_N + tauphi_s_N .* exp(-phi_p.^2 ./ nuphi_ms)) .* sign(phi_p) + dphi_Ns .* phi_p;
 
     % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
-    % eingesetzt) - Dämpfung hinzugefügt
-    out.tau_1 = out.M_11.*r_pp + out.C_1 + out.d_1;   % Eigentlich F
-    out.tau_2 = out.M_22.*phi_pp + out.C_2 + out.d_2; % Eigentlich tau
+    % eingesetzt) - Reibung hinzugefügt
+    out.tau_1 = out.M_11.*r_pp + out.C_1 + out.fric_1;   % Eigentlich F
+    out.tau_2 = out.M_22.*phi_pp + out.C_2 + out.fric_2; % Eigentlich tau
 
 end
 
@@ -112,7 +119,7 @@ Rob_Model = 1;
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = false;
+savedata = true;
 
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
@@ -187,8 +194,8 @@ for i = 1:number_runs
     traj_data(i).g_2 = out.g_2;
 
     % Dämpfungsterme
-    traj_data(i).d_1 = out.d_1;
-    traj_data(i).d_2 = out.d_2;
+    traj_data(i).fric_1 = out.fric_1;
+    traj_data(i).fric_2 = out.fric_2;
 
     % Eingeprägte Kräfte/Momente 
     traj_data(i).tau_1 = out.tau_1;
@@ -204,7 +211,7 @@ test_idx = randperm((number_runs), number_testdata);   % Zufällige Indizees fü
 
 features_test = [traj_data(test_idx(1)).q1, traj_data(test_idx(1)).q2, traj_data(test_idx(1)).q1_p, traj_data(test_idx(1)).q2_p, traj_data(test_idx(1)).tau_1, traj_data(test_idx(1)).tau_2];
 labels_test = [traj_data(test_idx(1)).q1_pp, traj_data(test_idx(1)).q2_pp];
-Mass_Cor_test = [traj_data(test_idx(1)).M_11, traj_data(test_idx(1)).M_12, traj_data(test_idx(1)).M_22, traj_data(test_idx(1)).C_1, traj_data(test_idx(1)).C_2, traj_data(test_idx(1)).g_1, traj_data(test_idx(1)).g_2, traj_data(test_idx(1)).d_1, traj_data(test_idx(1)).d_2];
+Mass_Cor_test = [traj_data(test_idx(1)).M_11, traj_data(test_idx(1)).M_12, traj_data(test_idx(1)).M_22, traj_data(test_idx(1)).C_1, traj_data(test_idx(1)).C_2, traj_data(test_idx(1)).g_1, traj_data(test_idx(1)).g_2, traj_data(test_idx(1)).fric_1, traj_data(test_idx(1)).fric_2];
 
 for i = test_idx(2:end)
     % Features [q1, q2, q1_p, q2_p, tau_1, tau_2]
@@ -213,9 +220,9 @@ for i = test_idx(2:end)
     % Labels [q1_pp, q2_pp]
     labels_test = [labels_test;
         traj_data(i).q1_pp, traj_data(i).q2_pp];
-    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2, d_1, d_2]
+    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2, fric_1, fric_2]
     Mass_Cor_test = [Mass_Cor_test;
-        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2, traj_data(i).g_1, traj_data(i).g_2, traj_data(i).d_1, traj_data(i).d_2];
+        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2, traj_data(i).g_1, traj_data(i).g_2, traj_data(i).fric_1, traj_data(i).fric_2];
 end
 
 % Trainingsdaten auswählen und in Features und Labels aufteilen (80%)
@@ -223,7 +230,7 @@ training_idx = setdiff((1:number_runs), test_idx);
 
 features_training = [traj_data(training_idx(1)).q1, traj_data(training_idx(1)).q2, traj_data(training_idx(1)).q1_p, traj_data(training_idx(1)).q2_p, traj_data(training_idx(1)).tau_1, traj_data(training_idx(1)).tau_2];
 labels_training = [traj_data(training_idx(1)).q1_pp, traj_data(training_idx(1)).q2_pp];
-Mass_Cor_training = [traj_data(training_idx(1)).M_11, traj_data(training_idx(1)).M_12, traj_data(training_idx(1)).M_22, traj_data(training_idx(1)).C_1, traj_data(training_idx(1)).C_2, traj_data(training_idx(1)).g_1, traj_data(training_idx(1)).g_2, traj_data(training_idx(1)).d_1, traj_data(training_idx(1)).d_2];
+Mass_Cor_training = [traj_data(training_idx(1)).M_11, traj_data(training_idx(1)).M_12, traj_data(training_idx(1)).M_22, traj_data(training_idx(1)).C_1, traj_data(training_idx(1)).C_2, traj_data(training_idx(1)).g_1, traj_data(training_idx(1)).g_2, traj_data(training_idx(1)).fric_1, traj_data(training_idx(1)).fric_2];
 
 for i = training_idx(2:end)
     % Features [q1, q2, q1_p, q2_p, tau_1, tau_2]
@@ -232,9 +239,9 @@ for i = training_idx(2:end)
     % Labels [q1_pp, q2_pp]
     labels_training = [labels_training;
         traj_data(i).q1_pp, traj_data(i).q2_pp];
-    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2, d_1, d_2]
+    % Mass and Coriolis Terms [M_11, M_12, M_22, C_1, C_2, g_1, g_2, fric_1, fric_2]
     Mass_Cor_training = [Mass_Cor_training;
-        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2,traj_data(i).g_1, traj_data(i).g_2, traj_data(i).d_1, traj_data(i).d_2];
+        traj_data(i).M_11, traj_data(i).M_12, traj_data(i).M_22, traj_data(i).C_1, traj_data(i).C_2,traj_data(i).g_1, traj_data(i).g_2, traj_data(i).fric_1, traj_data(i).fric_2];
 end
 
 if savedata == true
@@ -248,7 +255,7 @@ if savedata == true
     % Datei speichern (Prüfen ob Dämpfung vorhanden)
     num_samples = num2str(length(features_test) + length(features_training));
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
-    dateiName = 'SimData_V3_damping_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';   
+    dateiName = 'SimData_V3_friction_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';   
     full_path = fullfile(target_folder, dateiName);
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
@@ -325,16 +332,16 @@ title('tau2(t)');
 subplot(2,2,2);
 plot(t_vec_ges, Mass_Cor_training(:, 8), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('d1');
+ylabel('fric1');
 grid on;
-title('d1(t)');
+title('fric1(t)');
 
 subplot(2,2,4);
 plot(t_vec_ges, Mass_Cor_training(:, 9), 'b', 'LineWidth', 1.5);
 xlabel('Zeit [s]');
-ylabel('d2');
+ylabel('fric2');
 grid on;
-title('d2(t)');
+title('fric2(t)');
 
 % Plott M_11, M_12, M_22
 figure('WindowState','maximized');
