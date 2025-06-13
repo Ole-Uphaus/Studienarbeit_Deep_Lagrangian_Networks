@@ -48,13 +48,16 @@ hyper_param = {
     'weight_decay': 1.e-4,
     'n_epoch': 1000,
 
+    # Reibungsmodell
+    'use_friction_model': True,
+
     # Sonstiges
-    'save_model': True}
+    'save_model': False}
 
 # Trainings- und Testdaten laden
 target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_23_10_32_13_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_23_10_32_13_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -114,7 +117,7 @@ for epoch in range(hyper_param['n_epoch']):
         tau = batch_labels.to(device)
 
         # Forward pass
-        tau_hat, _, _, _ = DeLaN_network(q, qd, qdd)
+        tau_hat, _, _, _, _ = DeLaN_network(q, qd, qdd)
 
         # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
         err_inv_dyn = torch.sum((tau_hat - tau)**2, dim=1)
@@ -137,7 +140,7 @@ for epoch in range(hyper_param['n_epoch']):
 
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         # Model Evaluieren
-        test_loss, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test)
+        test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test)
 
         # Loss an Loss history anhängen
         test_loss_history.append([epoch + 1, test_loss])
@@ -149,7 +152,7 @@ for epoch in range(hyper_param['n_epoch']):
 DeLaN_network.eval()
 
 # Evaluierung
-_, tau_hat_test, H_test, c_test, g_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test)
+_, tau_hat_test, H_test, c_test, g_test, tau_fric_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test)
 
 # Modell abspeichern
 if hyper_param['save_model'] == True:
@@ -288,5 +291,29 @@ plt.grid(True)
 plt.legend()
 
 plt.tight_layout()
+
+# Reibungskräfte
+if hyper_param['use_friction_model']:
+    plt.figure()
+
+    plt.subplot(2, 1, 1)
+    plt.plot(samples_vec, tau_fric_test[:, 0], label='d1 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 7] ,label='d1 Analytic')
+    plt.title('d1')
+    plt.xlabel('Samples')
+    plt.ylabel('d1')
+    plt.grid(True)
+    plt.legend()
+
+    plt.subplot(2, 1, 2)
+    plt.plot(samples_vec, tau_fric_test[:, 1], label='d2 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 8], label='d2 Analytic')
+    plt.title('d2')
+    plt.xlabel('Samples')
+    plt.ylabel('d2')
+    plt.grid(True)
+    plt.legend()
+
+    plt.tight_layout()
 
 plt.show()

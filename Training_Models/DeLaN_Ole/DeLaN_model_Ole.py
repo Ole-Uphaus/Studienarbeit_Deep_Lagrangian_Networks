@@ -120,6 +120,14 @@ class Deep_Lagrangian_Network(nn.Module):
         self.n_dof = n_dof
         self.L_diagonal_offset = hyper_param['L_diagonal_offset']
 
+        # Prüfen, ob Reibungsmodell verwendet werden soll
+        self.use_friction_model = hyper_param['use_friction_model']
+
+        # Reibungsparameter als lernbare Netzwerkgewichte definieren
+        if self.use_friction_model:
+            # Dämpfungsparameter
+            self.d = nn.Parameter(torch.zeros(self.n_dof))
+
     def forward(self, q, qd, qdd):
 
         return self.lagrangian_dynamics(q, qd, qdd)
@@ -174,10 +182,16 @@ class Deep_Lagrangian_Network(nn.Module):
         # Coriolisterme berechnen (H_dt * qd - 0.5 * qdT_H_dq_qd)
         c = torch.einsum('bij,bj->bi', H_dt, qd) - 0.5 * qdT_H_dq_qd    # c.shape(batch_size, n_dof)
 
-        # Inverse Dynamik auswerten
-        tau_pred = torch.einsum('bij,bj->bi', H, qdd) + c + output_g
+        # Reibungskräfte berechnen
+        if self.use_friction_model:
+            tau_fric = qd * self.d
+        else:
+            tau_fric = torch.zeros_like(c)
 
-        return tau_pred, H, c, output_g
+        # Inverse Dynamik auswerten
+        tau_pred = torch.einsum('bij,bj->bi', H, qdd) + c + output_g + tau_fric
+
+        return tau_pred, H, c, output_g, tau_fric
     
     def compute_Jacobian_batched(self, output_L, input_q):
         # Dimensionen des Outputs bekommen
