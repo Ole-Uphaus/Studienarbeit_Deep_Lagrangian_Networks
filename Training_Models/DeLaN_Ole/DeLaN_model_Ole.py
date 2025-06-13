@@ -126,7 +126,7 @@ class Deep_Lagrangian_Network(nn.Module):
         # Reibungsparameter als lernbare Netzwerkgewichte definieren
         if self.use_friction_model:
             # Dämpfungsparameter
-            self.d = nn.Parameter(torch.zeros(self.n_dof))
+            self.friction_d = nn.Parameter(torch.zeros(self.n_dof))
 
     def forward(self, q, qd, qdd):
 
@@ -184,7 +184,7 @@ class Deep_Lagrangian_Network(nn.Module):
 
         # Reibungskräfte berechnen
         if self.use_friction_model:
-            tau_fric = qd * self.d
+            tau_fric = qd * self.friction_d
         else:
             tau_fric = torch.zeros_like(c)
 
