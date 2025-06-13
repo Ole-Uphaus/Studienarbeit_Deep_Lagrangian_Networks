@@ -49,15 +49,15 @@ hyper_param = {
     'n_epoch': 1000,
 
     # Reibungsmodell
-    'use_friction_model': True,
+    'use_friction_model': False,
 
     # Sonstiges
     'save_model': False}
 
 # Trainings- und Testdaten laden
 target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_23_10_32_13_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_damping_Rob_Model_1_2025_05_23_10_32_13_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -293,7 +293,7 @@ plt.legend()
 plt.tight_layout()
 
 # Reibungskräfte
-if hyper_param['use_friction_model']:
+if hyper_param['use_friction_model'] and Mass_Cor_test.shape[1] > 8:
     plt.figure()
 
     plt.subplot(2, 1, 1)
