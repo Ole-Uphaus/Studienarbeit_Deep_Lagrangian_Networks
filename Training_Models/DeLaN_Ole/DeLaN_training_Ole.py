@@ -46,20 +46,20 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 4000,
+    'n_epoch': 1000,
 
     # Reibungsmodell
-    'use_friction_model': True,
+    'use_friction_model': False,
     'friction_model_init_v': 0.01,
     'friction_epsilon': 100.0,
 
     # Sonstiges
-    'save_model': False}
+    'save_model': True}
 
 # Trainings- und Testdaten laden
-target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+target_folder = 'Mujoco_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
+features_training, labels_training, _, _, _ = extract_training_data('SimData_Mujoco_PD_2025_06_12_11_13_13.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_Mujoco_PD_2025_06_12_11_13_13.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
