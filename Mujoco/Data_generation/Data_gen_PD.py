@@ -9,19 +9,28 @@ import mujoco
 from mujoco import viewer
 import numpy as np
 import os
+import sys
 import matplotlib.pyplot as plt
 import time
 from scipy.io import savemat
 from datetime import datetime
 
+# Verzeichnis mit Hauptversion von DeLaN einbinden (liegt an anderer Stelle im Projekt)
+script_path = os.path.dirname(os.path.abspath(__file__))
+DeLaN_dir_path = os.path.join(script_path, '..', '..', 'Training_Models', 'DeLaN_Ole')
+
+if DeLaN_dir_path not in sys.path:
+    sys.path.insert(0, DeLaN_dir_path)
+
 from DeLaN_functions_Ole import *
 
 # Sollen Trainingsdaten erstellt werden
-save_data = True
+save_data = False
 
-# Trainings- und Testdaten aus MATLAB File (es werden hier nur die Sollpositionen und Geschwindigkeiten benötigt)
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat')  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat')  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+# Trainings- und Testdaten laden
+target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Daten aufbereiten (r, r_p und phi, phi_p heraussuchen) (zusätzlich noch Beschleunigungen - aber nur zur Auswertung)
 r_des_traj = features_training[:, 0]
