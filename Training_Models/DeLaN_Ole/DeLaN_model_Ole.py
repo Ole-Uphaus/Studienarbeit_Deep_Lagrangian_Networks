@@ -128,6 +128,18 @@ class Deep_Lagrangian_Network(nn.Module):
             # Dämpfungsparameter
             self.friction_d = nn.Parameter(torch.zeros(self.n_dof))
 
+            # Coulomb Anteile tau_c
+            self.friction_c = nn.Parameter(torch.zeros(self.n_dof))
+
+            # Stribeck-Spitze tau_s
+            self.friction_s = nn.Parameter(torch.zeros(self.n_dof))
+
+            # Stribeck Breite (wie schnell fällt Stribeck Spitze ab) - Initialisierung mit kleinem Wert, da nicht durch null geteilt werden darf.
+            self.friction_v = nn.Parameter(torch.ones(self.n_dof) * hyper_param['friction_model_init_v'])
+
+            # Epsilon (für glattes tanh) definieren (funktion, damit tensor von cpu auf gpu verschoben werden kann und auch abgespeichert wird)
+            self.register_buffer('friction_epsilon', torch.tensor(hyper_param['friction_epsilon']))
+
     def forward(self, q, qd, qdd):
 
         return self.lagrangian_dynamics(q, qd, qdd)
@@ -184,7 +196,8 @@ class Deep_Lagrangian_Network(nn.Module):
 
         # Reibungskräfte berechnen
         if self.use_friction_model:
-            tau_fric = qd * self.friction_d
+            # Stribeck Reibungsmodell
+            tau_fric = (self.friction_c + self.friction_s * torch.exp(-qd**2 / self.friction_v)) * torch.tanh(self.friction_epsilon * qd) + self.friction_d * qd
         else:
             tau_fric = torch.zeros_like(c)
 

@@ -46,18 +46,20 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 1000,
+    'n_epoch': 4000,
 
     # Reibungsmodell
-    'use_friction_model': False,
+    'use_friction_model': True,
+    'friction_model_init_v': 0.01,
+    'friction_epsilon': 100.0,
 
     # Sonstiges
     'save_model': False}
 
 # Trainings- und Testdaten laden
 target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -172,6 +174,13 @@ if hyper_param['save_model'] == True:
         'hyper_param': hyper_param,
         'n_dof': n_dof
     }, model_path)
+
+# Wenn Reibungsmodell gewählt, dann Reibungsparameter ausgeben
+if hyper_param['use_friction_model']:
+    print("Dämpfung (viskos):", DeLaN_network.friction_d)
+    print("Coulomb-Reibung:", DeLaN_network.friction_c)
+    print("Stribeck-Spitze:", DeLaN_network.friction_s)
+    print("Stribeck-Breite:", DeLaN_network.friction_v)
 
 # Plotten
 samples_vec = np.arange(1, H_test.shape[0] + 1)
