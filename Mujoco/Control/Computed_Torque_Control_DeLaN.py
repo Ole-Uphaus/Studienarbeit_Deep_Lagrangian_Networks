@@ -9,9 +9,17 @@ import mujoco
 from mujoco import viewer
 import numpy as np
 import os
+import sys
 import matplotlib.pyplot as plt
 import time
 import torch
+
+# Verzeichnis mit Hauptversion von DeLaN einbinden (liegt an anderer Stelle im Projekt)
+script_path = os.path.dirname(os.path.abspath(__file__))
+DeLaN_dir_path = os.path.join(script_path, '..', '..', 'Training_Models', 'DeLaN_Ole')
+
+if DeLaN_dir_path not in sys.path:
+    sys.path.insert(0, DeLaN_dir_path)
 
 from DeLaN_model_Ole import Deep_Lagrangian_Network
 
@@ -22,7 +30,7 @@ def inv_dyn_2_FHG_Robot(DeLaN_model, v, phi, phi_p, r, r_p):
     q_p = torch.tensor([r_p, phi_p], dtype=torch.float32)
 
     # Lagrange Dynamik auswerten (Beschleunigungen auf null setzen, da H, c, g nur von q und qd abhängen. tau_pred ist natürlich nicht mathematisch korrekt)
-    _, M_torch, c_torch, g_torch = DeLaN_model(q, q_p, torch.zeros_like(q))
+    _, M_torch, c_torch, g_torch, _ = DeLaN_model(q, q_p, torch.zeros_like(q))
 
     # Torch Tensoren in NumPy Arrays umwandeln
     M = M_torch[0].detach().cpu().numpy()
@@ -76,7 +84,7 @@ model = mujoco.MjModel.from_xml_path(xml_path)
 data = mujoco.MjData(model)
 
 # DeLaN Modell Daten laden
-DeLaN_name = "DeLaN_model_2025_06_12_14_33_54_Epochen_1000.pth"
+DeLaN_name = "DeLaN_model_MJ_Sim_2025_06_16_14_43_39_Epochen_1000.pth"
 DeLaN_path = os.path.join(script_path, '..', '..', 'Training_Models', 'DeLaN_Ole', 'Saved_Models', DeLaN_name)
 DeLaN_data = torch.load(DeLaN_path, map_location=torch.device('cpu'))
 
