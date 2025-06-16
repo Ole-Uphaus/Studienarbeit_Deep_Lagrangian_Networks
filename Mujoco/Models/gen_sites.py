@@ -13,5 +13,7 @@ xml_path = os.path.join(script_path, 'traj_sites.xml')
 
 # Datei erzeugen mit 100 Sites
 with open(xml_path, "w") as f:
-    for i in range(100):
-        f.write(f'  <site name="eff_traj_{i}" type="sphere" size="0.005" rgba="1 0 0 1" />\n')
+    for i in range(500):
+        f.write(f'''  <body name="sitebody_des_{i}" pos="0 0 0">
+    <site name="des_traj_{i}" type="sphere" size="0.005" rgba="0 0 1 1"/>
+  </body>\n''')
