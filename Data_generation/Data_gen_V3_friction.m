@@ -63,6 +63,8 @@ function out = inv_dyn_2_FHG_Robot_1_damping(traj_data)
     tauphi_s_N = 2; % zusätzlicher statischer Anteil
     nuphi_ms = 0.005;
 
+    epsilon = 100;  % Parameter, um den Tangens Hyperbolicus an die Sign-Funktion anzunähern
+
     % Output definieren
     out = struct();
 
@@ -89,8 +91,8 @@ function out = inv_dyn_2_FHG_Robot_1_damping(traj_data)
     out.g_2 = r*0;  % Zweiter Vektoreintrag
 
     % Reibungskräfte
-    out.fric_1 = (taur_c_N + taur_s_N .* exp(-r_p.^2 ./ nur_ms)) .* sign(r_p) + dr_Nspm .* r_p;
-    out.fric_2 = (tauphi_c_N + tauphi_s_N .* exp(-phi_p.^2 ./ nuphi_ms)) .* sign(phi_p) + dphi_Ns .* phi_p;
+    out.fric_1 = (taur_c_N + taur_s_N .* exp(-r_p.^2 ./ nur_ms)) .* tanh(epsilon.*r_p) + dr_Nspm .* r_p;
+    out.fric_2 = (tauphi_c_N + tauphi_s_N .* exp(-phi_p.^2 ./ nuphi_ms)) .* tanh(epsilon.*phi_p) + dphi_Ns .* phi_p;
 
     % Eingeprägte Kräfte/Momente (Hier direkt Massen- und Coriolisterme
     % eingesetzt) - Reibung hinzugefügt
