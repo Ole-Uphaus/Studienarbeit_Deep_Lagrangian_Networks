@@ -259,12 +259,12 @@ class Deep_Lagrangian_Network(nn.Module):
         tau = tau.view((-1, self.n_dof))    # tau.shape = (batch_size, 1)
 
         # Lagrange Dynamik auswerten (Beschleunigungen auf null setzen, da H, c, g nur von q und qd abhängen. tau_pred ist natürlich nicht mathematisch korrekt)
-        _, H, c, g = self.lagrangian_dynamics(q, qd, torch.zeros_like(q))
+        _, H, c, g, _, _ = self.lagrangian_dynamics(q, qd, torch.zeros_like(q))
 
         # H Batch weise invertieren (H^-1)
         H_inv = torch.linalg.inv(H)
 
         # Forwärts Dynamik auswerten (H^-1*(tau - g - c))
-        q_pred = torch.einsum('bij,bj->bi', H_inv, (tau - g - c))
+        qdd_pred = torch.einsum('bij,bj->bi', H_inv, (tau - g - c))
 
-        return q_pred, H, c, g
+        return qdd_pred, H, c, g

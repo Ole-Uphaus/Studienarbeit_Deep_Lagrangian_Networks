@@ -39,14 +39,14 @@ hyper_param = {
     'wheight_init': 'xavier_normal',
 
     # Lagrange Dynamik
-    'L_diagonal_offset': 1.e-4,
+    'L_diagonal_offset': 1.e-1,
     
     # Training
     'dropuot': 0.0,
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 2000,
+    'n_epoch': 1000,
 
     # Reibungsmodell
     'use_friction_model': False,
@@ -77,7 +77,8 @@ labels_test_tensor = torch.tensor(labels_test, dtype=torch.float32)
 q_test = features_test_tensor[:, (0, 1)].to(device)
 qd_test = features_test_tensor[:, (2, 3)].to(device)
 qdd_test = features_test_tensor[:, (4, 5)].to(device)
-tau_test = labels_test_tensor.cpu().numpy()    # Diesen Tensor direkt auf cpu schieben, damit damit nachher der loss berechnet werden kann
+tau_test = labels_test_tensor.to(device)
+tau_test_plot = labels_test_tensor.cpu().numpy()    # Diesen Tensor direkt auf cpu schieben, damit damit nachher der loss berechnet werden kann
 
 # Ausgabe Datendimensionen
 print('Datenpunkte Training: ', features_training.shape[0])
@@ -121,17 +122,22 @@ for epoch in range(hyper_param['n_epoch']):
         tau = batch_labels.to(device)
 
         # Forward pass
-        tau_hat, _, _, _, _, output_L_diag_no_activation = DeLaN_network(q, qd, qdd)
+        tau_hat, _, _, _, _, output_L_diag_no_activation = DeLaN_network(q, qd, qdd)    # Inverses Modell
+        qdd_hat, _, _, _ = DeLaN_network.forward_dynamics(q, qd, tau) # Vorwärts Modell
 
         # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
         err_inv_dyn = torch.sum((tau_hat - tau)**2, dim=1)
         mean_err_inv_dyn = torch.mean(err_inv_dyn)
 
+        # Fehler aus Vorwärtsmodell berechnen (Schätzung von qdd)
+        err_for_dyn = torch.sum((qdd_hat - qdd)**2, dim=1)
+        mean_err_for_dyn = torch.mean(err_for_dyn)
+
         # Durchnittlichen wert der Diagonalelemente vor der ReLu aktivierung (über Batch gemittelt)
         output_L_diag_no_activation_mean = output_L_diag_no_activation.mean(dim=0)
 
         # Loss berechnen und Optimierungsschritt durchführen
-        loss = mean_err_inv_dyn
+        loss = mean_err_inv_dyn + mean_err_for_dyn
         loss.backward()
         torch.nn.utils.clip_grad_norm_(DeLaN_network.parameters(), max_norm=0.5)    # Gradienten Clipping für besseres Training
         optimizer.step()
@@ -304,7 +310,7 @@ plt.legend()
 # tau
 plt.subplot(2, 3, 3)
 plt.plot(samples_vec, tau_hat_test[:, 0], label='tau1 DeLaN')
-plt.plot(samples_vec, tau_test[:, 0] ,label='tau1 Analytic')
+plt.plot(samples_vec, tau_test_plot[:, 0] ,label='tau1 Analytic')
 plt.title('tau1')
 plt.xlabel('Samples')
 plt.ylabel('tau')
@@ -313,7 +319,7 @@ plt.legend()
 
 plt.subplot(2, 3, 6)
 plt.plot(samples_vec, tau_hat_test[:, 1], label='tau2 DeLaN')
-plt.plot(samples_vec, tau_test[:, 1] ,label='tau2 Analytic')
+plt.plot(samples_vec, tau_test_plot[:, 1] ,label='tau2 Analytic')
 plt.title('tau2')
 plt.xlabel('Samples')
 plt.ylabel('tau')

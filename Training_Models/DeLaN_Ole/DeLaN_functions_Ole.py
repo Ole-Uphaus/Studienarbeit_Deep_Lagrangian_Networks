@@ -8,7 +8,6 @@ Dieses Skript enthält Funktionen im Zusammenhang mit dem Training und der Erpro
 import scipy.io
 import os
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 
 def extract_training_data(file_name, target_folder):
     # Pfad des aktuellen Skriptes
@@ -41,7 +40,8 @@ def extract_training_data(file_name, target_folder):
 
 def model_evaluation(model, q_test, qd_test, qdd_test, tau_test):
     # Forward pass
-    out_eval = model(q_test, qd_test, qdd_test)
+    out_eval = model(q_test, qd_test, qdd_test)    # Inverses Modell
+    qdd_hat, _, _, _ = model.forward_dynamics(q_test, qd_test, tau_test) # Vorwärts Modell
 
     tau_hat_eval = out_eval[0].cpu().detach().numpy()   # Tesnoren auf cpu legen, gradienten entfernen, un numpy arrays umwandeln
     H_eval = out_eval[1].cpu().detach().numpy()
@@ -49,8 +49,15 @@ def model_evaluation(model, q_test, qd_test, qdd_test, tau_test):
     g_eval = out_eval[3].cpu().detach().numpy()
     tau_fric_eval = out_eval[4].cpu().detach().numpy()
 
-    # Evaluierungs Loss berechnen (um mit Training zu vergleichen)
-    err_inv_dyn_test = np.sum((tau_hat_eval - tau_test)**2, axis=1)
+    # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
+    err_inv_dyn_test = np.sum((tau_hat_eval - tau_test.cpu().detach().numpy())**2, axis=1)
     mean_err_inv_dyn_eval = np.mean(err_inv_dyn_test)
 
-    return mean_err_inv_dyn_eval, tau_hat_eval, H_eval, c_eval, g_eval, tau_fric_eval
+    # Fehler aus Vorwärtsmodell berechnen (Schätzung von qdd)
+    err_for_dyn_test = np.sum((qdd_hat.cpu().detach().numpy() - qdd_test.cpu().detach().numpy())**2, axis=1)
+    mean_err_for_dyn_eval = np.mean(err_for_dyn_test)
+
+    # Test Loss berechnen
+    test_loss = mean_err_inv_dyn_eval + mean_err_for_dyn_eval
+
+    return test_loss, tau_hat_eval, H_eval, c_eval, g_eval, tau_fric_eval
