@@ -32,7 +32,7 @@ hyper_param = {
     'hidden_width': 64,
     'hidden_depth': 2,
     'activation_fnc': 'elu',
-    'activation_fnc_diag': 'softplus',
+    'activation_fnc_diag': 'relu',
 
     # Initialisierung
     'bias_init_constant': 1.e-3,
@@ -46,7 +46,7 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 1000,
+    'n_epoch': 2000,
 
     # Reibungsmodell
     'use_friction_model': False,
@@ -54,12 +54,12 @@ hyper_param = {
     'friction_epsilon': 100.0,
 
     # Sonstiges
-    'save_model': True}
+    'save_model': False}
 
 # Trainings- und Testdaten laden
-target_folder = 'Mujoco_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_Mujoco_PD_2025_06_12_11_13_13.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_Mujoco_PD_2025_06_12_11_13_13.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -102,11 +102,13 @@ start_time = time.time()
 # Training des Netzwerks
 training_loss_history = []
 test_loss_history = []
+output_L_diag_no_activation_history = []
 
 for epoch in range(hyper_param['n_epoch']):
     # Modell in den Trainingsmodeus versetzen und loss Summe initialisieren
     DeLaN_network.train()
     loss_sum = 0
+    output_L_diag_no_activation_mean_sum = 0
 
     for batch_features, batch_labels in dataloader_training:
         # Gradienten zurücksetzen
@@ -119,11 +121,14 @@ for epoch in range(hyper_param['n_epoch']):
         tau = batch_labels.to(device)
 
         # Forward pass
-        tau_hat, _, _, _, _ = DeLaN_network(q, qd, qdd)
+        tau_hat, _, _, _, _, output_L_diag_no_activation = DeLaN_network(q, qd, qdd)
 
         # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
         err_inv_dyn = torch.sum((tau_hat - tau)**2, dim=1)
         mean_err_inv_dyn = torch.mean(err_inv_dyn)
+
+        # Durchnittlichen wert der Diagonalelemente vor der ReLu aktivierung (über Batch gemittelt)
+        output_L_diag_no_activation_mean = output_L_diag_no_activation.mean(dim=0)
 
         # Loss berechnen und Optimierungsschritt durchführen
         loss = mean_err_inv_dyn
@@ -131,14 +136,17 @@ for epoch in range(hyper_param['n_epoch']):
         torch.nn.utils.clip_grad_norm_(DeLaN_network.parameters(), max_norm=0.5)    # Gradienten Clipping für besseres Training
         optimizer.step()
 
-        # Loss des aktuellen Batches aufsummieren
+        # Loss des aktuellen Batches aufsummieren (und mittleren Wert der Diagonalelemente ohne aktivierung)
         loss_sum += loss.item()
+        output_L_diag_no_activation_mean_sum += output_L_diag_no_activation_mean
 
-    # Mittleren Loss berechnen und ausgeben
+    # Mittleren Loss berechnen und ausgeben (und mittleren Wert der Diagonalelemente ohne aktivierung)
     loss_mean_batch = loss_sum/len(dataloader_training)
+    output_L_diag_no_activation_mean_batch = output_L_diag_no_activation_mean_sum/len(dataloader_training)
 
-    # Loss an Loss history anhängen
+    # Loss an Loss history anhängen (und mittleren Wert der Diagonalelemente ohne aktivierung)
     training_loss_history.append([epoch + 1, loss_mean_batch])
+    output_L_diag_no_activation_history.append(output_L_diag_no_activation_mean_batch.cpu().detach().numpy())
 
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         # Model Evaluieren
@@ -185,11 +193,14 @@ if hyper_param['use_friction_model']:
 # Plotten
 samples_vec = np.arange(1, H_test.shape[0] + 1)
 
-# Loss Entwicklung plotten
+# Loss Entwicklung plotten (und mittleren Wert der Diagonalelemente ohne aktivierung)
 training_loss_history = np.array(training_loss_history)
 test_loss_history = np.array(test_loss_history)
+output_L_diag_no_activation_history = np.array(output_L_diag_no_activation_history)
 
 plt.figure()
+
+plt.subplot(2, 1, 1)
 plt.semilogy(training_loss_history[:, 0], training_loss_history[:, 1], label='Training Loss')
 plt.semilogy(test_loss_history[:, 0], test_loss_history[:, 1], label='Test Loss')
 plt.xlabel('Epoche')
@@ -197,6 +208,16 @@ plt.ylabel('Loss')
 plt.title('Loss-Verlauf während des Trainings')
 plt.grid(True)
 plt.legend()
+
+plt.subplot(2, 1, 2)
+plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 0], label='H11')
+plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 1], label='H22')
+plt.title('H ohne Aktivierung')
+plt.xlabel('Epoche')
+plt.ylabel('H')
+plt.grid(True)
+plt.legend()
+
 plt.tight_layout()
 
 # H

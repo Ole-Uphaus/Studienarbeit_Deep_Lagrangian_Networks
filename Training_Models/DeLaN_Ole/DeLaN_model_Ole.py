@@ -106,8 +106,8 @@ class Intern_NN(nn.Module):
             q = self.activation_fnc(layer(q))
             q = self.dropout(q)
 
-        # Jeweils die Netzwerk Outputs einzeln berechnen und zurückgeben
-        return self.output_g(q), self.activation_fnc_diag(self.output_L_diag(q)), self.output_L_tril(q)
+        # Jeweils die Netzwerk Outputs einzeln berechnen und zurückgeben (zusätzlich noch diagonalelemente ohne relu zurückgeben)
+        return self.output_g(q), self.activation_fnc_diag(self.output_L_diag(q)), self.output_L_tril(q), self.output_L_diag(q)
       
 class Deep_Lagrangian_Network(nn.Module):
     def __init__(self, n_dof, **hyper_param):
@@ -159,8 +159,8 @@ class Deep_Lagrangian_Network(nn.Module):
         # Autograd verfolgung für q aktivieren
         q.requires_grad_(True)
 
-        # Internes Netz mit Eingangswerten (q) auswerten
-        output_g, output_L_diag, output_L_tril = self.Intern_NN(q)  # output_L_diag.shape = (batch_size, n_dof), output_L_tril.shape = (batch.size, anz_elemente_unter_hauptdiagonalen)
+        # Internes Netz mit Eingangswerten (q) auswerten (zusätzlich noch hauptdiagonalelemente ohne aktivierung ausgeben)
+        output_g, output_L_diag, output_L_tril, output_L_diag_no_activation = self.Intern_NN(q)  # output_L_diag.shape = (batch_size, n_dof), output_L_tril.shape = (batch.size, anz_elemente_unter_hauptdiagonalen)
 
         # Partielle Ableitungen der Einträge in L bezüglich der Eingänge (q) berechnen
         output_L_diag_dq = self.compute_Jacobian_batched(output_L_diag, q)
@@ -204,7 +204,7 @@ class Deep_Lagrangian_Network(nn.Module):
         # Inverse Dynamik auswerten
         tau_pred = torch.einsum('bij,bj->bi', H, qdd) + c + output_g + tau_fric
 
-        return tau_pred, H, c, output_g, tau_fric
+        return tau_pred, H, c, output_g, tau_fric, output_L_diag_no_activation
     
     def compute_Jacobian_batched(self, output_L, input_q):
         # Dimensionen des Outputs bekommen
