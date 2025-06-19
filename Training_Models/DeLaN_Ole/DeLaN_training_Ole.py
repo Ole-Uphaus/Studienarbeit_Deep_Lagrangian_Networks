@@ -39,27 +39,28 @@ hyper_param = {
     'wheight_init': 'xavier_normal',
 
     # Lagrange Dynamik
-    'L_diagonal_offset': 1.e-1,
+    'L_diagonal_offset': 5.e-1,
     
     # Training
     'dropuot': 0.0,
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 1000,
+    'n_epoch': 3000,
 
     # Reibungsmodell
-    'use_friction_model': False,
+    'use_friction_model': True,
     'friction_model_init_v': 0.01,
     'friction_epsilon': 100.0,
 
     # Sonstiges
+    'use_forward_model': False,
     'save_model': False}
 
 # Trainings- und Testdaten laden
 target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -125,19 +126,26 @@ for epoch in range(hyper_param['n_epoch']):
         tau_hat, _, _, _, _, output_L_diag_no_activation = DeLaN_network(q, qd, qdd)    # Inverses Modell
         qdd_hat, _, _, _ = DeLaN_network.forward_dynamics(q, qd, tau) # Vorwärts Modell
 
+        # Durchnittlichen wert der Diagonalelemente vor der ReLu aktivierung (über Batch gemittelt)
+        output_L_diag_no_activation_mean = output_L_diag_no_activation.mean(dim=0)
+
         # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
         err_inv_dyn = torch.sum((tau_hat - tau)**2, dim=1)
         mean_err_inv_dyn = torch.mean(err_inv_dyn)
 
-        # Fehler aus Vorwärtsmodell berechnen (Schätzung von qdd)
-        err_for_dyn = torch.sum((qdd_hat - qdd)**2, dim=1)
-        mean_err_for_dyn = torch.mean(err_for_dyn)
+        if hyper_param['use_forward_model']:
+            # Fehler aus Vorwärtsmodell berechnen (Schätzung von qdd)
+            err_for_dyn = torch.sum((qdd_hat - qdd)**2, dim=1)
+            mean_err_for_dyn = torch.mean(err_for_dyn)
 
-        # Durchnittlichen wert der Diagonalelemente vor der ReLu aktivierung (über Batch gemittelt)
-        output_L_diag_no_activation_mean = output_L_diag_no_activation.mean(dim=0)
+            # Loss berechnen
+            loss = mean_err_inv_dyn + mean_err_for_dyn
 
-        # Loss berechnen und Optimierungsschritt durchführen
-        loss = mean_err_inv_dyn + mean_err_for_dyn
+        else:
+            # Loss berechnen
+            loss = mean_err_inv_dyn
+
+        # Optimierungsschritt durchführen
         loss.backward()
         torch.nn.utils.clip_grad_norm_(DeLaN_network.parameters(), max_norm=0.5)    # Gradienten Clipping für besseres Training
         optimizer.step()
@@ -156,7 +164,7 @@ for epoch in range(hyper_param['n_epoch']):
 
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         # Model Evaluieren
-        test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test)
+        test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_forward_model'])
 
         # Loss an Loss history anhängen
         test_loss_history.append([epoch + 1, test_loss])
@@ -168,7 +176,7 @@ for epoch in range(hyper_param['n_epoch']):
 DeLaN_network.eval()
 
 # Evaluierung
-_, tau_hat_test, H_test, c_test, g_test, tau_fric_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test)
+_, tau_hat_test, H_test, c_test, g_test, tau_fric_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_forward_model'])
 
 # Modell abspeichern
 if hyper_param['save_model'] == True:
