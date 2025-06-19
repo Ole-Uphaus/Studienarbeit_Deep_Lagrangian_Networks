@@ -1,0 +1,71 @@
+<!-- Modell 2 FHG Roboter
+
+Autor:      Ole Uphaus
+Datum:      19.06.2025
+Beschreibung: Dies ist eine Kopie des vorherigen Robotermodell. In diesem Modell ist jedoch Reibung implementiert.
+
+Anmerkungen zur Geometrie (Verbindung zum analytischen Modell):
+    - phi: entspricht joint1, ansonsten alles wie im Analytischen modell
+    - r: entspricht joint2, ansonsten alles wie im Analytischen modell
+    
+    - l: ist der Schwerpunktabstand von m und m_L, in diesem Fall die Distanz, um die der body "telescopic_link" gegenüber "end_mass" verschoben wurde
+
+    - J: konstantes Trägheitsmoment, kann bei der Trägheit des "rotating_arm" verändert werden
+    - m: Masse des Arms: variation unter "telescopic_link"
+    - m_l: Massedes Endeffektors, variation unter "end_mass"
+
+    - da Massen in Mujoco nicht gleich Null gesetzt werden dürfen, haben alle Elemente die im analytischen Modell gleich null sind sehr kleine numerische Werte.
+
+-->
+<mujoco model='2_FHG_Rob_Model_1_friction'>
+
+  <compiler coordinate='local'/>
+  <option timestep='0.030303030303030304' gravity="0 0 0"/>
+
+  <!-- Anfangspositionen definieren (zum Test) -->
+  <keyframe>
+    <key name="init_extended" qpos="0 0.9"/>
+  </keyframe>
+
+  <worldbody>
+    <geom name='floor' pos='0 0 -0.1' size='4 4 4' type='plane' />
+    <light name="main_light" pos="0 0 5" dir="0 0 -1" diffuse="1 1 1" specular="0.5 0.5 0.5" />
+
+    <!-- Rotationsgelenk mit starrem Arm -->
+    <body name="rotating_arm" pos="0 0 0">
+      <joint name="joint1" type="hinge" axis="0 0 1" limited="false" damping="6"/>
+      <geom type="box" size="0.3 0.075 0.05" pos="0.3 0 0" rgba="0.4 0.8 0.4 1"/>
+      <geom type="cylinder" size="0.10 0.05" pos="0 0 0" rgba="0.4 0.8 0.4 1"/>
+
+      <inertial pos="0 0 0" mass="0.0001" diaginertia="0.4 0.4 0.4"/>
+
+      <!-- Endmasse -->
+      <body name="end_mass" pos="0 0 0">
+        <geom type="box" size="0.05 0.075 0.05" pos="0 0 0" rgba="0.4 0.4 0.8 1"/>
+        <joint name="joint2" type="slide" axis="1 0 0" limited="false" damping="6"/>
+
+        <!-- Endeffektor hinzufügen -->
+        <site name="end_mass_site" pos="0 0 0" size="0.02" rgba="1 0 0 1"/>
+
+        <inertial pos="0 0 0" mass="2" diaginertia="0.0001 0.0001 0.0001"/>
+
+        <!-- Teleskoparm -->
+        <body name="telescopic_link" pos="-0.25 0 0">
+          <geom type="box" size="0.3 0.055 0.035" pos="0 0 0" rgba="0.4 0.4 0.8 1"/>
+
+          <inertial pos="0 0 0" mass="5" diaginertia="0.0001 0.0001 0.0001"/>
+
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+  <!-- Moment Rotationsgelenk -->
+  <motor name="motor_joint1" joint="joint1" gear="1"/>
+
+  <!-- Kraft Schubgelenk -->
+  <motor name="motor_joint2" joint="joint2" gear="1"/>
+</actuator>
+
+</mujoco>

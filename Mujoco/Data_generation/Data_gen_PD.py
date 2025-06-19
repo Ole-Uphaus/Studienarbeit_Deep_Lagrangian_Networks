@@ -25,7 +25,7 @@ if DeLaN_dir_path not in sys.path:
 from DeLaN_functions_Ole import *
 
 # Sollen Trainingsdaten erstellt werden
-save_data = False
+save_data = True
 
 # Trainings- und Testdaten laden
 target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
@@ -80,7 +80,7 @@ t_vec = np.linspace(0, move_time, r_des_traj_divided.shape[1])
 dt = move_time/(r_des_traj_divided.shape[1] - 1)    # Zeitschritt hier etwas anders berechnet, da bei linspace ja immer ein Zeitschritt weniger als Anzahl der Samples
 
 # XML Modell laden (Eigenes XML Modell nur für dieses Skript, da andere Abtastzeit)
-xml_name = '2_FHG_Rob_Model_1_data_gen.xml'
+xml_name = '2_FHG_Rob_Model_1_friction_data_gen.xml'
 script_path = os.path.dirname(os.path.abspath(__file__))
 xml_path = os.path.join(script_path, '..', 'Models', xml_name)
 
@@ -227,18 +227,39 @@ if save_data:
     features_test_PD = np.concatenate([features_test[:, :4], labels_test], axis=1)
     labels_test_PD = features_test[:, 4:]
 
-    # Dictionary erstellen
-    save_dict = {
-        'features_training': features_training_PD,
-        'labels_training': labels_training_PD,
-        'features_test': features_test_PD,
-        'labels_test': labels_test_PD,
-        'Mass_Cor_test': Mass_Cor_test
-    }
+    # Unterscheidung zwischen Reibmodell und Reibungslosem Modell
+    if xml_name == '2_FHG_Rob_Model_1_data_gen.xml':
 
-    # Pfad zum Speichern erstellen
-    timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    save_path = os.path.join(script_path, '..', '..', 'Training_Data', 'Mujoco_Simulation', f"SimData_Mujoco_PD_{timestamp}.mat")
+        # Dictionary erstellen
+        save_dict = {
+            'features_training': features_training_PD,
+            'labels_training': labels_training_PD,
+            'features_test': features_test_PD,
+            'labels_test': labels_test_PD,
+            'Mass_Cor_test': Mass_Cor_test
+        }
+
+        # Pfad zum Speichern erstellen
+        timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        save_path = os.path.join(script_path, '..', '..', 'Training_Data', 'Mujoco_Simulation', f"SimData_Mujoco_PD_{timestamp}.mat")
+
+    else:
+
+        # Nullvektoren an Massen- und Coriolismatrix anhängen, damit reibungsterme nachher im Trainingsskript geplottet werden. Die realen Reibwerte sind ja nichtmehr bekannt.
+        Mass_Cor_test = np.concatenate([Mass_Cor_test, np.zeros((Mass_Cor_test.shape[0], 2))], axis=1)
+
+        # Dictionary erstellen
+        save_dict = {
+            'features_training': features_training_PD,
+            'labels_training': labels_training_PD,
+            'features_test': features_test_PD,
+            'labels_test': labels_test_PD,
+            'Mass_Cor_test': Mass_Cor_test
+        }
+
+        # Pfad zum Speichern erstellen
+        timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        save_path = os.path.join(script_path, '..', '..', 'Training_Data', 'Mujoco_Simulation', f"SimData_Mujoco_PD_friction_{timestamp}.mat")
 
     # .mat file erstellen
     savemat(save_path, save_dict)
