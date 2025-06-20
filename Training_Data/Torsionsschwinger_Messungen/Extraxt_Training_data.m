@@ -26,7 +26,7 @@ r_resample = 10;
 test_idx = 2100;
 
 % Daten abspeichern
-savedata = true;
+savedata = false;
 
 %% Signale filtern
 
@@ -77,9 +77,11 @@ labels_ges = [phi1pp_filt_res, phi2pp_filt_res];
 % Aufteilen in Trainings und Testdaten
 features_training = features_ges((test_idx + 1):end, :);
 labels_training = labels_ges((test_idx + 1):end, :);
+t_vec_training = t_ges_res((test_idx + 1):end, :);
 
 features_test = features_ges(1:test_idx, :);
 labels_test = labels_ges(1:test_idx, :);
+t_vec_test = t_ges_res(1:test_idx, :);
 
 % Massen und Coriolisterme erstellen (hier unbekannt - gleich null setzen
 % für Plot später)
@@ -102,18 +104,20 @@ end
 % Positionen
 figure()
 subplot(2,1,1);
-plot(t_ges, phi1_rad, 'LineWidth', 1.5);
+% plot(t_ges, phi1_rad, 'LineWidth', 1.5);
 hold on
-plot(t_ges_res, phi1_filt_res, 'LineWidth', 1.5);
+plot(t_vec_test, features_test(:, 1), 'LineWidth', 1.5);
+plot(t_vec_training, features_training(:, 1), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi1');
 grid on;
 title('phi1(t)');
 
 subplot(2,1,2);
-plot(t_ges, phi2_rad, 'LineWidth', 1.5);
+% plot(t_ges, phi2_rad, 'LineWidth', 1.5);
 hold on
-plot(t_ges_res, phi2_filt_res, 'LineWidth', 1.5);
+plot(t_vec_test, features_test(:, 2), 'LineWidth', 1.5);
+plot(t_vec_training, features_training(:, 2), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi2');
 grid on;
@@ -122,14 +126,18 @@ title('phi2(t)');
 % Geschwindigkeiten
 figure()
 subplot(2,1,1);
-plot(t_ges_res, phi1p_filt_res, 'LineWidth', 1.5);
+plot(t_vec_test, features_test(:, 3), 'LineWidth', 1.5);
+hold on
+plot(t_vec_training, features_training(:, 3), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi1p');
 grid on;
 title('phi1p(t)');
 
 subplot(2,1,2);
-plot(t_ges_res, phi2p_filt_res, 'LineWidth', 1.5);
+plot(t_vec_test, features_test(:, 4), 'LineWidth', 1.5);
+hold on
+plot(t_vec_training, features_training(:, 4), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi2p');
 grid on;
@@ -138,14 +146,18 @@ title('phi2p(t)');
 % Beschleunigungen
 figure()
 subplot(2,1,1);
-plot(t_ges_res, phi1pp_filt_res, 'LineWidth', 1.5);
+plot(t_vec_test, labels_test(:, 1), 'LineWidth', 1.5);
+hold on
+plot(t_vec_training, labels_training(:, 1), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi1pp');
 grid on;
 title('phi1pp(t)');
 
 subplot(2,1,2);
-plot(t_ges_res, phi2pp_filt_res, 'LineWidth', 1.5);
+plot(t_vec_test, labels_test(:, 2), 'LineWidth', 1.5);
+hold on
+plot(t_vec_training, labels_training(:, 2), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi2pp');
 grid on;
@@ -153,7 +165,9 @@ title('phi2pp(t)');
 
 % Drehmoment
 figure()
-plot(t_ges_res, u_res, 'LineWidth', 1.5);
+plot(t_vec_test, features_test(:, 5), 'LineWidth', 1.5);
+hold on
+plot(t_vec_training, features_training(:, 5), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('tau');
 grid on;
