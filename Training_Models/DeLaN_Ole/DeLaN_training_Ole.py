@@ -46,21 +46,22 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 1000,
+    'n_epoch': 500,
 
     # Reibungsmodell
-    'use_friction_model': True,
+    'use_friction_model': False,
     'friction_model_init_v': 0.01,
     'friction_epsilon': 100.0,
 
     # Sonstiges
+    'use_inverse_model': True,
     'use_forward_model': True,
     'save_model': False}
 
 # Trainings- und Testdaten laden
-target_folder = 'Torsionsschwinger_Messungen' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
-features_training, labels_training, _, _, _ = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -122,28 +123,36 @@ for epoch in range(hyper_param['n_epoch']):
         qdd = batch_features[:, (4, 5)].to(device)
         tau = batch_labels.to(device)
 
-        # Forward pass
-        tau_hat, _, _, _, _, output_L_diag_no_activation = DeLaN_network(q, qd, qdd)    # Inverses Modell
-        qdd_hat, _, _, _ = DeLaN_network.forward_dynamics(q, qd, tau) # Vorwärts Modell
+        # Loss initialisieren
+        loss = torch.tensor(0.0, device=device)
 
-        # Durchnittlichen wert der Diagonalelemente vor der ReLu aktivierung (über Batch gemittelt)
-        output_L_diag_no_activation_mean = output_L_diag_no_activation.mean(dim=0)
+        if hyper_param['use_inverse_model']:
+            # Forward pass
+            tau_hat, _, _, _, _, output_L_diag_no_activation = DeLaN_network(q, qd, qdd)    # Inverses Modell
 
-        # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
-        err_inv_dyn = torch.sum((tau_hat - tau)**2, dim=1)
-        mean_err_inv_dyn = torch.mean(err_inv_dyn)
+            # Durchnittlichen wert der Diagonalelemente vor der ReLu aktivierung (über Batch gemittelt)
+            output_L_diag_no_activation_mean = output_L_diag_no_activation.mean(dim=0)
+
+            # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
+            err_inv_dyn = torch.sum((tau_hat - tau)**2, dim=1)
+            mean_err_inv_dyn = torch.mean(err_inv_dyn)
+
+            # Loss berechnen
+            loss += mean_err_inv_dyn
 
         if hyper_param['use_forward_model']:
+            # Forward pass    
+            qdd_hat, _, _, _ = DeLaN_network.forward_dynamics(q, qd, tau) # Vorwärts Modell
+
             # Fehler aus Vorwärtsmodell berechnen (Schätzung von qdd)
             err_for_dyn = torch.sum((qdd_hat - qdd)**2, dim=1)
             mean_err_for_dyn = torch.mean(err_for_dyn)
 
             # Loss berechnen
-            loss = mean_err_inv_dyn + mean_err_for_dyn
+            loss += mean_err_for_dyn
 
-        else:
-            # Loss berechnen
-            loss = mean_err_inv_dyn
+        if hyper_param['use_inverse_model'] == False and hyper_param['use_forward_model'] == False:
+            raise ValueError("Ungültige Konfiguration: 'use_inverse_model' und 'use_forward_model' dürfen nicht beide False sein.")
 
         # Optimierungsschritt durchführen
         loss.backward()
@@ -152,15 +161,18 @@ for epoch in range(hyper_param['n_epoch']):
 
         # Loss des aktuellen Batches aufsummieren (und mittleren Wert der Diagonalelemente ohne aktivierung)
         loss_sum += loss.item()
-        output_L_diag_no_activation_mean_sum += output_L_diag_no_activation_mean
+        if hyper_param['use_inverse_model']:
+            output_L_diag_no_activation_mean_sum += output_L_diag_no_activation_mean
 
     # Mittleren Loss berechnen und ausgeben (und mittleren Wert der Diagonalelemente ohne aktivierung)
     loss_mean_batch = loss_sum/len(dataloader_training)
-    output_L_diag_no_activation_mean_batch = output_L_diag_no_activation_mean_sum/len(dataloader_training)
+    if hyper_param['use_inverse_model']:
+        output_L_diag_no_activation_mean_batch = output_L_diag_no_activation_mean_sum/len(dataloader_training)
 
     # Loss an Loss history anhängen (und mittleren Wert der Diagonalelemente ohne aktivierung)
     training_loss_history.append([epoch + 1, loss_mean_batch])
-    output_L_diag_no_activation_history.append(output_L_diag_no_activation_mean_batch.cpu().detach().numpy())
+    if hyper_param['use_inverse_model']:
+        output_L_diag_no_activation_history.append(output_L_diag_no_activation_mean_batch.cpu().detach().numpy())
 
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         # Model Evaluieren
@@ -223,14 +235,15 @@ plt.title('Loss-Verlauf während des Trainings')
 plt.grid(True)
 plt.legend()
 
-plt.subplot(2, 1, 2)
-plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 0], label='H11')
-plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 1], label='H22')
-plt.title('H ohne Aktivierung')
-plt.xlabel('Epoche')
-plt.ylabel('H')
-plt.grid(True)
-plt.legend()
+if hyper_param['use_inverse_model']:
+    plt.subplot(2, 1, 2)
+    plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 0], label='H11')
+    plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 1], label='H22')
+    plt.title('H ohne Aktivierung')
+    plt.xlabel('Epoche')
+    plt.ylabel('H')
+    plt.grid(True)
+    plt.legend()
 
 plt.tight_layout()
 
