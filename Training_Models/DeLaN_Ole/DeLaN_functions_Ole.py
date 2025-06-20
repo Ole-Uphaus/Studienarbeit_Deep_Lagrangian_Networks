@@ -38,7 +38,7 @@ def extract_training_data(file_name, target_folder):
 
     return features_training_delan, labels_training_delan, features_test_delan, labels_test_delan, Mass_Cor_test
 
-def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_forward_model):
+def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_inverse_model, use_forward_model):
     # Forward pass
     out_eval = model(q_test, qd_test, qdd_test)    # Inverses Modell
     qdd_hat, _, _, _ = model.forward_dynamics(q_test, qd_test, tau_test) # Vorwärts Modell
@@ -49,9 +49,16 @@ def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_forward_mod
     g_eval = out_eval[3].cpu().detach().numpy()
     tau_fric_eval = out_eval[4].cpu().detach().numpy()
 
-    # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
-    err_inv_dyn_test = np.sum((tau_hat_eval - tau_test.cpu().detach().numpy())**2, axis=1)
-    mean_err_inv_dyn_eval = np.mean(err_inv_dyn_test)
+    # Loss initialisieren
+    test_loss = np.array(0.0)
+
+    if use_inverse_model:
+        # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
+        err_inv_dyn_test = np.sum((tau_hat_eval - tau_test.cpu().detach().numpy())**2, axis=1)
+        mean_err_inv_dyn_eval = np.mean(err_inv_dyn_test)
+
+        # Test Loss berechnen
+        test_loss += mean_err_inv_dyn_eval
 
     if use_forward_model:
         # Fehler aus Vorwärtsmodell berechnen (Schätzung von qdd)
@@ -59,10 +66,9 @@ def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_forward_mod
         mean_err_for_dyn_eval = np.mean(err_for_dyn_test)
 
         # Test Loss berechnen
-        test_loss = mean_err_inv_dyn_eval + mean_err_for_dyn_eval
+        test_loss += mean_err_for_dyn_eval
 
-    else:
-        # Test Loss berechnen
-        test_loss = mean_err_inv_dyn_eval
+    if use_inverse_model == False and use_forward_model == False:
+        raise ValueError("Ungültige Konfiguration: 'use_inverse_model' und 'use_forward_model' dürfen nicht beide False sein.")
 
     return test_loss, tau_hat_eval, H_eval, c_eval, g_eval, tau_fric_eval
