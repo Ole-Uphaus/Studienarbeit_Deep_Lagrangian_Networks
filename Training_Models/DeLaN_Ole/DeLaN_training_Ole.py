@@ -46,11 +46,14 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 1000,
+    'n_epoch': 100,
 
     # Reibungsmodell
     'use_friction_model': True,
-    'friction_model_init_v': 0.01,
+    'friction_model_init_d': 0.1,
+    'friction_model_init_c': 1,
+    'friction_model_init_s': 1,
+    'friction_model_init_v': 0.1,
     'friction_epsilon': 100.0,
 
     # Sonstiges
@@ -214,7 +217,7 @@ if hyper_param['use_friction_model']:
     print("Dämpfung (viskos):", DeLaN_network.friction_d)
     print("Coulomb-Reibung:", DeLaN_network.friction_c)
     print("Stribeck-Spitze:", DeLaN_network.friction_s)
-    print("Stribeck-Breite:", DeLaN_network.friction_v)
+    print("Stribeck-Breite:", DeLaN_network.friction_v())
 
 # Plotten
 samples_vec = np.arange(1, H_test.shape[0] + 1)
