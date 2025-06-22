@@ -141,7 +141,7 @@ class Deep_Lagrangian_Network(nn.Module):
             self.register_buffer('friction_epsilon', torch.tensor(hyper_param['friction_epsilon']))
 
     def friction_v(self):
-        return torch.clamp(self.friction_v_raw, min=0.001)
+        return torch.clamp(self.friction_v_raw, min=0.001)  # Damit keine negativen Werte möglich sind
 
     def forward(self, q, qd, qdd):
 
