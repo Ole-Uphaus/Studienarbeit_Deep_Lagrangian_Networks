@@ -46,7 +46,7 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 3000,
+    'n_epoch': 1000,
 
     # Reibungsmodell
     'use_friction_model': True,
@@ -59,9 +59,9 @@ hyper_param = {
     'save_model': False}
 
 # Trainings- und Testdaten laden
-target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+target_folder = 'Torsionsschwinger_Messungen' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
+features_training, labels_training, _, _, _ = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
