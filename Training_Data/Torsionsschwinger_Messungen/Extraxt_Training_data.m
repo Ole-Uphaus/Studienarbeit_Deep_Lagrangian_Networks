@@ -86,10 +86,6 @@ features_test = features_ges(1:test_idx, :);
 labels_test = labels_ges(1:test_idx, :);
 t_vec_test = t_ges_res(1:test_idx, :);
 
-% Massen und Coriolisterme erstellen (hier unbekannt - gleich null setzen
-% für Plot später)
-Mass_Cor_test = zeros(size(features_test, 1), 9);
-
 %% Datenpunkte im Stillstand löschen
 
 % Trainingsdaten (Geschwindigkeit == 0 -> Datenpunkt löschen)
@@ -104,10 +100,13 @@ test_delete_idx = find(abs(features_test(:, 3)) < threshold_v | abs(features_tes
 features_test(test_delete_idx, :) = [];
 labels_test(test_delete_idx, :) = [];
 
-% Samples vektoren erstellen (ist noch falsch)
-
+% Samples vektoren erstellen
 samples_training = size(features_test, 1):(size(features_test, 1) + size(features_training, 1) - 1);
 samples_test = 0:(size(features_test, 1) - 1);
+
+% Massen und Coriolisterme erstellen (hier unbekannt - gleich null setzen
+% für Plot später)
+Mass_Cor_test = zeros(size(features_test, 1), 9);
 
 %% Abspeichern
 
