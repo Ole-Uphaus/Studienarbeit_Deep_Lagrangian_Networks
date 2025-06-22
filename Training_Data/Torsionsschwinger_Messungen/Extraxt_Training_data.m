@@ -25,8 +25,11 @@ r_resample = 10;
 % Index, bis zu dem Testdaten gesammelt werden
 test_idx = 2100;
 
+% Schwellenwert für Geschwindigkeit
+threshold_v = 1.e-2;
+
 % Daten abspeichern
-savedata = false;
+savedata = true;
 
 %% Signale filtern
 
@@ -68,7 +71,7 @@ t_ges_res = downsample(t_ges, r_resample);
 
 u_res = downsample(u, r_resample);
 
-%% Zusammenfassen unt Trainings und Testdaten erstellen
+%% Zusammenfassen und Trainings und Testdaten erstellen
 
 % Zusammenfassen
 features_ges = [phi1_filt_res, phi2_filt_res, phi1p_filt_res, phi2p_filt_res, u_res, zeros(size(u_res))];
@@ -86,6 +89,25 @@ t_vec_test = t_ges_res(1:test_idx, :);
 % Massen und Coriolisterme erstellen (hier unbekannt - gleich null setzen
 % für Plot später)
 Mass_Cor_test = zeros(size(features_test, 1), 9);
+
+%% Datenpunkte im Stillstand löschen
+
+% Trainingsdaten (Geschwindigkeit == 0 -> Datenpunkt löschen)
+training_delete_idx = find(abs(features_training(:, 3)) < threshold_v | abs(features_training(:, 4)) < threshold_v);
+
+features_training(training_delete_idx, :) = [];
+labels_training(training_delete_idx, :) = [];
+
+% Testdaten (Geschwindigkeit == 0 -> Datenpunkt löschen)
+test_delete_idx = find(abs(features_test(:, 3)) < threshold_v | abs(features_test(:, 4)) < threshold_v);
+
+features_test(test_delete_idx, :) = [];
+labels_test(test_delete_idx, :) = [];
+
+% Samples vektoren erstellen (ist noch falsch)
+
+samples_training = size(features_test, 1):(size(features_test, 1) + size(features_training, 1) - 1);
+samples_test = 0:(size(features_test, 1) - 1);
 
 %% Abspeichern
 
@@ -106,8 +128,8 @@ figure()
 subplot(2,1,1);
 % plot(t_ges, phi1_rad, 'LineWidth', 1.5);
 hold on
-plot(t_vec_test, features_test(:, 1), 'LineWidth', 1.5);
-plot(t_vec_training, features_training(:, 1), 'LineWidth', 1.5);
+plot(samples_test, features_test(:, 1), 'LineWidth', 1.5);
+plot(samples_training, features_training(:, 1), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi1');
 grid on;
@@ -116,8 +138,8 @@ title('phi1(t)');
 subplot(2,1,2);
 % plot(t_ges, phi2_rad, 'LineWidth', 1.5);
 hold on
-plot(t_vec_test, features_test(:, 2), 'LineWidth', 1.5);
-plot(t_vec_training, features_training(:, 2), 'LineWidth', 1.5);
+plot(samples_test, features_test(:, 2), 'LineWidth', 1.5);
+plot(samples_training, features_training(:, 2), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi2');
 grid on;
@@ -126,18 +148,18 @@ title('phi2(t)');
 % Geschwindigkeiten
 figure()
 subplot(2,1,1);
-plot(t_vec_test, features_test(:, 3), 'LineWidth', 1.5);
+plot(samples_test, features_test(:, 3), 'LineWidth', 1.5);
 hold on
-plot(t_vec_training, features_training(:, 3), 'LineWidth', 1.5);
+plot(samples_training, features_training(:, 3), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi1p');
 grid on;
 title('phi1p(t)');
 
 subplot(2,1,2);
-plot(t_vec_test, features_test(:, 4), 'LineWidth', 1.5);
+plot(samples_test, features_test(:, 4), 'LineWidth', 1.5);
 hold on
-plot(t_vec_training, features_training(:, 4), 'LineWidth', 1.5);
+plot(samples_training, features_training(:, 4), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi2p');
 grid on;
@@ -146,18 +168,18 @@ title('phi2p(t)');
 % Beschleunigungen
 figure()
 subplot(2,1,1);
-plot(t_vec_test, labels_test(:, 1), 'LineWidth', 1.5);
+plot(samples_test, labels_test(:, 1), 'LineWidth', 1.5);
 hold on
-plot(t_vec_training, labels_training(:, 1), 'LineWidth', 1.5);
+plot(samples_training, labels_training(:, 1), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi1pp');
 grid on;
 title('phi1pp(t)');
 
 subplot(2,1,2);
-plot(t_vec_test, labels_test(:, 2), 'LineWidth', 1.5);
+plot(samples_test, labels_test(:, 2), 'LineWidth', 1.5);
 hold on
-plot(t_vec_training, labels_training(:, 2), 'LineWidth', 1.5);
+plot(samples_training, labels_training(:, 2), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('phi2pp');
 grid on;
@@ -165,9 +187,9 @@ title('phi2pp(t)');
 
 % Drehmoment
 figure()
-plot(t_vec_test, features_test(:, 5), 'LineWidth', 1.5);
+plot(samples_test, features_test(:, 5), 'LineWidth', 1.5);
 hold on
-plot(t_vec_training, features_training(:, 5), 'LineWidth', 1.5);
+plot(samples_training, features_training(:, 5), 'LineWidth', 1.5);
 xlabel('Zeit [s]');
 ylabel('tau');
 grid on;
