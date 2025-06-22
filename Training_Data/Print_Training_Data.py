@@ -8,39 +8,20 @@ Dieses Skript dient dazu, die Trainingsdaten plotten zu können, om die Interval
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import scipy.io
+import sys
 
-def extract_training_data(file_name):
-    # Pfad des aktuellen Skriptes
-    script_path = os.path.dirname(os.path.abspath(__file__))
+# Verzeichnis mit Hauptversion von DeLaN einbinden (liegt an anderer Stelle im Projekt)
+script_path = os.path.dirname(os.path.abspath(__file__))
+DeLaN_dir_path = os.path.join(script_path, '..', 'Training_Models', 'DeLaN_Ole')
 
-    # Relativer Pfad zum Datenordner von hier aus
-    # Wir müssen zwei Ebenen hoch und dann in den Zielordner
-    data_path = os.path.join(script_path, 'MATLAB_Simulation', file_name)
+if DeLaN_dir_path not in sys.path:
+    sys.path.insert(0, DeLaN_dir_path)
 
-    # Pfad normieren
-    data_path = os.path.normpath(data_path)
+from DeLaN_functions_Ole import *
 
-    # Daten extrahieren
-    data = scipy.io.loadmat(data_path)
-
-    features_training = data['features_training']
-    labels_training = data['labels_training']
-    features_test = data['features_test']
-    labels_test = data['labels_test']
-    Mass_Cor_test = data['Mass_Cor_test']
-
-    # Zusammensetzung der vektoren ändern, da Erstellung in Matlab für Inverse Dynamik ausgelegt war
-    features_training_delan = np.concatenate((features_training[:, :4], labels_training), axis=1)   # (q, qp, qpp)
-    features_test_delan = np.concatenate((features_test[:, :4], labels_test), axis=1)   
-
-    labels_training_delan = features_training[:, 4:]
-    labels_test_delan = features_test[:, 4:]
-
-    return features_training_delan, labels_training_delan, features_test_delan, labels_test_delan, Mass_Cor_test
-
-# Trainings- und Testdaten laden 
-features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat')  # Mein Modell
+# Trainings- und Testdaten laden
+target_folder = 'Torsionsschwinger_Messungen' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
+features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)
 
 # Anzahl der Samples 
 samples_training = np.arange(1, features_training.shape[0] + 1)
