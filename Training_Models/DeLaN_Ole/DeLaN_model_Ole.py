@@ -126,13 +126,13 @@ class Deep_Lagrangian_Network(nn.Module):
         # Reibungsparameter als lernbare Netzwerkgewichte definieren
         if self.use_friction_model:
             # Dämpfungsparameter
-            self.friction_d = nn.Parameter(torch.tensor(hyper_param['friction_model_init_d']))
+            self.friction_d_raw = nn.Parameter(torch.tensor(hyper_param['friction_model_init_d']))
 
             # Coulomb Anteile tau_c
-            self.friction_c = nn.Parameter(torch.tensor(hyper_param['friction_model_init_c']))
+            self.friction_c_raw = nn.Parameter(torch.tensor(hyper_param['friction_model_init_c']))
 
             # Stribeck-Spitze tau_s
-            self.friction_s = nn.Parameter(torch.tensor(hyper_param['friction_model_init_s']))
+            self.friction_s_raw = nn.Parameter(torch.tensor(hyper_param['friction_model_init_s']))
 
             # Stribeck Breite (wie schnell fällt Stribeck Spitze ab) - Initialisierung mit kleinem Wert, da nicht durch null geteilt werden darf.
             self.friction_v_raw = nn.Parameter(torch.tensor(hyper_param['friction_model_init_v']))
@@ -141,7 +141,16 @@ class Deep_Lagrangian_Network(nn.Module):
             self.register_buffer('friction_epsilon', torch.tensor(hyper_param['friction_epsilon']))
 
     def friction_v(self):
-        return torch.clamp(self.friction_v_raw, min=0.001)  # Damit keine negativen Werte möglich sind
+        return torch.clamp(self.friction_v_raw, min=0.0001)  # Damit keine negativen Werte möglich sind
+    
+    def friction_d(self):
+        return torch.clamp(self.friction_d_raw, min=0.0001)  # Damit keine negativen Werte möglich sind
+    
+    def friction_c(self):
+        return torch.clamp(self.friction_c_raw, min=0.0001)  # Damit keine negativen Werte möglich sind
+    
+    def friction_s(self):
+        return torch.clamp(self.friction_s_raw, min=0.0001)  # Damit keine negativen Werte möglich sind
 
     def forward(self, q, qd, qdd):
 
@@ -200,7 +209,7 @@ class Deep_Lagrangian_Network(nn.Module):
         # Reibungskräfte berechnen
         if self.use_friction_model:
             # Stribeck Reibungsmodell
-            tau_fric = (self.friction_c + self.friction_s * torch.exp(-qd**2 / self.friction_v())) * torch.tanh(self.friction_epsilon * qd) + self.friction_d * qd
+            tau_fric = (self.friction_c() + self.friction_s() * torch.exp(-qd**2 / self.friction_v())) * torch.tanh(self.friction_epsilon * qd) + self.friction_d() * qd
         else:
             tau_fric = torch.zeros_like(c)
 

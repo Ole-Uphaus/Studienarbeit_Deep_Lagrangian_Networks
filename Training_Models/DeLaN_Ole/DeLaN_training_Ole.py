@@ -43,14 +43,14 @@ hyper_param = {
     
     # Training
     'dropuot': 0.0,
-    'batch_size': 512,
+    'batch_size': 256,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 1,
+    'n_epoch': 800,
 
     # Reibungsmodell
     'use_friction_model': True,
-    'friction_model_init_d': [0.1, 0.1],
+    'friction_model_init_d': [0.05, 0.05],
     'friction_model_init_c': [3.0, 0.0],
     'friction_model_init_s': [1.0, 0.0],
     'friction_model_init_v': [0.1, 0.1],
@@ -58,13 +58,13 @@ hyper_param = {
 
     # Sonstiges
     'use_inverse_model': True,
-    'use_forward_model': False,
+    'use_forward_model': True,
     'save_model': False}
 
 # Trainings- und Testdaten laden
-target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+target_folder = 'Torsionsschwinger_Messungen' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
+features_training, labels_training, _, _, _ = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -214,9 +214,9 @@ if hyper_param['save_model'] == True:
 
 # Wenn Reibungsmodell gewählt, dann Reibungsparameter ausgeben
 if hyper_param['use_friction_model']:
-    print(f"Dämpfung (viskos): {DeLaN_network.friction_d.detach().cpu().numpy().tolist()}")
-    print(f"Coulomb-Reibung: {DeLaN_network.friction_c.detach().cpu().numpy().tolist()}")
-    print(f"Stribeck-Spitze: {DeLaN_network.friction_s.detach().cpu().numpy().tolist()}")
+    print(f"Dämpfung (viskos): {DeLaN_network.friction_d().detach().cpu().numpy().tolist()}")
+    print(f"Coulomb-Reibung: {DeLaN_network.friction_c().detach().cpu().numpy().tolist()}")
+    print(f"Stribeck-Spitze: {DeLaN_network.friction_s().detach().cpu().numpy().tolist()}")
     print(f"Stribeck-Breite: {DeLaN_network.friction_v().detach().cpu().numpy().tolist()}")
 
 # Plotten
