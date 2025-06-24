@@ -8,6 +8,7 @@ Dieses Skript enthält Funktionen im Zusammenhang mit dem Training und der Erpro
 import scipy.io
 import os
 import numpy as np
+import torch
 
 def extract_training_data(file_name, target_folder):
     # Pfad des aktuellen Skriptes
@@ -72,3 +73,16 @@ def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_inverse_mod
         raise ValueError("Ungültige Konfiguration: 'use_inverse_model' und 'use_forward_model' dürfen nicht beide False sein.")
 
     return test_loss, tau_hat_eval, H_eval, c_eval, g_eval, tau_fric_eval
+
+def eval_friction_graph(model, device):
+    # Geschwindigkeitstensoren definieren
+    qd = torch.concatenate((torch.linspace(0, 10, 1000).view((-1, 1)), torch.linspace(0, 10, 1000).view((-1, 1))), dim=1).to(device)
+
+    # Modell auswerten
+    _, _, _, _, tau_fric, _ = model(torch.zeros_like(qd), qd, torch.zeros_like(qd))
+
+    # Tensoren in numpy umwandeln für Plot
+    qd_numpy = qd[:, 1].cpu().detach().numpy()
+    tau_fric_numpy = tau_fric.cpu().detach().numpy()
+
+    return qd_numpy, tau_fric_numpy

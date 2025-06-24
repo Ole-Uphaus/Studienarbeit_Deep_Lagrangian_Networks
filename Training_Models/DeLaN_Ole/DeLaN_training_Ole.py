@@ -39,7 +39,7 @@ hyper_param = {
     'wheight_init': 'xavier_normal',
 
     # Lagrange Dynamik
-    'L_diagonal_offset': 5.e-1,
+    'L_diagonal_offset': 1.e-3,
     
     # Training
     'dropuot': 0.0,
@@ -58,13 +58,13 @@ hyper_param = {
 
     # Sonstiges
     'use_inverse_model': True,
-    'use_forward_model': True,
+    'use_forward_model': False,
     'save_model': False}
 
 # Trainings- und Testdaten laden
-target_folder = 'Torsionsschwinger_Messungen' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
-features_training, labels_training, _, _, _ = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_friction_Rob_Model_1_2025_06_16_12_51_47_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -214,10 +214,10 @@ if hyper_param['save_model'] == True:
 
 # Wenn Reibungsmodell gewählt, dann Reibungsparameter ausgeben
 if hyper_param['use_friction_model']:
-    print("Dämpfung (viskos):", DeLaN_network.friction_d)
-    print("Coulomb-Reibung:", DeLaN_network.friction_c)
-    print("Stribeck-Spitze:", DeLaN_network.friction_s)
-    print("Stribeck-Breite:", DeLaN_network.friction_v())
+    print(f"Dämpfung (viskos): {DeLaN_network.friction_d.detach().cpu().numpy().tolist()}")
+    print(f"Coulomb-Reibung: {DeLaN_network.friction_c.detach().cpu().numpy().tolist()}")
+    print(f"Stribeck-Spitze: {DeLaN_network.friction_s.detach().cpu().numpy().tolist()}")
+    print(f"Stribeck-Breite: {DeLaN_network.friction_v().detach().cpu().numpy().tolist()}")
 
 # Plotten
 samples_vec = np.arange(1, H_test.shape[0] + 1)
@@ -354,23 +354,42 @@ plt.tight_layout()
 
 # Reibungskräfte
 if hyper_param['use_friction_model'] and Mass_Cor_test.shape[1] > 8:
+    # Reibungskennlinie auswerten
+    qd_numpy, tau_fric_numpy = eval_friction_graph(DeLaN_network, device)
+
     plt.figure()
 
-    plt.subplot(2, 1, 1)
-    plt.plot(samples_vec, tau_fric_test[:, 0], label='d1 DeLaN')
-    plt.plot(samples_vec, Mass_Cor_test[:, 7] ,label='d1 Analytic')
-    plt.title('d1')
+    plt.subplot(2, 2, 1)
+    plt.plot(samples_vec, tau_fric_test[:, 0], label='fric1 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 7] ,label='fric1 Analytic')
+    plt.title('fric1')
     plt.xlabel('Samples')
-    plt.ylabel('d1')
+    plt.ylabel('fric1')
     plt.grid(True)
     plt.legend()
 
-    plt.subplot(2, 1, 2)
-    plt.plot(samples_vec, tau_fric_test[:, 1], label='d2 DeLaN')
-    plt.plot(samples_vec, Mass_Cor_test[:, 8], label='d2 Analytic')
-    plt.title('d2')
+    plt.subplot(2, 2, 3)
+    plt.plot(samples_vec, tau_fric_test[:, 1], label='fric2 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 8], label='fric2 Analytic')
+    plt.title('fric2')
     plt.xlabel('Samples')
-    plt.ylabel('d2')
+    plt.ylabel('fric2')
+    plt.grid(True)
+    plt.legend()
+
+    plt.subplot(2, 2, 2)
+    plt.plot(qd_numpy, tau_fric_numpy[:, 0] ,label='fric1')
+    plt.title('Reibungskennlinie fric1')
+    plt.xlabel('qd')
+    plt.ylabel('fric1')
+    plt.grid(True)
+    plt.legend()
+
+    plt.subplot(2, 2, 4)
+    plt.plot(qd_numpy, tau_fric_numpy[:, 1] ,label='fric2')
+    plt.title('Reibungskennlinie fric2')
+    plt.xlabel('qd')
+    plt.ylabel('fric2')
     plt.grid(True)
     plt.legend()
 
