@@ -26,7 +26,7 @@ r_resample = 10;
 test_idx = 2100;
 
 % Schwellenwert für Geschwindigkeit
-threshold_v = 2.e-1;
+threshold_v = 5.e-1;
 
 % Daten abspeichern
 savedata = true;
