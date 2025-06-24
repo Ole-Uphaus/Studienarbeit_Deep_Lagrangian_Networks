@@ -46,14 +46,14 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 100,
+    'n_epoch': 1,
 
     # Reibungsmodell
     'use_friction_model': True,
-    'friction_model_init_d': 0.1,
-    'friction_model_init_c': 1,
-    'friction_model_init_s': 1,
-    'friction_model_init_v': 0.1,
+    'friction_model_init_d': [0.1, 0.1],
+    'friction_model_init_c': [3.0, 0.0],
+    'friction_model_init_s': [1.0, 0.0],
+    'friction_model_init_v': [0.1, 0.1],
     'friction_epsilon': 100.0,
 
     # Sonstiges

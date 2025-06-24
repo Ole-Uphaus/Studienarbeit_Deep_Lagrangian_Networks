@@ -126,16 +126,16 @@ class Deep_Lagrangian_Network(nn.Module):
         # Reibungsparameter als lernbare Netzwerkgewichte definieren
         if self.use_friction_model:
             # Dämpfungsparameter
-            self.friction_d = nn.Parameter(torch.ones(self.n_dof) * hyper_param['friction_model_init_d'])
+            self.friction_d = nn.Parameter(torch.tensor(hyper_param['friction_model_init_d']))
 
             # Coulomb Anteile tau_c
-            self.friction_c = nn.Parameter(torch.ones(self.n_dof) * hyper_param['friction_model_init_c'])
+            self.friction_c = nn.Parameter(torch.tensor(hyper_param['friction_model_init_c']))
 
             # Stribeck-Spitze tau_s
-            self.friction_s = nn.Parameter(torch.ones(self.n_dof) * hyper_param['friction_model_init_s'])
+            self.friction_s = nn.Parameter(torch.tensor(hyper_param['friction_model_init_s']))
 
             # Stribeck Breite (wie schnell fällt Stribeck Spitze ab) - Initialisierung mit kleinem Wert, da nicht durch null geteilt werden darf.
-            self.friction_v_raw = nn.Parameter(torch.ones(self.n_dof) * hyper_param['friction_model_init_v'])
+            self.friction_v_raw = nn.Parameter(torch.tensor(hyper_param['friction_model_init_v']))
 
             # Epsilon (für glattes tanh) definieren (funktion, damit tensor von cpu auf gpu verschoben werden kann und auch abgespeichert wird)
             self.register_buffer('friction_epsilon', torch.tensor(hyper_param['friction_epsilon']))
