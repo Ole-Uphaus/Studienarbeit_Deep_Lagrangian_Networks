@@ -26,16 +26,16 @@ r_resample = 10;
 test_idx = 2100;
 
 % Schwellenwert für Geschwindigkeit
-threshold_v = 1.e-2;
+threshold_v = 2.e-1;
 
 % Daten abspeichern
-savedata = false;
+savedata = true;
 
 %% Signale filtern
 
 % Winkel in Radiant umrechnen
-phi1_rad = phi1 / 180 * pi;
-phi2_rad = phi2 / 180 * pi;
+phi1_rad = phi1;
+phi2_rad = phi2;
 
 % Filter vorbereiten
 dt = mean(diff(t_ges));
