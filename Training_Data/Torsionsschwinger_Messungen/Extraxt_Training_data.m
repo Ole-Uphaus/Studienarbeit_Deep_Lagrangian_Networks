@@ -29,7 +29,7 @@ test_idx = 2100;
 threshold_v = 1.e-2;
 
 % Daten abspeichern
-savedata = true;
+savedata = false;
 
 %% Signale filtern
 
@@ -38,7 +38,8 @@ phi1_rad = phi1 / 180 * pi;
 phi2_rad = phi2 / 180 * pi;
 
 % Filter vorbereiten
-fs = 1 / mean(diff(t_ges)); % Abtastrate
+dt = mean(diff(t_ges));
+fs = 1 / dt; % Abtastrate
 [b, a] = butter(2, fc / (fs/2));
 
 % Filtern der Positionssignale und daraus dann die Ableitungen bestimmen
@@ -48,12 +49,12 @@ phi2_filt = filtfilt(b, a, phi2_rad);
 %% Geschwindigkeiten und Beschleunigungen berechnen
 
 % Geschwindigkeiten
-phi1p_filt = gradient(phi1_filt) ./ gradient(t_ges);
-phi2p_filt = gradient(phi2_filt) ./ gradient(t_ges);
+phi1p_filt = gradient(phi1_filt, dt);
+phi2p_filt = gradient(phi2_filt, dt);
 
 % Beschleunigungen
-phi1pp_filt = gradient(phi1p_filt) ./ gradient(t_ges);
-phi2pp_filt = gradient(phi2p_filt) ./ gradient(t_ges);
+phi1pp_filt = gradient(phi1p_filt, dt);
+phi2pp_filt = gradient(phi2p_filt, dt);
 
 %% Signale downsamplen
 
