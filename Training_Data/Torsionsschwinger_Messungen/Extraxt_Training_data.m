@@ -56,6 +56,70 @@ phi2p_filt = gradient(phi2_filt, dt);
 phi1pp_filt = gradient(phi1p_filt, dt);
 phi2pp_filt = gradient(phi2p_filt, dt);
 
+% Test: Integral der Beschleunigungen berechnen
+phi1_p_int = cumtrapz(phi1pp_filt)*dt;
+
+%% Ursprungssignale Plotten
+
+% Positionen
+figure()
+subplot(2,1,1);
+plot(t_ges, phi1_filt, 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('phi1');
+grid on;
+title('phi1(t)');
+
+subplot(2,1,2);
+plot(t_ges, phi2_filt, 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('phi2');
+grid on;
+title('phi2(t)');
+
+% Geschwindigkeiten
+figure()
+subplot(2,1,1);
+plot(t_ges, phi1p_filt, 'LineWidth', 1.5);
+hold on
+plot(t_ges, phi1_p_int, 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('phi1p');
+grid on;
+title('phi1p(t)');
+
+subplot(2,1,2);
+plot(t_ges, phi2p_filt, 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('phi2p');
+grid on;
+title('phi2p(t)');
+
+% Beschleunigungen
+figure()
+subplot(2,1,1);
+plot(t_ges, phi1pp_filt, 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('phi1pp');
+grid on;
+title('phi1pp(t)');
+
+subplot(2,1,2);
+plot(t_ges, phi2pp_filt, 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('phi2pp');
+grid on;
+title('phi2pp(t)');
+
+% Drehmoment
+figure()
+plot(t_ges, u, 'LineWidth', 1.5);
+xlabel('Zeit [s]');
+ylabel('tau');
+grid on;
+title('tau(t)');
+
+
 %% Signale downsamplen
 
 % Resamplen
