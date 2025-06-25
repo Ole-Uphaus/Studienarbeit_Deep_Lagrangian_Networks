@@ -131,7 +131,7 @@ Rob_Model = 1;
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = false;
+savedata = true;
 
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
@@ -332,7 +332,7 @@ if savedata == true
     % Datei speichern (Prüfen ob Dämpfung vorhanden)
     num_samples = num2str(length(features_test) + length(features_training));
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
-    dateiName = 'SimData_V3_friction_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';   
+    dateiName = 'SimData_V3_friction_stick_Rob_Model_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';   
     full_path = fullfile(target_folder, dateiName);
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
