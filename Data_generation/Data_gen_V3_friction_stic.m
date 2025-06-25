@@ -229,6 +229,12 @@ sample_base = linspace(0, samples_per_run, number_base_points);
 % Nullvektor erstellen
 zeros_vec = zeros(samples_per_run, 1);
 
+% Systemparameter
+m_kg = 5;   % Masse des Arms
+mL_kg = 2;  % Masse der Last
+J_kgm2 = 0.4;  % gesamte Rotationsträgheit
+l_m = 0.25; % Schwerpunktsabstand (Arm - Last)
+
 for i = stick_idx
     
     % Drehmomente generieren
@@ -247,8 +253,7 @@ for i = stick_idx
     taur = min(max(taur, taur_min), taur_max);
     tauphi = min(max(tauphi, tauphi_min), tauphi_max);
 
-    % Trajektoriendaten überschreiben (nicht dringend benötigte Elemente
-    % gleich null setzen)
+    % Trajektoriendaten überschreiben 
     traj_data(i).q1 = zeros_vec;
     traj_data(i).q1_p = zeros_vec;
     traj_data(i).q1_pp = zeros_vec;
@@ -258,9 +263,9 @@ for i = stick_idx
     traj_data(i).q2_pp = zeros_vec;
 
     % Massenmatrix
-    traj_data(i).M_11 = zeros_vec;
+    traj_data(i).M_11 = m_kg + mL_kg + zeros_vec;
     traj_data(i).M_12 = zeros_vec;
-    traj_data(i).M_22 = zeros_vec;
+    traj_data(i).M_22 = J_kgm2 + m_kg*(zeros_vec - l_m).^2 + mL_kg*zeros_vec.^2;
 
     % Corioliskräfte
     traj_data(i).C_1 = zeros_vec;
