@@ -39,26 +39,26 @@ hyper_param = {
     'wheight_init': 'xavier_normal',
 
     # Lagrange Dynamik
-    'L_diagonal_offset': 1.e-3,
+    'L_diagonal_offset': 0.15811,
     
     # Training
     'dropuot': 0.0,
-    'batch_size': 256,
-    'learning_rate': 5.e-4,
+    'batch_size': 512,
+    'learning_rate': 5.e-5,
     'weight_decay': 1.e-4,
-    'n_epoch': 800,
+    'n_epoch': 1000,
 
     # Reibungsmodell
-    'use_friction_model': True,
-    'friction_model_init_d': [0.05, 0.05],
-    'friction_model_init_c': [3.0, 0.0],
-    'friction_model_init_s': [1.0, 0.0],
-    'friction_model_init_v': [0.1, 0.1],
+    'use_friction_model': False,
+    'friction_model_init_d': [1.05, 1.05],
+    'friction_model_init_c': [1.0, 1.0],
+    'friction_model_init_s': [1.0, 1.0],
+    'friction_model_init_v': [0.01, 0.01],
     'friction_epsilon': 100.0,
 
     # Sonstiges
     'use_inverse_model': True,
-    'use_forward_model': True,
+    'use_forward_model': False,
     'save_model': False}
 
 # Trainings- und Testdaten laden
@@ -193,6 +193,15 @@ DeLaN_network.eval()
 # Evaluierung
 _, tau_hat_test, H_test, c_test, g_test, tau_fric_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'])
 
+# Metriken Berechnen
+mse_tau = np.mean((tau_hat_test - tau_test.cpu().detach().numpy())**2)
+rmse_tau = np.sqrt(np.mean((tau_hat_test - tau_test.cpu().detach().numpy())**2))
+
+# Metriken ausgeben
+print('Metriken:')
+print(f"MSE Test: {mse_tau:4f}")
+print(f"RMSE (Absolutfehler) Test: {rmse_tau:4f}")
+
 # Modell abspeichern
 if hyper_param['save_model'] == True:
         
@@ -214,6 +223,7 @@ if hyper_param['save_model'] == True:
 
 # Wenn Reibungsmodell gewählt, dann Reibungsparameter ausgeben
 if hyper_param['use_friction_model']:
+    print('Reibungsparameter:')
     print(f"Dämpfung (viskos): {DeLaN_network.friction_d().detach().cpu().numpy().tolist()}")
     print(f"Coulomb-Reibung: {DeLaN_network.friction_c().detach().cpu().numpy().tolist()}")
     print(f"Stribeck-Spitze: {DeLaN_network.friction_s().detach().cpu().numpy().tolist()}")
