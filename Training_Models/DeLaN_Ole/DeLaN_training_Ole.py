@@ -39,20 +39,20 @@ hyper_param = {
     'wheight_init': 'xavier_normal',
 
     # Lagrange Dynamik
-    'L_diagonal_offset': 0.15811,
+    'L_diagonal_offset': 1.e-3,
     
     # Training
     'dropuot': 0.0,
     'batch_size': 512,
-    'learning_rate': 5.e-5,
+    'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 1000,
+    'n_epoch': 500,
 
     # Reibungsmodell
     'use_friction_model': False,
-    'friction_model_init_d': [1.05, 1.05],
-    'friction_model_init_c': [1.0, 1.0],
-    'friction_model_init_s': [1.0, 1.0],
+    'friction_model_init_d': [0.01, 0.01],
+    'friction_model_init_c': [0.01, 0.01],
+    'friction_model_init_s': [0.01, 0.01],
     'friction_model_init_v': [0.01, 0.01],
     'friction_epsilon': 100.0,
 
@@ -62,9 +62,9 @@ hyper_param = {
     'save_model': False}
 
 # Trainings- und Testdaten laden
-target_folder = 'Torsionsschwinger_Messungen' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
-features_training, labels_training, _, _, _ = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Torch Tensoren der Trainingsdaten erstellen
 features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
@@ -193,14 +193,17 @@ DeLaN_network.eval()
 # Evaluierung
 _, tau_hat_test, H_test, c_test, g_test, tau_fric_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'])
 
-# Metriken Berechnen
-mse_tau = np.mean((tau_hat_test - tau_test.cpu().detach().numpy())**2)
-rmse_tau = np.sqrt(np.mean((tau_hat_test - tau_test.cpu().detach().numpy())**2))
+# Metriken Berechnen (Fehler aus inverser Dynamik)
+mse_tau = np.mean(np.sum((tau_hat_test - tau_test.cpu().detach().numpy())**2, axis=1))
+rmse_tau = np.sqrt(mse_tau)
+tau_mean = np.sqrt(np.mean(np.sum((tau_test.cpu().detach().numpy())**2, axis=1)))
+rmse_tau_percent = rmse_tau/tau_mean*100
 
 # Metriken ausgeben
 print('Metriken:')
 print(f"MSE Test: {mse_tau:4f}")
 print(f"RMSE (Absolutfehler) Test: {rmse_tau:4f}")
+print(f"Prozentualer Fehler Test: {rmse_tau_percent:4f}")
 
 # Modell abspeichern
 if hyper_param['save_model'] == True:
