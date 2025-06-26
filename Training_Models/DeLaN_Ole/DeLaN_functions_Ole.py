@@ -73,7 +73,7 @@ def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_inverse_mod
 
     if use_energy_consumption:
         # Fehler aus Energieerhaltung berechnen
-        E_dt_mot = torch.einsum('bi,bi->b', qd_test, out_eval[0])
+        E_dt_mot = torch.einsum('bi,bi->b', qd_test, tau_test)
         E_dt_mot_hat = T_dt + V_dt + torch.einsum('bi,bi->b', qd_test, out_eval[4])  
 
         err_E_dt_mot = (E_dt_mot_hat.cpu().detach().numpy() - E_dt_mot.cpu().detach().numpy())**2
