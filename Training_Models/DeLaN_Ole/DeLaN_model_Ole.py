@@ -206,6 +206,14 @@ class Deep_Lagrangian_Network(nn.Module):
         # Coriolisterme berechnen (H_dt * qd - 0.5 * qdT_H_dq_qd)
         c = torch.einsum('bij,bj->bi', H_dt, qd) - 0.5 * qdT_H_dq_qd    # c.shape(batch_size, n_dof)
 
+        # Ableitung der kinetischen Energie berechnen (T_dt = qd' * H * qdd + 0.5 * qd' * H_dt qd)
+        H_qdd = torch.einsum('bij,bj->bi', H, qdd)
+        H_dt_qd = torch.einsum('bij,bj->bi', H_dt, qd)
+        T_dt = torch.einsum('bi,bi->b', qd, H_qdd) + 0.5 * torch.einsum('bi,bi->b', qd, H_dt_qd)
+
+        # Ableitung der Potentiellen Energie berechnen (V_dt = qd' * V_dq = qd' * g)
+        V_dt = torch.einsum('bi,bi->b', qd, output_g)
+
         # Reibungskräfte berechnen
         if self.use_friction_model:
             # Stribeck Reibungsmodell
@@ -216,7 +224,7 @@ class Deep_Lagrangian_Network(nn.Module):
         # Inverse Dynamik auswerten
         tau_pred = torch.einsum('bij,bj->bi', H, qdd) + c + output_g + tau_fric
 
-        return tau_pred, H, c, output_g, tau_fric, output_L_diag_no_activation
+        return tau_pred, H, c, output_g, tau_fric, output_L_diag_no_activation, T_dt, V_dt
     
     def compute_Jacobian_batched(self, output_L, input_q):
         # Dimensionen des Outputs bekommen
@@ -271,7 +279,7 @@ class Deep_Lagrangian_Network(nn.Module):
         tau = tau.view((-1, self.n_dof))    # tau.shape = (batch_size, 1)
 
         # Lagrange Dynamik auswerten (Beschleunigungen auf null setzen, da H, c, g nur von q und qd abhängen. tau_pred ist natürlich nicht mathematisch korrekt)
-        _, H, c, g, tau_fric, _ = self.lagrangian_dynamics(q, qd, torch.zeros_like(q))
+        _, H, c, g, tau_fric, _, _, _ = self.lagrangian_dynamics(q, qd, torch.zeros_like(q))
 
         # H Batch weise invertieren (H^-1)
         H_inv = torch.linalg.inv(H)

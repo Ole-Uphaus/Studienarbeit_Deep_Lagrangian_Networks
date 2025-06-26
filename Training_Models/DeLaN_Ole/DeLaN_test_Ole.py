@@ -26,25 +26,36 @@ torch.cuda.manual_seed_all(seed)
 
 hyper_param = {
     # Netzparameter
-    'hidden_width': 32,
-    'hidden_depth': 3,
+    'hidden_width': 64,
+    'hidden_depth': 2,
     'activation_fnc': 'elu',
+    'activation_fnc_diag': 'relu',
 
     # Initialisierung
     'bias_init_constant': 1.e-3,
     'wheight_init': 'xavier_normal',
 
     # Lagrange Dynamik
-    'L_diagonal_offset': 1.e-4,
+    'L_diagonal_offset': 1.e-3,
     
     # Training
     'dropuot': 0.0,
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 2000,
+    'n_epoch': 500,
+
+    # Reibungsmodell
+    'use_friction_model': False,
+    'friction_model_init_d': [0.01, 0.01],
+    'friction_model_init_c': [0.01, 0.01],
+    'friction_model_init_s': [0.01, 0.01],
+    'friction_model_init_v': [0.01, 0.01],
+    'friction_epsilon': 100.0,
 
     # Sonstiges
+    'use_inverse_model': True,
+    'use_forward_model': True,
     'save_model': False}
 
 # Testnetzwerk erstellen
@@ -60,22 +71,28 @@ print('Test Input q: \n', test_q)
 print('Test Input qd: \n', test_qd)
 print('Test Input qdd: \n', test_qdd)
 print()
-# # Inverse Dynamik auswerten
-# output_inv = test_net(test_q, test_qd, test_qdd)
-
-# # Outputs ansehen
-# print('Massenmatrix H: \n', output_inv[1])
-# print()
-# print('Corioliskräfte c: \n', output_inv[2])
-# print()
-
-# Vorwärts Dynamik auswerten
-output_for = test_net.forward_dynamics(test_q, test_qd, test_tau)
+# Inverse Dynamik auswerten
+output_inv = test_net(test_q, test_qd, test_qdd)
 
 # Outputs ansehen
-print('Massenmatrix H: \n', output_for[1])
+print('Massenmatrix H: \n', output_inv[1])
 print()
-print('Corioliskräfte c: \n', output_for[2])
+print('Corioliskräfte c: \n', output_inv[2])
 print()
-print('q_pp: \n', output_for[0])
+print('T_dt: \n', output_inv[6])
 print()
+print('V_dt: \n', output_inv[7])
+print()
+print('tau_fric: \n', output_inv[4])
+print()
+
+# # Vorwärts Dynamik auswerten
+# output_for = test_net.forward_dynamics(test_q, test_qd, test_tau)
+
+# # Outputs ansehen
+# print('Massenmatrix H: \n', output_for[1])
+# print()
+# print('Corioliskräfte c: \n', output_for[2])
+# print()
+# print('q_pp: \n', output_for[0])
+# print()
