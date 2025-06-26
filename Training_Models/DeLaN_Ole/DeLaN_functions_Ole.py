@@ -92,7 +92,7 @@ def eval_friction_graph(model, device):
     qd = torch.concatenate((torch.linspace(0, 10, 1000).view((-1, 1)), torch.linspace(0, 10, 1000).view((-1, 1))), dim=1).to(device)
 
     # Modell auswerten
-    _, _, _, _, tau_fric, _ = model(torch.zeros_like(qd), qd, torch.zeros_like(qd))
+    _, _, _, _, tau_fric, _, _, _ = model(torch.zeros_like(qd), qd, torch.zeros_like(qd))
 
     # Tensoren in numpy umwandeln für Plot
     qd_numpy = qd[:, 1].cpu().detach().numpy()
