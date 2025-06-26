@@ -59,6 +59,7 @@ hyper_param = {
     # Sonstiges
     'use_inverse_model': True,
     'use_forward_model': False,
+    'use_energy_consumption': True,
     'save_model': False}
 
 # Trainings- und Testdaten laden
@@ -129,10 +130,10 @@ for epoch in range(hyper_param['n_epoch']):
         # Loss initialisieren
         loss = torch.tensor(0.0, device=device)
 
-        if hyper_param['use_inverse_model']:
-            # Forward pass
-            tau_hat, _, _, _, _, output_L_diag_no_activation = DeLaN_network(q, qd, qdd)    # Inverses Modell
+        # Forward pass (inverse Dynamik)
+        tau_hat, _, _, _, tau_fric_hat, output_L_diag_no_activation, T_dt, V_dt = DeLaN_network(q, qd, qdd)    # Inverses Modell
 
+        if hyper_param['use_inverse_model']:
             # Durchnittlichen wert der Diagonalelemente vor der ReLu aktivierung (über Batch gemittelt)
             output_L_diag_no_activation_mean = output_L_diag_no_activation.mean(dim=0)
 
@@ -153,6 +154,18 @@ for epoch in range(hyper_param['n_epoch']):
 
             # Loss berechnen
             loss += mean_err_for_dyn
+
+        if hyper_param['use_energy_consumption']:
+
+            # Fehler aus Energieerhaltung berechnen
+            E_dt_mot = torch.einsum('bi,bi->b', qd, tau)
+            E_dt_mot_hat = T_dt + V_dt + torch.einsum('bi,bi->b', qd, tau_fric_hat)  
+
+            err_E_dt_mot = (E_dt_mot_hat - E_dt_mot) ** 2
+            mean_err_E_dt_mot = torch.mean(err_E_dt_mot)
+
+            # Loss berechnen
+            loss += mean_err_E_dt_mot
 
         if hyper_param['use_inverse_model'] == False and hyper_param['use_forward_model'] == False:
             raise ValueError("Ungültige Konfiguration: 'use_inverse_model' und 'use_forward_model' dürfen nicht beide False sein.")
