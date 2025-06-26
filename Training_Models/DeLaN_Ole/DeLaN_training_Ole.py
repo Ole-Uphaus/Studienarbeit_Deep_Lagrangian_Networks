@@ -46,7 +46,7 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 500,
+    'n_epoch': 100,
 
     # Reibungsmodell
     'use_friction_model': False,
@@ -57,7 +57,7 @@ hyper_param = {
     'friction_epsilon': 100.0,
 
     # Sonstiges
-    'use_inverse_model': True,
+    'use_inverse_model': False,
     'use_forward_model': False,
     'use_energy_consumption': True,
     'save_model': False}
@@ -161,13 +161,13 @@ for epoch in range(hyper_param['n_epoch']):
             E_dt_mot = torch.einsum('bi,bi->b', qd, tau)
             E_dt_mot_hat = T_dt + V_dt + torch.einsum('bi,bi->b', qd, tau_fric_hat)  
 
-            err_E_dt_mot = (E_dt_mot_hat - E_dt_mot) ** 2
+            err_E_dt_mot = (E_dt_mot_hat - E_dt_mot)**2
             mean_err_E_dt_mot = torch.mean(err_E_dt_mot)
 
             # Loss berechnen
             loss += mean_err_E_dt_mot
 
-        if hyper_param['use_inverse_model'] == False and hyper_param['use_forward_model'] == False:
+        if hyper_param['use_inverse_model'] == False and hyper_param['use_forward_model'] == False and hyper_param['use_energy_consumption'] == False:
             raise ValueError("Ungültige Konfiguration: 'use_inverse_model' und 'use_forward_model' dürfen nicht beide False sein.")
 
         # Optimierungsschritt durchführen
@@ -192,7 +192,7 @@ for epoch in range(hyper_param['n_epoch']):
 
     if epoch == 0 or np.mod(epoch + 1, 100) == 0:
         # Model Evaluieren
-        test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'])
+        test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'], hyper_param['use_energy_consumption'])
 
         # Loss an Loss history anhängen
         test_loss_history.append([epoch + 1, test_loss])
@@ -204,7 +204,7 @@ for epoch in range(hyper_param['n_epoch']):
 DeLaN_network.eval()
 
 # Evaluierung
-_, tau_hat_test, H_test, c_test, g_test, tau_fric_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'])
+_, tau_hat_test, H_test, c_test, g_test, tau_fric_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'], hyper_param['use_energy_consumption'])
 
 # Metriken Berechnen (Fehler aus inverser Dynamik)
 mse_tau = np.mean(np.sum((tau_hat_test - tau_test.cpu().detach().numpy())**2, axis=1))

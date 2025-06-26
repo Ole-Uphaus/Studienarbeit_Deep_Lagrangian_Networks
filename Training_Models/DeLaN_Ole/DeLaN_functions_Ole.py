@@ -39,7 +39,7 @@ def extract_training_data(file_name, target_folder):
 
     return features_training_delan, labels_training_delan, features_test_delan, labels_test_delan, Mass_Cor_test
 
-def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_inverse_model, use_forward_model):
+def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_inverse_model, use_forward_model, use_energy_consumption):
     # Forward pass
     out_eval = model(q_test, qd_test, qdd_test)    # Inverses Modell
     qdd_hat, _, _, _ = model.forward_dynamics(q_test, qd_test, tau_test) # Vorwärts Modell
@@ -49,6 +49,8 @@ def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_inverse_mod
     c_eval = out_eval[2].cpu().detach().numpy()
     g_eval = out_eval[3].cpu().detach().numpy()
     tau_fric_eval = out_eval[4].cpu().detach().numpy()
+    T_dt = out_eval[6]
+    V_dt = out_eval[7]
 
     # Loss initialisieren
     test_loss = np.array(0.0)
@@ -69,7 +71,18 @@ def model_evaluation(model, q_test, qd_test, qdd_test, tau_test, use_inverse_mod
         # Test Loss berechnen
         test_loss += mean_err_for_dyn_eval
 
-    if use_inverse_model == False and use_forward_model == False:
+    if use_energy_consumption:
+        # Fehler aus Energieerhaltung berechnen
+        E_dt_mot = torch.einsum('bi,bi->b', qd_test, out_eval[0])
+        E_dt_mot_hat = T_dt + V_dt + torch.einsum('bi,bi->b', qd_test, out_eval[4])  
+
+        err_E_dt_mot = (E_dt_mot_hat.cpu().detach().numpy() - E_dt_mot.cpu().detach().numpy())**2
+        mean_err_E_dt_mot = np.mean(err_E_dt_mot)
+
+        # Test Loss berechnen
+        test_loss += mean_err_E_dt_mot
+
+    if use_inverse_model == False and use_forward_model == False and use_energy_consumption == False:
         raise ValueError("Ungültige Konfiguration: 'use_inverse_model' und 'use_forward_model' dürfen nicht beide False sein.")
 
     return test_loss, tau_hat_eval, H_eval, c_eval, g_eval, tau_fric_eval
