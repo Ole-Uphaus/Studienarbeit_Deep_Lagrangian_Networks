@@ -102,13 +102,13 @@ c_phi_Nmprad = 7.309;
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 5;
+number_runs = 30;
 
 % Seed für reproduzierbare Ergebnisse
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = false;
+savedata = true;
 
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
@@ -269,7 +269,7 @@ if savedata == true
     % Datei speichern
     num_samples = num2str(length(features_test) + length(features_training));
     time_stamp = string(datetime('now', 'Format', 'yyyy_MM_dd_HH_mm_ss'));
-    dateiName = 'SimData_Torsionsschwinger_' + string(Rob_Model) + '_' + time_stamp + '_Samples_' + num_samples + '.mat';   
+    dateiName = 'SimData_Torsionsschwinger_' + time_stamp + '_Samples_' + num_samples + '.mat';   
     full_path = fullfile(target_folder, dateiName);
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
