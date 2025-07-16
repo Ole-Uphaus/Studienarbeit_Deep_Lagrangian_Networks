@@ -51,7 +51,7 @@ hyper_param = {
     # Netzparameter
     'hidden_size': 256,
     'depth': 2,
-    'activation_fnc': 'elu',
+    'activation_fnc': 'relu',
 
     # Training
     'epoch': 1000,
@@ -181,8 +181,6 @@ plt.ylabel('Loss')
 plt.title('Loss-Verlauf während des Trainings')
 plt.grid(True)
 plt.legend()
-
-plt.show()
 
 # tau
 plt.figure()
