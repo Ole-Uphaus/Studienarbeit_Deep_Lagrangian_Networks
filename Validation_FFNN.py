@@ -8,7 +8,7 @@ Dieses skript soll die Validierung des neuronalen Netzes vornehmen. Es soll dass
 import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
-from Training_Models.Feedforward_NN.Feed_forward_NN_pytorch import Feed_forward_NN
+from Training_Models.Feedforward_NN.FFNN_training import Feed_forward_NN
 from pathlib import Path
 import os
 import torch
