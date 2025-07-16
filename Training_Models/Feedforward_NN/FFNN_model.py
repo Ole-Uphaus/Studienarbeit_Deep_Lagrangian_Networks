@@ -27,13 +27,13 @@ class FeedForwardNN(nn.Module):
 
         # Input Schicht
         layers.append(nn.Linear(self.input_size, self.hidden_size))
-        layers.append(nn.ReLU())
+        layers.append(self.activation_fnc)
         layers.append(nn.Dropout(self.dropout))
 
         # Hidden Layers als Schleife anhängen
         for i in range(self.depth - 1):
             layers.append(nn.Linear(self.hidden_size, self.hidden_size))
-            layers.append(nn.ReLU())
+            layers.append(self.activation_fnc)
             layers.append(nn.Dropout(self.dropout))
 
         # Output Layer hinzufügen
