@@ -9,12 +9,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.preprocessing import StandardScaler
 import os
 import numpy as np
 import sys
 import time
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 # Verzeichnis mit Hauptversion von DeLaN einbinden (liegt an anderer Stelle im Projekt)
 script_path = os.path.dirname(os.path.abspath(__file__))
@@ -54,14 +54,14 @@ hyper_param = {
     'activation_fnc': 'relu',
 
     # Training
-    'epoch': 1000,
+    'n_epoch': 1000,
     'learning_rate': 0.001,
     'wheight_decay': 1e-4,
     'dropout': 0.3,
     'batch_size': 512,
 
     # Sonstiges
-    'save_model': False,
+    'save_model': True,
     }
 
 # Trainings- und Testdaten laden
@@ -89,7 +89,7 @@ dataset_training = TensorDataset(features_tensor_training, labels_tensor_trainin
 dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch_size'], shuffle=True, drop_last=True, )
 
 # Optimierung (Lernprozess)
-num_epochs = hyper_param['epoch']  # Anzahl der Durchläufe durch den gesamten Datensatz
+num_epochs = hyper_param['n_epoch']  # Anzahl der Durchläufe durch den gesamten Datensatz
 
 print('Starte Optimierung...')
 start_time = time.time()
@@ -158,6 +158,25 @@ print('Metriken:')
 print(f"MSE Test: {mse_tau:4f}")
 print(f"RMSE (Absolutfehler) Test: {rmse_tau:4f}")
 print(f"Prozentualer Fehler Test: {rmse_tau_percent:4f}")
+
+# Modell abspeichern
+if hyper_param['save_model'] == True:
+        
+    # Aktueller Zeitstempel
+    timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+
+    if target_folder == 'MATLAB_Simulation':
+        model_path = os.path.join(script_path, "Saved_Models", f"FFNN_model_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
+    else:
+        model_path = os.path.join(script_path, "Saved_Models", f"FFNN_model_MJ_Sim_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
+
+    # Speichern
+    torch.save({
+        'state_dict': model.state_dict(),
+        'hyper_param': hyper_param,
+        'input_size': input_size,
+        'n_dof': n_dof
+    }, model_path)
 
 # Plotten
 samples_vec = np.arange(1, tau_hat_test.shape[0] + 1)
