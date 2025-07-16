@@ -19,6 +19,9 @@ class FeedForwardNN(nn.Module):
         self.depth = hyper_param['depth']
         self.dropout = hyper_param['dropout']
 
+        # Aktivierungsfunktion festlegen
+        self.activation_fnc = self.get_activation_fnc(hyper_param['activation_fnc'])
+
         # Liste mit allen Schichten
         layers = []
 
@@ -38,6 +41,30 @@ class FeedForwardNN(nn.Module):
 
         # Hier eine Vereinfachung, dass der befehl in forward Funktion kürzer wird
         self.net = nn.Sequential(*layers)
+
+    def get_activation_fnc(self, name):
+        # Alles klein geschrieben
+        name = name.lower()
+
+        # Alle erlaubten Aktivierungsfunktionen druchgehen (hier noch weitere hinzufügen)
+        if name == 'relu':
+            activation_fnc = nn.ReLU()
+        elif name == 'softplus':
+            activation_fnc = nn.Softplus()
+        elif name == 'tanh':
+            activation_fnc = nn.Tanh()
+        elif name == 'elu':
+            activation_fnc = nn.ELU()
+        elif name == 'gelu':
+            activation_fnc = nn.GELU()
+        elif name == 'silu':
+            activation_fnc = nn.SiLU()
+        elif name == 'mish':
+            activation_fnc = nn.Mish()
+        else:
+            activation_fnc = nn.ReLU()
+
+        return activation_fnc
     
     def forward(self, x):
         return self.net(x)
