@@ -30,7 +30,7 @@ def inv_dyn_2_FHG_Robot(DeLaN_model, v, phi, phi_p, r, r_p):
     q_p = torch.tensor([r_p, phi_p], dtype=torch.float32)
 
     # Lagrange Dynamik auswerten (Beschleunigungen auf null setzen, da H, c, g nur von q und qd abhängen. tau_pred ist natürlich nicht mathematisch korrekt)
-    _, M_torch, c_torch, g_torch, _ = DeLaN_model(q, q_p, torch.zeros_like(q))
+    _, M_torch, c_torch, g_torch, _, _, _, _ = DeLaN_model(q, q_p, torch.zeros_like(q))
 
     # Torch Tensoren in NumPy Arrays umwandeln
     M = M_torch[0].detach().cpu().numpy()
