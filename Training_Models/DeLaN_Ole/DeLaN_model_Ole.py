@@ -19,6 +19,7 @@ class Intern_NN(nn.Module):
 
         # Aktivierungsfunktion festlegen
         self.activation_fnc = self.get_activation_fnc(hyper_param['activation_fnc'])
+        
         if hyper_param['activation_fnc_diag'] == 'relu':    # Aktivierungsfunktion für Diagonalelemente festlegen
             self.activation_fnc_diag = nn.ReLU()
         elif hyper_param['activation_fnc_diag'] == 'softplus':
