@@ -69,16 +69,10 @@ target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujo
 features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
 _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
-# Daten vorbereiten (scaling - aber nur die Features)
-scaler_f = StandardScaler()
-
-scaled_features_training = scaler_f.fit_transform(features_training)
-scaled_features_test = scaler_f.transform(features_test)    # Hier nur transform, um Skalierungsparameter beizubehalten
-
 # Trainings- und Testdaten in Torch-Tensoren umwandeln
-features_tensor_training = torch.tensor(scaled_features_training, dtype=torch.float32)
+features_tensor_training = torch.tensor(features_training, dtype=torch.float32)
 labels_tensor_training = torch.tensor(labels_training, dtype=torch.float32)
-features_tensor_test = torch.tensor(scaled_features_test, dtype=torch.float32).to(device)
+features_tensor_test = torch.tensor(features_test, dtype=torch.float32).to(device)
 labels_tensor_test = torch.tensor(labels_test, dtype=torch.float32).to(device)
 
 # Neuronales Netz initialisieren
