@@ -145,7 +145,7 @@ t_vec = linspace(0, move_time, samples_per_run);
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 60;
+number_runs = 10;
 
 % Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
 % Drehgelenken)
@@ -155,7 +155,10 @@ Rob_Model = 1;
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = true;
+savedata = false;
+
+% Sollen plots gespeichert werden
+save_plots = true;
 
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
@@ -292,10 +295,20 @@ if savedata == true
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
 
-%% Ergebnisse Plotten (nur Trainingsdaten)
+%% Plots + Speichern
+
+% Speicher Pfad
+plot_path = 'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\04_Datengenerierung';
+plot_1_name = fullfile(plot_path, 'test_plot.pdf');
 
 % Zeitvektor über alle Trainingstrajektorien
 t_vec_ges = linspace(0, (number_runs - number_testdata) * move_time, (number_runs - number_testdata) * samples_per_run)';
+
+% Plot erstellen
+Single_Plot(t_vec_ges, features_training(:, [1 2]), '$\mathrm{Zeit} \,[\mathrm{s}]$', '$\mathrm{Position} \,[\mathrm{m}]$', '$\mathbf{r(t)}$', {'Trajektorie1', 'Trajektorie2'}, plot_1_name, save_plots)
+
+
+%% Ergebnisse Plotten (nur Trainingsdaten)
 
 % Plot q1, q2
 figure('WindowState','maximized');
