@@ -6,7 +6,7 @@
 % Studienarbeit.
 % -------------------------------------------------------------
 
-function Single_Plot(x, y, xlabel_str, ylabel_str, title_str, legend_label, filename, save_pdf)
+function Single_Plot(x, y, xlabel_str, ylabel_str, title_str, legend_label, filename, save_pdf, print_legend)
 
     % Textbreite Latex in cm (um figure genauso groß zu machen - in latex dann
     % skalierung == 1)
@@ -24,7 +24,7 @@ function Single_Plot(x, y, xlabel_str, ylabel_str, title_str, legend_label, file
 
     % Mehrere Signale plotten (jede Spalte ist ein Signal)
     hold on;
-    [n_rows, n_signals] = size(y);
+    [~, n_signals] = size(y);
     for k = 1:n_signals
         plot(x, y(:, k), 'LineWidth', 1.5);
     end
@@ -45,10 +45,12 @@ function Single_Plot(x, y, xlabel_str, ylabel_str, title_str, legend_label, file
     set(gca, 'FontSize', 11, 'TickLabelInterpreter', 'latex');
     
     % Beschriftungen
-    xlabel(xlabel_str, 'Interpreter', 'latex', 'FontSize', 12);
-    ylabel(ylabel_str, 'Interpreter', 'latex', 'FontSize', 12);
-    title(title_str, 'Interpreter', 'latex', 'FontSize', 14);
-    legend(legend_label, 'Interpreter', 'latex', 'FontSize', 10, 'Location','best');
+    xlabel(xlabel_str, 'Interpreter', 'latex', 'FontSize', 11);
+    ylabel(ylabel_str, 'Interpreter', 'latex', 'FontSize', 11);
+    title(title_str, 'Interpreter', 'latex', 'FontSize', 12);
+    if print_legend
+        legend(legend_label, 'Interpreter', 'latex', 'FontSize', 11, 'Location','best');
+    end
 
     % Rand festlegen
     set(gca, 'Position', [0.20, 0.17, 0.68, 0.72]); % Empfehlung [0.15, 0.17, 0.78, 0.72]

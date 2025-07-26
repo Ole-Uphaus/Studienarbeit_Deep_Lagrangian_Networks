@@ -145,7 +145,7 @@ t_vec = linspace(0, move_time, samples_per_run);
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 10;
+number_runs = 12;
 
 % Robotermodell auswählen (1 - Roboter aus NLRS, 2 - Roboter mit 2
 % Drehgelenken)
@@ -299,139 +299,188 @@ end
 
 % Speicher Pfad
 plot_path = 'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\04_Datengenerierung';
-plot_1_name = fullfile(plot_path, 'test_plot.pdf');
+plot_1_name = fullfile(plot_path, 'Abbildung_r_phi_Rob_1.pdf');
+plot_2_name = fullfile(plot_path, 'Abbildung_Drehmoment_Rob_1.pdf');
+plot_3_name = fullfile(plot_path, 'Abbildung_Massenmatrix_Rob_1.pdf');
+plot_4_name = fullfile(plot_path, 'Abbildung_Minimalkoordinaten_Rob_1.pdf');
+plot_5_name = fullfile(plot_path, 'Abbildung_rp_phip_Rob_1.pdf');
+plot_6_name = fullfile(plot_path, 'Abbildung_c_k_Rob_1.pdf');
 
 % Zeitvektor über alle Trainingstrajektorien
 t_vec_ges = linspace(0, (number_runs - number_testdata) * move_time, (number_runs - number_testdata) * samples_per_run)';
 
-% Plot erstellen
-Single_Plot(t_vec_ges, features_training(:, [1 2]), '$\mathrm{Zeit} \,[\mathrm{s}]$', '$\mathrm{Position} \,[\mathrm{m}]$', '$\mathbf{r(t)}$', {'Trajektorie1', 'Trajektorie2'}, plot_1_name, save_plots)
+% Plot 1 erstellen
+Double_Subplot(t_vec_ges, {features_training(:, 1), features_training(:, 2)}, ...
+    '$\mathrm{Zeit} \,[\mathrm{s}]$', ...
+    {'$\mathrm{Pos.} \,[\mathrm{m}]$', '$\mathrm{Pos.} \,[\mathrm{rad}]$'}, ...
+    {'$r_{RS}(t)$', '$\phi_{RS}(t)$'}, ...
+    {{'Trajektorie1'}, {'Trajektorie2'}}, ...
+    plot_1_name, save_plots, false)
 
+% Plot 2 Drehmoment
+Double_Subplot(t_vec_ges, {features_training(:, 5), features_training(:, 6)}, ...
+    '$\mathrm{Zeit} \,[\mathrm{s}]$', ...
+    {'$\mathrm{Kraft} \,[\mathrm{N}]$', '$\mathrm{Moment} \,[\mathrm{Nm}]$'}, ...
+    {'$F_{RS}(t)$', '$\tau_{RS}(t)$'}, ...
+    {{'Trajektorie1'}, {'Trajektorie2'}}, ...
+    plot_2_name, save_plots, false)
+
+% Plot 3 Massenmatrix
+Quad_Subplot(t_vec_ges, {Mass_Cor_training(:, 1), Mass_Cor_training(:, 2), Mass_Cor_training(:, 2), Mass_Cor_training(:, 3)}, ...
+    '$\mathrm{Zeit} \,[\mathrm{s}]$', ...
+    {'$\mathrm{Masse} \,[\mathrm{kg}]$','$\mathrm{Kopplung} \,[\mathrm{kg}\cdot m]$','$\mathrm{Kopplung} \,[\mathrm{kg}\cdot m]$','$\mathrm{Tr} \ddot{a} \mathrm{gheit} \,[\mathrm{kg}\cdot m^2]$'}, ...
+    {'$M_{RS,11}(t)$', '$M_{RS,12}(t)$', '$M_{RS,21}(t)$', '$M_{RS,22}(t)$'}, ...
+    {{'Trajektorie1'}, {'Trajektorie2'}}, ...
+    plot_3_name, save_plots, false)
+
+% Plot 4
+Six_Subplot(t_vec_ges, {features_training(:, 1), features_training(:, 3), labels_training(:, 1), features_training(:, 2), features_training(:, 4), labels_training(:, 2)}, ...
+    '$\mathrm{Zeit} \,[\mathrm{s}]$', ...
+    {'$\mathrm{Pos.} \,[\mathrm{m}]$', '$\mathrm{Geschw.} \,[\mathrm{m/s}]$', '$\mathrm{Beschl.} \,[\mathrm{m/s^2}]$','$\mathrm{Pos.} \,[\mathrm{rad}]$', '$\mathrm{Geschw.} \,[\mathrm{rad/s}]$', '$\mathrm{Beschl.} \,[\mathrm{rad/s^2}]$'}, ...
+    {'$r_{RS}(t)$', '$\dot{r}_{RS}(t)$', '$\ddot{r}_{RS}(t)$', '$\phi_{RS}(t)$', '$\dot{\phi}_{RS}(t)$', '$\ddot{\phi}_{RS}(t)$'}, ...
+    {{'Trajektorie1'}, {'Trajektorie2'}}, ...
+    plot_4_name, save_plots, false)
+
+% Plot 5
+Quad_Subplot(t_vec_ges, {features_training(:, 3), labels_training(:, 1), features_training(:, 4), labels_training(:, 2)}, ...
+    '$\mathrm{Zeit} \,[\mathrm{s}]$', ...
+    {'$\mathrm{Geschw.} \,[\mathrm{m/s}]$', '$\mathrm{Beschl.} \,[\mathrm{m/s^2}]$', '$\mathrm{Geschw.} \,[\mathrm{rad/s}]$', '$\mathrm{Beschl.} \,[\mathrm{rad/s^2}]$'}, ...
+    {'$\dot{r}_{RS}(t)$', '$\ddot{r}_{RS}(t)$', '$\dot{\phi}_{RS}(t)$', '$\ddot{\phi}_{RS}(t)$'}, ...
+    {{'Trajektorie1'}, {'Trajektorie2'}}, ...
+    plot_5_name, save_plots, false)
+
+% Plot 6
+Quad_Subplot(t_vec_ges, {Mass_Cor_training(:, 4), Mass_Cor_training(:, 6), Mass_Cor_training(:, 5), Mass_Cor_training(:, 7)}, ...
+    '$\mathrm{Zeit} \,[\mathrm{s}]$', ...
+    {'$\mathrm{Kraft} \,[\mathrm{N}]$','$\mathrm{Kraft} \,[\mathrm{N}\cdot m]$','$\mathrm{Moment} \,[\mathrm{Nm}\cdot m]$','$\mathrm{Moment} \,[\mathrm{Nm}\cdot m^2]$'}, ...
+    {'$c_{RS,1}(t)$', '$k^{(c)}_{RS,1}(t)$', '$c_{RS,2}(t)$', '$k^{(c)}_{RS,2}(t)$'}, ...
+    {{'Trajektorie1'}, {'Trajektorie2'}}, ...
+    plot_6_name, save_plots, false)
 
 %% Ergebnisse Plotten (nur Trainingsdaten)
 
-% Plot q1, q2
-figure('WindowState','maximized');
-
-subplot(2,3,1);
-plot(t_vec_ges, features_training(:, 1), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('q1');
-grid on;
-title('q1(t)');
-
-subplot(2,3,4);
-plot(t_vec_ges, features_training(:, 2), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('q2');
-grid on;
-title('q2(t)');
-
-% Plot q1_p, q2_p
-subplot(2,3,2);
-plot(t_vec_ges, features_training(:, 3), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('q1_p');
-grid on;
-title('q1p(t)');
-
-subplot(2,3,5);
-plot(t_vec_ges, features_training(:, 4), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('q2_p');
-grid on;
-title('q2p(t)');
-
-% Plot q1_pp, q2_pp
-subplot(2,3,3);
-plot(t_vec_ges, labels_training(:, 1), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('q1pp');
-grid on;
-title('q1pp(t)');
-
-subplot(2,3,6);
-plot(t_vec_ges, labels_training(:, 2), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('q2pp');
-grid on;
-title('q2pp(t)');
-
-% Plot F, tau
-figure('WindowState','maximized');
-
-subplot(2,1,1);
-plot(t_vec_ges, features_training(:, 5), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('tau_1');
-grid on;
-title('tau1(t)');
-
-subplot(2,1,2);
-plot(t_vec_ges, features_training(:, 6), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('tau_2');
-grid on;
-title('tau2(t)');
-
-% Plott M_11, M_12, M_22
-figure('WindowState','maximized');
-
-subplot(2,4,1);
-plot(t_vec_ges, Mass_Cor_training(:, 1), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('M11');
-grid on;
-title('M11(t)');
-
-subplot(2,4,5);
-plot(t_vec_ges, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('M12');
-grid on;
-title('M12(t)');
-
-subplot(2,4,2);
-plot(t_vec_ges, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('M12');
-grid on;
-title('M12(t)');
-
-subplot(2,4,6);
-plot(t_vec_ges, Mass_Cor_training(:, 3), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('M22');
-grid on;
-title('M22(t)');
-
-% Plott C_1, C_2
-subplot(2,4,3);
-plot(t_vec_ges, Mass_Cor_training(:, 4), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('C1');
-grid on;
-title('C1(t)');
-
-subplot(2,4,7);
-plot(t_vec_ges, Mass_Cor_training(:, 5), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('C2');
-grid on;
-title('C2(t)');
-
-% Plott g_1, g_2
-subplot(2,4,4);
-plot(t_vec_ges, Mass_Cor_training(:, 6), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('g1');
-grid on;
-title('g1(t)');
-
-subplot(2,4,8);
-plot(t_vec_ges, Mass_Cor_training(:, 7), 'b', 'LineWidth', 1.5);
-xlabel('Zeit [s]');
-ylabel('g2');
-grid on;
-title('g2(t)');
-
+% % Plot q1, q2
+% figure('WindowState','maximized');
+% 
+% subplot(2,3,1);
+% plot(t_vec_ges, features_training(:, 1), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('q1');
+% grid on;
+% title('q1(t)');
+% 
+% subplot(2,3,4);
+% plot(t_vec_ges, features_training(:, 2), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('q2');
+% grid on;
+% title('q2(t)');
+% 
+% % Plot q1_p, q2_p
+% subplot(2,3,2);
+% plot(t_vec_ges, features_training(:, 3), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('q1_p');
+% grid on;
+% title('q1p(t)');
+% 
+% subplot(2,3,5);
+% plot(t_vec_ges, features_training(:, 4), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('q2_p');
+% grid on;
+% title('q2p(t)');
+% 
+% % Plot q1_pp, q2_pp
+% subplot(2,3,3);
+% plot(t_vec_ges, labels_training(:, 1), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('q1pp');
+% grid on;
+% title('q1pp(t)');
+% 
+% subplot(2,3,6);
+% plot(t_vec_ges, labels_training(:, 2), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('q2pp');
+% grid on;
+% title('q2pp(t)');
+% 
+% % Plot F, tau
+% figure('WindowState','maximized');
+% 
+% subplot(2,1,1);
+% plot(t_vec_ges, features_training(:, 5), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('tau_1');
+% grid on;
+% title('tau1(t)');
+% 
+% subplot(2,1,2);
+% plot(t_vec_ges, features_training(:, 6), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('tau_2');
+% grid on;
+% title('tau2(t)');
+% 
+% % Plott M_11, M_12, M_22
+% figure('WindowState','maximized');
+% 
+% subplot(2,4,1);
+% plot(t_vec_ges, Mass_Cor_training(:, 1), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('M11');
+% grid on;
+% title('M11(t)');
+% 
+% subplot(2,4,5);
+% plot(t_vec_ges, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('M12');
+% grid on;
+% title('M12(t)');
+% 
+% subplot(2,4,2);
+% plot(t_vec_ges, Mass_Cor_training(:, 2), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('M12');
+% grid on;
+% title('M12(t)');
+% 
+% subplot(2,4,6);
+% plot(t_vec_ges, Mass_Cor_training(:, 3), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('M22');
+% grid on;
+% title('M22(t)');
+% 
+% % Plott C_1, C_2
+% subplot(2,4,3);
+% plot(t_vec_ges, Mass_Cor_training(:, 4), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('C1');
+% grid on;
+% title('C1(t)');
+% 
+% subplot(2,4,7);
+% plot(t_vec_ges, Mass_Cor_training(:, 5), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('C2');
+% grid on;
+% title('C2(t)');
+% 
+% % Plott g_1, g_2
+% subplot(2,4,4);
+% plot(t_vec_ges, Mass_Cor_training(:, 6), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('g1');
+% grid on;
+% title('g1(t)');
+% 
+% subplot(2,4,8);
+% plot(t_vec_ges, Mass_Cor_training(:, 7), 'b', 'LineWidth', 1.5);
+% xlabel('Zeit [s]');
+% ylabel('g2');
+% grid on;
+% title('g2(t)');
+% 
