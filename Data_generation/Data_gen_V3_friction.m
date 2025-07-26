@@ -105,14 +105,14 @@ end
 
 % Bewegungszeit und Schrittweite
 samples_per_run = 100;
-move_time = 2;  % Vrogeschlagene Werte: Rob_Model = 1 (3s), Rob_Model = 2 (s)
+move_time = 3;  % Vrogeschlagene Werte: Rob_Model = 1 (3s), Rob_Model = 2 (s)
 t_vec = linspace(0, move_time, samples_per_run);
 
 % Zeitpunkte der Wegpunkte
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 30;
+number_runs = 12;
 
 % Robotermodell auswählen (altuell nur Robotermodell 1 möglich)
 Rob_Model = 1;
@@ -121,13 +121,16 @@ Rob_Model = 1;
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = true;
+savedata = false;
+
+% Sollen plots gespeichert werden
+save_plots = true;
 
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
 if Rob_Model == 1
     % Startpunkte
-    q1_0 = random_init(number_runs, 0, 0.5, false); % Bsp. Intervall r [0, 0.5]
+    q1_0 = random_init(number_runs, 0.5, 1.2, false); % Bsp. Intervall r [0, 0.5]
     q2_0 = random_init(number_runs, 0, pi, false);  % Bsp. Intervall phi [0, pi]
     
     % Differenzen für Endpunkte
@@ -262,10 +265,24 @@ if savedata == true
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
 
-%% Ergebnisse Plotten (nur Trainingsdaten)
+%% Plots + Speichern
+
+% Speicher Pfad
+plot_path = 'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\04_Datengenerierung';
+plot_2_name = fullfile(plot_path, 'Abbildung_reibung_Rob_1.pdf');
 
 % Zeitvektor über alle Trainingstrajektorien
 t_vec_ges = linspace(0, (number_runs - number_testdata) * move_time, (number_runs - number_testdata) * samples_per_run)';
+
+% Plot 2
+Quad_Subplot(t_vec_ges, {features_training(:, 5), Mass_Cor_training(:, 8), features_training(:, 5), Mass_Cor_training(:, 9)}, ...
+    '$\mathrm{Zeit} \,[\mathrm{s}]$', ...
+    {'$\mathrm{Kraft} \,[\mathrm{N}]$','$\mathrm{Kraft} \,[\mathrm{N}]$','$\mathrm{Moment} \,[\mathrm{Nm}]$','$\mathrm{Moment} \,[\mathrm{Nm}]$'}, ...
+    {'$F_{RS}(t)$', '$F^{(f)}_{RS}(t)$', '$\tau_{RS}(t)$', '$\tau^{(f)}_{RS}(t)$'}, ...
+    {{'Trajektorie1'}, {'Trajektorie2'}}, ...
+    plot_2_name, save_plots, false)
+
+%% Ergebnisse Plotten (nur Trainingsdaten)
 
 % Plot q1, q2
 figure('WindowState','maximized');
