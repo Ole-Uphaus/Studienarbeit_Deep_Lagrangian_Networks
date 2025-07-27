@@ -147,13 +147,14 @@ def Delan_Train_Eval(
         if hyper_param['use_inverse_model']:
             output_L_diag_no_activation_history.append(output_L_diag_no_activation_mean_batch.cpu().detach().numpy())
 
+        # Model Evaluieren
+        test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'], hyper_param['use_energy_consumption'])
+
+        # Loss an Loss history anhängen
+        test_loss_history.append([epoch + 1, test_loss])
+
         if epoch == 0 or np.mod(epoch + 1, 100) == 0:
-            # Model Evaluieren
-            test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'], hyper_param['use_energy_consumption'])
-
-            # Loss an Loss history anhängen
-            test_loss_history.append([epoch + 1, test_loss])
-
+            
             # Ausgabe während des Trainings
             print(f'Epoch [{epoch + 1}/{hyper_param['n_epoch']}], Training-Loss: {loss_mean_batch:.3e}, Test-Loss: {test_loss:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
 
