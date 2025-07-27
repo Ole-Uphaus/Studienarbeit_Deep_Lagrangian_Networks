@@ -15,410 +15,459 @@ from datetime import datetime
 from DeLaN_model_Ole import Deep_Lagrangian_Network
 from DeLaN_functions_Ole import *
 
-# Checken, ob Cuda verfügbar und festlegen des devices, auf dem trainiert werden soll
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Benutze Device: {device}")
-print()
+# DeLaN Trainingsfunktion
+def Delan_Train_Eval(
+        target_folder,
+        features_training,
+        labels_training,
+        features_test,
+        labels_test,
+        hyper_param
+    ):
 
-# Seed setzen für Reproduzierbarkeit
-seed = 42
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed_all(seed)
+    # Torch Tensoren der Trainingsdaten erstellen
+    features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
+    labels_training_tensor = torch.tensor(labels_training, dtype=torch.float32)
 
-# Parameter festlegen
-hyper_param = {
-    # Netzparameter
-    'hidden_width': 64,
-    'hidden_depth': 2,
-    'activation_fnc': 'elu',
-    'activation_fnc_diag': 'relu',
+    # Dataset und Dataloader für das Training erstellen
+    dataset_training = TensorDataset(features_training_tensor, labels_training_tensor)
+    dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch_size'], shuffle=True, drop_last=True)
 
-    # Initialisierung
-    'bias_init_constant': 1.e-3,
-    'wheight_init': 'xavier_normal',
+    # Testdaten in torch Tensoren umwandeln
+    features_test_tensor = torch.tensor(features_test, dtype=torch.float32)
+    labels_test_tensor = torch.tensor(labels_test, dtype=torch.float32)
 
-    # Lagrange Dynamik
-    'L_diagonal_offset': 1.e-2,
-    
-    # Training
-    'dropuot': 0.0,
-    'batch_size': 512,
-    'learning_rate': 5.e-4,
-    'weight_decay': 1.e-4,
-    'n_epoch': 1000,
+    # Testdaten zuordnen und auf device verschieben
+    q_test = features_test_tensor[:, (0, 1)].to(device)
+    qd_test = features_test_tensor[:, (2, 3)].to(device)
+    qdd_test = features_test_tensor[:, (4, 5)].to(device)
+    tau_test = labels_test_tensor.to(device)
 
-    # Reibungsmodell
-    'use_friction_model': False,
-    'friction_model_init_d': [0.01, 0.01],
-    'friction_model_init_c': [3.01, 0.01],
-    'friction_model_init_s': [2.01, 0.01],
-    'friction_model_init_v': [0.01, 0.01],
-    'friction_epsilon': 100.0,
+    # Ausgabe Datendimensionen
+    print('Datenpunkte Training: ', features_training.shape[0])
+    print('Datenpunkte Evaluierung: ', features_test.shape[0])
+    print()
 
-    # Sonstiges
-    'use_inverse_model': True,
-    'use_forward_model': True,
-    'use_energy_consumption': False,
-    'save_model': False}
+    # DeLaN Netzwerk erstellen
+    n_dof = labels_training.shape[1]
+    DeLaN_network = Deep_Lagrangian_Network(n_dof, **hyper_param).to(device)
 
-# Trainings- und Testdaten laden
-target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+    # Optimierer Initialisieren
+    optimizer = torch.optim.Adam(DeLaN_network.parameters(),
+                                    lr=hyper_param["learning_rate"],
+                                    weight_decay=hyper_param["weight_decay"],
+                                    amsgrad=True)
 
-# Torch Tensoren der Trainingsdaten erstellen
-features_training_tensor = torch.tensor(features_training, dtype=torch.float32)
-labels_training_tensor = torch.tensor(labels_training, dtype=torch.float32)
+    # Optimierung starten und Zeitmessung beginnen
+    print('Starte Optimierung...')
+    print()
+    start_time = time.time()
 
-# Dataset und Dataloader für das Training erstellen
-dataset_training = TensorDataset(features_training_tensor, labels_training_tensor)
-dataloader_training = DataLoader(dataset_training, batch_size=hyper_param['batch_size'], shuffle=True, drop_last=True)
+    # Training des Netzwerks
+    training_loss_history = []
+    test_loss_history = []
+    output_L_diag_no_activation_history = []
 
-# Testdaten in torch Tensoren umwandeln
-features_test_tensor = torch.tensor(features_test, dtype=torch.float32)
-labels_test_tensor = torch.tensor(labels_test, dtype=torch.float32)
+    for epoch in range(hyper_param['n_epoch']):
+        # Modell in den Trainingsmodeus versetzen und loss Summe initialisieren
+        DeLaN_network.train()
+        loss_sum = 0
+        output_L_diag_no_activation_mean_sum = 0
 
-# Testdaten zuordnen und auf device verschieben
-q_test = features_test_tensor[:, (0, 1)].to(device)
-qd_test = features_test_tensor[:, (2, 3)].to(device)
-qdd_test = features_test_tensor[:, (4, 5)].to(device)
-tau_test = labels_test_tensor.to(device)
-tau_test_plot = labels_test_tensor.cpu().numpy()    # Diesen Tensor direkt auf cpu schieben, damit damit nachher der loss berechnet werden kann
+        for batch_features, batch_labels in dataloader_training:
+            # Gradienten zurücksetzen
+            optimizer.zero_grad()
 
-# Ausgabe Datendimensionen
-print('Datenpunkte Training: ', features_training.shape[0])
-print('Datenpunkte Evaluierung: ', features_test.shape[0])
-print()
+            # Trainingsdaten zuordnen
+            q = batch_features[:, (0, 1)].to(device)
+            qd = batch_features[:, (2, 3)].to(device)
+            qdd = batch_features[:, (4, 5)].to(device)
+            tau = batch_labels.to(device)
 
-# DeLaN Netzwerk erstellen
-n_dof = labels_training.shape[1]
-DeLaN_network = Deep_Lagrangian_Network(n_dof, **hyper_param).to(device)
+            # Loss initialisieren
+            loss = torch.tensor(0.0, device=device)
 
-# Optimierer Initialisieren
-optimizer = torch.optim.Adam(DeLaN_network.parameters(),
-                                lr=hyper_param["learning_rate"],
-                                weight_decay=hyper_param["weight_decay"],
-                                amsgrad=True)
+            # Forward pass (inverse Dynamik)
+            tau_hat, _, _, _, tau_fric_hat, output_L_diag_no_activation, T_dt, V_dt = DeLaN_network(q, qd, qdd)    # Inverses Modell
 
-# Optimierung starten und Zeitmessung beginnen
-print('Starte Optimierung...')
-print()
-start_time = time.time()
+            if hyper_param['use_inverse_model']:
+                # Durchnittlichen wert der Diagonalelemente vor der ReLu aktivierung (über Batch gemittelt)
+                output_L_diag_no_activation_mean = output_L_diag_no_activation.mean(dim=0)
 
-# Training des Netzwerks
-training_loss_history = []
-test_loss_history = []
-output_L_diag_no_activation_history = []
+                # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
+                err_inv_dyn = torch.sum((tau_hat - tau)**2, dim=1)
+                mean_err_inv_dyn = torch.mean(err_inv_dyn)
 
-for epoch in range(hyper_param['n_epoch']):
-    # Modell in den Trainingsmodeus versetzen und loss Summe initialisieren
-    DeLaN_network.train()
-    loss_sum = 0
-    output_L_diag_no_activation_mean_sum = 0
+                # Loss berechnen
+                loss += mean_err_inv_dyn
 
-    for batch_features, batch_labels in dataloader_training:
-        # Gradienten zurücksetzen
-        optimizer.zero_grad()
+            if hyper_param['use_forward_model']:
+                # Forward pass    
+                qdd_hat, _, _, _ = DeLaN_network.forward_dynamics(q, qd, tau) # Vorwärts Modell
 
-        # Trainingsdaten zuordnen
-        q = batch_features[:, (0, 1)].to(device)
-        qd = batch_features[:, (2, 3)].to(device)
-        qdd = batch_features[:, (4, 5)].to(device)
-        tau = batch_labels.to(device)
+                # Fehler aus Vorwärtsmodell berechnen (Schätzung von qdd)
+                err_for_dyn = torch.sum((qdd_hat - qdd)**2, dim=1)
+                mean_err_for_dyn = torch.mean(err_for_dyn)
 
-        # Loss initialisieren
-        loss = torch.tensor(0.0, device=device)
+                # Loss berechnen
+                loss += mean_err_for_dyn
 
-        # Forward pass (inverse Dynamik)
-        tau_hat, _, _, _, tau_fric_hat, output_L_diag_no_activation, T_dt, V_dt = DeLaN_network(q, qd, qdd)    # Inverses Modell
+            if hyper_param['use_energy_consumption']:
 
+                # Fehler aus Energieerhaltung berechnen
+                E_dt_mot = torch.einsum('bi,bi->b', qd, tau)
+                E_dt_mot_hat = T_dt + V_dt + torch.einsum('bi,bi->b', qd, tau_fric_hat)  
+
+                err_E_dt_mot = (E_dt_mot_hat - E_dt_mot)**2
+                mean_err_E_dt_mot = torch.mean(err_E_dt_mot)
+
+                # Loss berechnen
+                loss += mean_err_E_dt_mot
+
+            if hyper_param['use_inverse_model'] == False and hyper_param['use_forward_model'] == False and hyper_param['use_energy_consumption'] == False:
+                raise ValueError("Ungültige Konfiguration: 'use_inverse_model' und 'use_forward_model' dürfen nicht beide False sein.")
+
+            # Optimierungsschritt durchführen
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(DeLaN_network.parameters(), max_norm=0.5)    # Gradienten Clipping für besseres Training
+            optimizer.step()
+
+            # Loss des aktuellen Batches aufsummieren (und mittleren Wert der Diagonalelemente ohne aktivierung)
+            loss_sum += loss.item()
+            if hyper_param['use_inverse_model']:
+                output_L_diag_no_activation_mean_sum += output_L_diag_no_activation_mean
+
+        # Mittleren Loss berechnen und ausgeben (und mittleren Wert der Diagonalelemente ohne aktivierung)
+        loss_mean_batch = loss_sum/len(dataloader_training)
         if hyper_param['use_inverse_model']:
-            # Durchnittlichen wert der Diagonalelemente vor der ReLu aktivierung (über Batch gemittelt)
-            output_L_diag_no_activation_mean = output_L_diag_no_activation.mean(dim=0)
+            output_L_diag_no_activation_mean_batch = output_L_diag_no_activation_mean_sum/len(dataloader_training)
 
-            # Fehler aus inverser Dynamik berechnen (Schätzung von tau)
-            err_inv_dyn = torch.sum((tau_hat - tau)**2, dim=1)
-            mean_err_inv_dyn = torch.mean(err_inv_dyn)
-
-            # Loss berechnen
-            loss += mean_err_inv_dyn
-
-        if hyper_param['use_forward_model']:
-            # Forward pass    
-            qdd_hat, _, _, _ = DeLaN_network.forward_dynamics(q, qd, tau) # Vorwärts Modell
-
-            # Fehler aus Vorwärtsmodell berechnen (Schätzung von qdd)
-            err_for_dyn = torch.sum((qdd_hat - qdd)**2, dim=1)
-            mean_err_for_dyn = torch.mean(err_for_dyn)
-
-            # Loss berechnen
-            loss += mean_err_for_dyn
-
-        if hyper_param['use_energy_consumption']:
-
-            # Fehler aus Energieerhaltung berechnen
-            E_dt_mot = torch.einsum('bi,bi->b', qd, tau)
-            E_dt_mot_hat = T_dt + V_dt + torch.einsum('bi,bi->b', qd, tau_fric_hat)  
-
-            err_E_dt_mot = (E_dt_mot_hat - E_dt_mot)**2
-            mean_err_E_dt_mot = torch.mean(err_E_dt_mot)
-
-            # Loss berechnen
-            loss += mean_err_E_dt_mot
-
-        if hyper_param['use_inverse_model'] == False and hyper_param['use_forward_model'] == False and hyper_param['use_energy_consumption'] == False:
-            raise ValueError("Ungültige Konfiguration: 'use_inverse_model' und 'use_forward_model' dürfen nicht beide False sein.")
-
-        # Optimierungsschritt durchführen
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(DeLaN_network.parameters(), max_norm=0.5)    # Gradienten Clipping für besseres Training
-        optimizer.step()
-
-        # Loss des aktuellen Batches aufsummieren (und mittleren Wert der Diagonalelemente ohne aktivierung)
-        loss_sum += loss.item()
+        # Loss an Loss history anhängen (und mittleren Wert der Diagonalelemente ohne aktivierung)
+        training_loss_history.append([epoch + 1, loss_mean_batch])
         if hyper_param['use_inverse_model']:
-            output_L_diag_no_activation_mean_sum += output_L_diag_no_activation_mean
+            output_L_diag_no_activation_history.append(output_L_diag_no_activation_mean_batch.cpu().detach().numpy())
 
-    # Mittleren Loss berechnen und ausgeben (und mittleren Wert der Diagonalelemente ohne aktivierung)
-    loss_mean_batch = loss_sum/len(dataloader_training)
-    if hyper_param['use_inverse_model']:
-        output_L_diag_no_activation_mean_batch = output_L_diag_no_activation_mean_sum/len(dataloader_training)
+        if epoch == 0 or np.mod(epoch + 1, 100) == 0:
+            # Model Evaluieren
+            test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'], hyper_param['use_energy_consumption'])
 
-    # Loss an Loss history anhängen (und mittleren Wert der Diagonalelemente ohne aktivierung)
-    training_loss_history.append([epoch + 1, loss_mean_batch])
-    if hyper_param['use_inverse_model']:
-        output_L_diag_no_activation_history.append(output_L_diag_no_activation_mean_batch.cpu().detach().numpy())
+            # Loss an Loss history anhängen
+            test_loss_history.append([epoch + 1, test_loss])
 
-    if epoch == 0 or np.mod(epoch + 1, 100) == 0:
-        # Model Evaluieren
-        test_loss, _, _, _, _, _ = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'], hyper_param['use_energy_consumption'])
+            # Ausgabe während des Trainings
+            print(f'Epoch [{epoch + 1}/{hyper_param['n_epoch']}], Training-Loss: {loss_mean_batch:.3e}, Test-Loss: {test_loss:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
 
-        # Loss an Loss history anhängen
-        test_loss_history.append([epoch + 1, test_loss])
+    # Modell evaluieren (kein torch.nograd(), da interne Gradienten benötigt werden)
+    DeLaN_network.eval()
 
-        # Ausgabe während des Trainings
-        print(f'Epoch [{epoch + 1}/{hyper_param['n_epoch']}], Training-Loss: {loss_mean_batch:.3e}, Test-Loss: {test_loss:.3e}, Verstrichene Zeit: {(time.time() - start_time):.2f} s')
+    # Evaluierung
+    _, tau_hat_test, H_test, c_test, g_test, tau_fric_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'], hyper_param['use_energy_consumption'])
 
-# Modell evaluieren (kein torch.nograd(), da interne Gradienten benötigt werden)
-DeLaN_network.eval()
+    # Metriken Berechnen (Fehler aus inverser Dynamik)
+    mse_tau = np.mean(np.sum((tau_hat_test - tau_test.cpu().detach().numpy())**2, axis=1))
+    rmse_tau = np.sqrt(mse_tau)
+    tau_mean = np.sqrt(np.mean(np.sum((tau_test.cpu().detach().numpy())**2, axis=1)))
+    rmse_tau_percent = rmse_tau/tau_mean*100
 
-# Evaluierung
-_, tau_hat_test, H_test, c_test, g_test, tau_fric_test = model_evaluation(DeLaN_network, q_test, qd_test, qdd_test, tau_test, hyper_param['use_inverse_model'], hyper_param['use_forward_model'], hyper_param['use_energy_consumption'])
+    # Metriken ausgeben
+    print('Metriken:')
+    print(f"MSE Test: {mse_tau:4f}")
+    print(f"RMSE (Absolutfehler) Test: {rmse_tau:4f}")
+    print(f"Prozentualer Fehler Test: {rmse_tau_percent:4f}")
 
-# Metriken Berechnen (Fehler aus inverser Dynamik)
-mse_tau = np.mean(np.sum((tau_hat_test - tau_test.cpu().detach().numpy())**2, axis=1))
-rmse_tau = np.sqrt(mse_tau)
-tau_mean = np.sqrt(np.mean(np.sum((tau_test.cpu().detach().numpy())**2, axis=1)))
-rmse_tau_percent = rmse_tau/tau_mean*100
+    # Modell abspeichern
+    if hyper_param['save_model'] == True:
+            
+        # Aktueller Zeitstempel
+        timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        script_path = os.path.dirname(os.path.abspath(__file__))
 
-# Metriken ausgeben
-print('Metriken:')
-print(f"MSE Test: {mse_tau:4f}")
-print(f"RMSE (Absolutfehler) Test: {rmse_tau:4f}")
-print(f"Prozentualer Fehler Test: {rmse_tau_percent:4f}")
+        if target_folder == 'MATLAB_Simulation':
+            model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
+        else:
+            model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_MJ_Sim_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
 
-# Modell abspeichern
-if hyper_param['save_model'] == True:
+        # Speichern
+        torch.save({
+            'state_dict': DeLaN_network.state_dict(),
+            'hyper_param': hyper_param,
+            'n_dof': n_dof
+        }, model_path)
+
+    # Wenn Reibungsmodell gewählt, dann Reibungsparameter ausgeben
+    if hyper_param['use_friction_model']:
+        print('Reibungsparameter:')
+        print(f"Dämpfung (viskos): {DeLaN_network.friction_d().detach().cpu().numpy().tolist()}")
+        print(f"Coulomb-Reibung: {DeLaN_network.friction_c().detach().cpu().numpy().tolist()}")
+        print(f"Stribeck-Spitze: {DeLaN_network.friction_s().detach().cpu().numpy().tolist()}")
+        print(f"Stribeck-Breite: {DeLaN_network.friction_v().detach().cpu().numpy().tolist()}")
+
+    # Rückgabe dictionary erstellen
+    results = {
+        # Training histories
+        'training_loss_history': training_loss_history,
+        'test_loss_history': test_loss_history,
+        'output_L_diag_no_activation_history': output_L_diag_no_activation_history,
+
+        # Evaluation results
+        'H_test': H_test,
+        'c_test': c_test,
+        'g_test': g_test,
+        'tau_fric_test': tau_fric_test,
+        'tau_hat_test': tau_hat_test
+    }
+
+    return DeLaN_network, results
+
+# Um import zu ermöglichen
+if __name__ == "__main__":
+
+    # Checken, ob Cuda verfügbar und festlegen des devices, auf dem trainiert werden soll
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Benutze Device: {device}")
+    print()
+
+    # Seed setzen für Reproduzierbarkeit
+    seed = 42
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    # Parameter festlegen
+    hyper_param = {
+        # Netzparameter
+        'hidden_width': 64,
+        'hidden_depth': 2,
+        'activation_fnc': 'elu',
+        'activation_fnc_diag': 'relu',
+
+        # Initialisierung
+        'bias_init_constant': 1.e-3,
+        'wheight_init': 'xavier_normal',
+
+        # Lagrange Dynamik
+        'L_diagonal_offset': 1.e-2,
         
-    # Aktueller Zeitstempel
-    timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    script_path = os.path.dirname(os.path.abspath(__file__))
+        # Training
+        'dropuot': 0.0,
+        'batch_size': 512,
+        'learning_rate': 5.e-4,
+        'weight_decay': 1.e-4,
+        'n_epoch': 500,
 
-    if target_folder == 'MATLAB_Simulation':
-        model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
-    else:
-        model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_MJ_Sim_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
+        # Reibungsmodell
+        'use_friction_model': False,
+        'friction_model_init_d': [0.01, 0.01],
+        'friction_model_init_c': [3.01, 0.01],
+        'friction_model_init_s': [2.01, 0.01],
+        'friction_model_init_v': [0.01, 0.01],
+        'friction_epsilon': 100.0,
 
-    # Speichern
-    torch.save({
-        'state_dict': DeLaN_network.state_dict(),
-        'hyper_param': hyper_param,
-        'n_dof': n_dof
-    }, model_path)
+        # Sonstiges
+        'use_inverse_model': True,
+        'use_forward_model': True,
+        'use_energy_consumption': False,
+        'save_model': False}
 
-# Wenn Reibungsmodell gewählt, dann Reibungsparameter ausgeben
-if hyper_param['use_friction_model']:
-    print('Reibungsparameter:')
-    print(f"Dämpfung (viskos): {DeLaN_network.friction_d().detach().cpu().numpy().tolist()}")
-    print(f"Coulomb-Reibung: {DeLaN_network.friction_c().detach().cpu().numpy().tolist()}")
-    print(f"Stribeck-Spitze: {DeLaN_network.friction_s().detach().cpu().numpy().tolist()}")
-    print(f"Stribeck-Breite: {DeLaN_network.friction_v().detach().cpu().numpy().tolist()}")
+    # Trainings- und Testdaten laden
+    target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
+    features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
+    _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
-# Plotten
-samples_vec = np.arange(1, H_test.shape[0] + 1)
+    # Modell trainieren
+    DeLaN_network, results = Delan_Train_Eval(
+            target_folder,
+            features_training,
+            labels_training,
+            features_test,
+            labels_test,
+            hyper_param
+        )
 
-# Loss Entwicklung plotten (und mittleren Wert der Diagonalelemente ohne aktivierung)
-training_loss_history = np.array(training_loss_history)
-test_loss_history = np.array(test_loss_history)
-output_L_diag_no_activation_history = np.array(output_L_diag_no_activation_history)
+    # Ergebnisse entpacken
+    training_loss_history = results['training_loss_history']
+    test_loss_history = results['test_loss_history']
+    output_L_diag_no_activation_history = results['output_L_diag_no_activation_history']
+    H_test = results['H_test']
+    c_test = results['c_test']
+    g_test = results['g_test']
+    tau_fric_test = results['tau_fric_test']
+    tau_hat_test = results['tau_hat_test']
 
-plt.figure()
+    # Plotten
+    samples_vec = np.arange(1, H_test.shape[0] + 1)
 
-plt.subplot(2, 1, 1)
-plt.semilogy(training_loss_history[:, 0], training_loss_history[:, 1], label='Training Loss')
-plt.semilogy(test_loss_history[:, 0], test_loss_history[:, 1], label='Test Loss')
-plt.xlabel('Epoche')
-plt.ylabel('Loss')
-plt.title('Loss-Verlauf während des Trainings')
-plt.grid(True)
-plt.legend()
+    # Loss Entwicklung plotten (und mittleren Wert der Diagonalelemente ohne aktivierung)
+    training_loss_history = np.array(training_loss_history)
+    test_loss_history = np.array(test_loss_history)
+    output_L_diag_no_activation_history = np.array(output_L_diag_no_activation_history)
 
-if hyper_param['use_inverse_model']:
-    plt.subplot(2, 1, 2)
-    plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 0], label='H11')
-    plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 1], label='H22')
-    plt.title('H ohne Aktivierung')
+    plt.figure()
+
+    plt.subplot(2, 1, 1)
+    plt.semilogy(training_loss_history[:, 0], training_loss_history[:, 1], label='Training Loss')
+    plt.semilogy(test_loss_history[:, 0], test_loss_history[:, 1], label='Test Loss')
     plt.xlabel('Epoche')
+    plt.ylabel('Loss')
+    plt.title('Loss-Verlauf während des Trainings')
+    plt.grid(True)
+    plt.legend()
+
+    if hyper_param['use_inverse_model']:
+        plt.subplot(2, 1, 2)
+        plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 0], label='H11')
+        plt.plot(training_loss_history[:, 0], output_L_diag_no_activation_history[:, 1], label='H22')
+        plt.title('H ohne Aktivierung')
+        plt.xlabel('Epoche')
+        plt.ylabel('H')
+        plt.grid(True)
+        plt.legend()
+
+    plt.tight_layout()
+
+    # H
+    plt.figure()
+
+    plt.subplot(2, 2, 1)
+    plt.plot(samples_vec, H_test[:, 0, 0], label='H11 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 0] ,label='H11 Analytic')
+    plt.title('H11')
+    plt.xlabel('Samples')
     plt.ylabel('H')
     plt.grid(True)
     plt.legend()
 
-plt.tight_layout()
-
-# H
-plt.figure()
-
-plt.subplot(2, 2, 1)
-plt.plot(samples_vec, H_test[:, 0, 0], label='H11 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 0] ,label='H11 Analytic')
-plt.title('H11')
-plt.xlabel('Samples')
-plt.ylabel('H')
-plt.grid(True)
-plt.legend()
-
-plt.subplot(2, 2, 2)
-plt.plot(samples_vec, H_test[:, 0, 1], label='H12 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H12 Analytic')
-plt.title('H12')
-plt.xlabel('Samples')
-plt.ylabel('H')
-plt.grid(True)
-plt.legend()
-
-plt.subplot(2, 2, 3)
-plt.plot(samples_vec, H_test[:, 1, 0], label='H21 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H21 Analytic')
-plt.title('H21')
-plt.xlabel('Samples')
-plt.ylabel('H')
-plt.grid(True)
-plt.legend()
-
-plt.subplot(2, 2, 4)
-plt.plot(samples_vec, H_test[:, 1, 1], label='H22 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 2], label='H22 Analytic')
-plt.title('H22')
-plt.xlabel('Samples')
-plt.ylabel('H')
-plt.grid(True)
-plt.legend()
-
-plt.tight_layout()
-
-# c
-plt.figure()
-
-plt.subplot(2, 3, 1)
-plt.plot(samples_vec, c_test[:, 0], label='C1 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 3] ,label='C1 Analytic')
-plt.title('C1')
-plt.xlabel('Samples')
-plt.ylabel('C')
-plt.grid(True)
-plt.legend()
-
-plt.subplot(2, 3, 4)
-plt.plot(samples_vec, c_test[:, 1], label='C2 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 4] ,label='C2 Analytic')
-plt.title('C2')
-plt.xlabel('Samples')
-plt.ylabel('C')
-plt.grid(True)
-plt.legend()
-
-# g
-plt.subplot(2, 3, 2)
-plt.plot(samples_vec, g_test[:, 0], label='g1 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 5] ,label='g1 Analytic')
-plt.title('g1')
-plt.xlabel('Samples')
-plt.ylabel('g')
-plt.grid(True)
-plt.legend()
-
-plt.subplot(2, 3, 5)
-plt.plot(samples_vec, g_test[:, 1], label='g2 DeLaN')
-plt.plot(samples_vec, Mass_Cor_test[:, 6] ,label='g2 Analytic')
-plt.title('g2')
-plt.xlabel('Samples')
-plt.ylabel('g')
-plt.grid(True)
-plt.legend()
-
-# tau
-plt.subplot(2, 3, 3)
-plt.plot(samples_vec, tau_hat_test[:, 0], label='tau1 DeLaN')
-plt.plot(samples_vec, tau_test_plot[:, 0] ,label='tau1 Analytic')
-plt.title('tau1')
-plt.xlabel('Samples')
-plt.ylabel('tau')
-plt.grid(True)
-plt.legend()
-
-plt.subplot(2, 3, 6)
-plt.plot(samples_vec, tau_hat_test[:, 1], label='tau2 DeLaN')
-plt.plot(samples_vec, tau_test_plot[:, 1] ,label='tau2 Analytic')
-plt.title('tau2')
-plt.xlabel('Samples')
-plt.ylabel('tau')
-plt.grid(True)
-plt.legend()
-
-plt.tight_layout()
-
-# Reibungskräfte
-if hyper_param['use_friction_model'] and Mass_Cor_test.shape[1] > 8:
-    # Reibungskennlinie auswerten
-    qd_numpy, tau_fric_numpy = eval_friction_graph(DeLaN_network, device)
-
-    plt.figure()
-
-    plt.subplot(2, 2, 1)
-    plt.plot(samples_vec, tau_fric_test[:, 0], label='fric1 DeLaN')
-    plt.plot(samples_vec, Mass_Cor_test[:, 7] ,label='fric1 Analytic')
-    plt.title('fric1')
+    plt.subplot(2, 2, 2)
+    plt.plot(samples_vec, H_test[:, 0, 1], label='H12 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H12 Analytic')
+    plt.title('H12')
     plt.xlabel('Samples')
-    plt.ylabel('fric1')
+    plt.ylabel('H')
     plt.grid(True)
     plt.legend()
 
     plt.subplot(2, 2, 3)
-    plt.plot(samples_vec, tau_fric_test[:, 1], label='fric2 DeLaN')
-    plt.plot(samples_vec, Mass_Cor_test[:, 8], label='fric2 Analytic')
-    plt.title('fric2')
+    plt.plot(samples_vec, H_test[:, 1, 0], label='H21 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 1], label='H21 Analytic')
+    plt.title('H21')
     plt.xlabel('Samples')
-    plt.ylabel('fric2')
-    plt.grid(True)
-    plt.legend()
-
-    plt.subplot(2, 2, 2)
-    plt.plot(qd_numpy, tau_fric_numpy[:, 0] ,label='fric1')
-    plt.title('Reibungskennlinie fric1')
-    plt.xlabel('qd')
-    plt.ylabel('fric1')
+    plt.ylabel('H')
     plt.grid(True)
     plt.legend()
 
     plt.subplot(2, 2, 4)
-    plt.plot(qd_numpy, tau_fric_numpy[:, 1] ,label='fric2')
-    plt.title('Reibungskennlinie fric2')
-    plt.xlabel('qd')
-    plt.ylabel('fric2')
+    plt.plot(samples_vec, H_test[:, 1, 1], label='H22 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 2], label='H22 Analytic')
+    plt.title('H22')
+    plt.xlabel('Samples')
+    plt.ylabel('H')
     plt.grid(True)
     plt.legend()
 
     plt.tight_layout()
 
-plt.show()
+    # c
+    plt.figure()
+
+    plt.subplot(2, 3, 1)
+    plt.plot(samples_vec, c_test[:, 0], label='C1 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 3] ,label='C1 Analytic')
+    plt.title('C1')
+    plt.xlabel('Samples')
+    plt.ylabel('C')
+    plt.grid(True)
+    plt.legend()
+
+    plt.subplot(2, 3, 4)
+    plt.plot(samples_vec, c_test[:, 1], label='C2 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 4] ,label='C2 Analytic')
+    plt.title('C2')
+    plt.xlabel('Samples')
+    plt.ylabel('C')
+    plt.grid(True)
+    plt.legend()
+
+    # g
+    plt.subplot(2, 3, 2)
+    plt.plot(samples_vec, g_test[:, 0], label='g1 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 5] ,label='g1 Analytic')
+    plt.title('g1')
+    plt.xlabel('Samples')
+    plt.ylabel('g')
+    plt.grid(True)
+    plt.legend()
+
+    plt.subplot(2, 3, 5)
+    plt.plot(samples_vec, g_test[:, 1], label='g2 DeLaN')
+    plt.plot(samples_vec, Mass_Cor_test[:, 6] ,label='g2 Analytic')
+    plt.title('g2')
+    plt.xlabel('Samples')
+    plt.ylabel('g')
+    plt.grid(True)
+    plt.legend()
+
+    # tau
+    plt.subplot(2, 3, 3)
+    plt.plot(samples_vec, tau_hat_test[:, 0], label='tau1 DeLaN')
+    plt.plot(samples_vec, labels_test[:, 0] ,label='tau1 Analytic')
+    plt.title('tau1')
+    plt.xlabel('Samples')
+    plt.ylabel('tau')
+    plt.grid(True)
+    plt.legend()
+
+    plt.subplot(2, 3, 6)
+    plt.plot(samples_vec, tau_hat_test[:, 1], label='tau2 DeLaN')
+    plt.plot(samples_vec, labels_test[:, 1] ,label='tau2 Analytic')
+    plt.title('tau2')
+    plt.xlabel('Samples')
+    plt.ylabel('tau')
+    plt.grid(True)
+    plt.legend()
+
+    plt.tight_layout()
+
+    # Reibungskräfte
+    if hyper_param['use_friction_model'] and Mass_Cor_test.shape[1] > 8:
+        # Reibungskennlinie auswerten
+        qd_numpy, tau_fric_numpy = eval_friction_graph(DeLaN_network, device)
+
+        plt.figure()
+
+        plt.subplot(2, 2, 1)
+        plt.plot(samples_vec, tau_fric_test[:, 0], label='fric1 DeLaN')
+        plt.plot(samples_vec, Mass_Cor_test[:, 7] ,label='fric1 Analytic')
+        plt.title('fric1')
+        plt.xlabel('Samples')
+        plt.ylabel('fric1')
+        plt.grid(True)
+        plt.legend()
+
+        plt.subplot(2, 2, 3)
+        plt.plot(samples_vec, tau_fric_test[:, 1], label='fric2 DeLaN')
+        plt.plot(samples_vec, Mass_Cor_test[:, 8], label='fric2 Analytic')
+        plt.title('fric2')
+        plt.xlabel('Samples')
+        plt.ylabel('fric2')
+        plt.grid(True)
+        plt.legend()
+
+        plt.subplot(2, 2, 2)
+        plt.plot(qd_numpy, tau_fric_numpy[:, 0] ,label='fric1')
+        plt.title('Reibungskennlinie fric1')
+        plt.xlabel('qd')
+        plt.ylabel('fric1')
+        plt.grid(True)
+        plt.legend()
+
+        plt.subplot(2, 2, 4)
+        plt.plot(qd_numpy, tau_fric_numpy[:, 1] ,label='fric2')
+        plt.title('Reibungskennlinie fric2')
+        plt.xlabel('qd')
+        plt.ylabel('fric2')
+        plt.grid(True)
+        plt.legend()
+
+        plt.tight_layout()
+
+    plt.show()
