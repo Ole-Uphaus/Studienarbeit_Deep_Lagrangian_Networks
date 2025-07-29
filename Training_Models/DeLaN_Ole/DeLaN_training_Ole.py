@@ -22,7 +22,8 @@ def Delan_Train_Eval(
         labels_training,
         features_test,
         labels_test,
-        hyper_param
+        hyper_param,
+        device
     ):
 
     # Torch Tensoren der Trainingsdaten erstellen
@@ -282,7 +283,8 @@ if __name__ == "__main__":
             labels_training,
             features_test,
             labels_test,
-            hyper_param
+            hyper_param,
+            device
         )
 
     # Ergebnisse entpacken
