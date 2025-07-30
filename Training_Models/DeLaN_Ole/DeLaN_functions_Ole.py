@@ -111,7 +111,7 @@ def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legen
     fig_height = 8.5 * cm_to_inch
 
     # Liniendicke
-    line_thickness = 0.4
+    line_thickness = 0.35
 
     # LaTeX Einstellungen
     rcParams.update({
@@ -154,7 +154,16 @@ def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legen
         ax.spines['right'].set_linewidth(line_thickness)
 
         if print_legend:
-            ax.legend(legend_label_list[i], loc='upper right')
+            legend = ax.legend(legend_label_list[i], # Legende wie in matlab
+                loc='upper right',
+                frameon=True,         # Rahmen anzeigen (MATLAB-like)
+                edgecolor='black',    # Rahmenfarbe
+                framealpha=1.0,       # Kein transparenter Hintergrund
+                fancybox=False,       # Kein abgerundeter Rahmen
+                borderpad=0.3,        # Weniger Padding im Rahmen
+                handletextpad=0.5     # Abstand zwischen Linie und Text
+                )
+            legend.get_frame().set_linewidth(line_thickness)
 
     # x-Achse setzen
     axes[1].set_xlabel(xlabel_str)

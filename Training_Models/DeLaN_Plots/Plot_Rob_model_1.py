@@ -49,7 +49,7 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 500,
+    'n_epoch': 1,
 
     # Reibungsmodell
     'use_friction_model': False,
