@@ -90,7 +90,7 @@ end
 
 % Bewegungszeit und Schrittweite
 samples_per_run = 100;
-move_time = 1.5; 
+move_time = 1; 
 t_vec = linspace(0, move_time, samples_per_run);
 
 % Systemparameter
@@ -102,7 +102,7 @@ c_phi_Nmprad = 7.309;
 waypointTimes = [0 move_time];
 
 % Anzahl der voneinander unabhängigen Bewegungen
-number_runs = 30;
+number_runs = 12;
 
 % Seed für reproduzierbare Ergebnisse
 rng(42)
@@ -110,13 +110,16 @@ rng(42)
 % Sollen Simulationsdaten gespeichert werden
 savedata = true;
 
+% Sollen plots gespeichert werden
+save_plots = true;
+
 %% Wegpunkte für Trajektorie festlegen (hier unterscheiden bei Robotermodellen)
 
 % Startpunkte
 q1_0 = random_init(number_runs, 0, 2*pi, false); % Bsp. Intervall r [0, 0.5]
 
 % Differenzen für Endpunkte
-delta_q1 = random_init(number_runs, pi, 2*pi, true); % Bsp. Intervall delta_r [0.2, 0.5]
+delta_q1 = random_init(number_runs, 2*pi, 4*pi, true); % Bsp. Intervall delta_r [0.2, 0.5]
 
 %% Trajektorien generieren
 
@@ -274,10 +277,24 @@ if savedata == true
     save(full_path, 'features_training', 'labels_training', 'features_test', 'labels_test', "Mass_Cor_test");
 end
 
-%% Ergebnisse Plotten (nur Trainingsdaten)
+%% Plots + Speichern
+
+% Speicher Pfad
+plot_path = 'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\04_Datengenerierung';
+plot_1_name = fullfile(plot_path, 'Abbildung_phi_phip_phipp_Torsionsschwinger.pdf');
 
 % Zeitvektor über alle Trainingstrajektorien
 t_vec_ges = linspace(0, (number_runs - number_testdata) * move_time, (number_runs - number_testdata) * samples_per_run)';
+
+% Plot 2 Geschwindigkeit Beschleunigung
+Triple_Subplot(t_vec_ges, {[features_training(:, 1), features_training(:, 2)], [features_training(:, 3), features_training(:, 4)], [labels_training(:, 1), labels_training(:, 2)]}, ...
+    '$\mathrm{Zeit} \, / \, \mathrm{s}$', ...
+    {'$\mathrm{Pos.} \, / \, \mathrm{rad}$', '$\mathrm{Geschw.} \, / \, \mathrm{rad} \, \mathrm{s}^{-1}$', '$\mathrm{Beschl.} \, / \, \mathrm{rad} \, \mathrm{s}^{-2}$'}, ...
+    {'', '', ''}, ...
+    {{'$\varphi_{T, 1}$', '$\varphi_{T, 2}$'}, {'$\dot{\varphi}_{T, 1}$', '$\dot{\varphi}_{T, 2}$'}, {'$\ddot{\varphi}_{T, 1}$', '$\ddot{\varphi}_{T, 2}$'}}, ...
+    plot_1_name, save_plots, true)
+
+%% Ergebnisse Plotten (nur Trainingsdaten)
 
 % Plot q1, q2
 figure('WindowState','maximized');

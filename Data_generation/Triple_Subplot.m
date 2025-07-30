@@ -2,11 +2,11 @@
 % Autor:      Ole Uphaus
 % Datum:      24.07.2025
 % Beschreibung:
-% Dies ist eine Matlab funktion für einen einfachen Subplot mit 2 Plots für die
+% Dies ist eine Matlab funktion für einen einfachen Subplot mit 3 Plots für die
 % Studienarbeit.
 % -------------------------------------------------------------
 
-function Double_Subplot(x, y_cell, xlabel_str, ylabel_str_cell, title_str_cell, legend_label_cell, filename, save_pdf, print_legend)
+function Triple_Subplot(x, y_cell, xlabel_str, ylabel_str_cell, title_str_cell, legend_label_cell, filename, save_pdf, print_legend)
 
     % Textbreite Latex in cm (um figure genauso groß zu machen - in latex dann
     % skalierung == 1)
@@ -14,7 +14,7 @@ function Double_Subplot(x, y_cell, xlabel_str, ylabel_str_cell, title_str_cell, 
 
     % Größe der Ausgabe definieren (Breite x Höhe in cm)
     fig_width = textwidth_cm;
-    fig_height = 8.5;
+    fig_height = 13;
 
     % Figure mit definierter Größe erzeugen
     figure('Visible', 'on', ...
@@ -23,8 +23,8 @@ function Double_Subplot(x, y_cell, xlabel_str, ylabel_str_cell, title_str_cell, 
            'Color', 'w');
 
     % Subplot erstellen
-    for i = 1:2
-        subplot(2,1,i);
+    for i = 1:3
+        subplot(3,1,i);
 
         % Mehrere Signale plotten (jede Spalte ist ein Signal)
         hold on;
@@ -49,7 +49,7 @@ function Double_Subplot(x, y_cell, xlabel_str, ylabel_str_cell, title_str_cell, 
         set(gca, 'FontSize', 11, 'TickLabelInterpreter', 'latex');
         
         % Beschriftungen
-        if i == 2
+        if i == 3
             xlabel(xlabel_str, 'Interpreter', 'latex', 'FontSize', 11);
         end
         
