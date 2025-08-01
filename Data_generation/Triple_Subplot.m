@@ -39,7 +39,39 @@ function Triple_Subplot(x, y_cell, xlabel_str, ylabel_str_cell, title_str_cell, 
         % Achsenbereich einstellen
         yl = ylim();
         dy = diff(yl);
-        ylim([yl(1) - 0.05*dy, yl(2) + 0.05*dy]);
+        new_ylim = [yl(1) - 0.05*dy, yl(2) + 0.05*dy];
+        ylim(new_ylim);
+
+        % Nullinie etwas dicker machen
+        if new_ylim(1) < 0 && new_ylim(2) > 0
+            % neue Nullinie
+            h0 = line(xlim(), [0 0], ...
+                'Color', [0.8 0.8 0.8], ...
+                'LineStyle', '-', ...
+                'LineWidth', 0.7, ...
+                'HandleVisibility', 'off');  % nicht in der Legende anzeigen
+
+            % Achsenticks künstlich
+            current_xlim = xlim();
+            tick_offset = 0.01;
+
+            tick_left = line([current_xlim(1), (current_xlim(2) - current_xlim(1))*tick_offset], [0 0], ...
+                'Color', [0 0 0], ...
+                'LineStyle', '-', ...
+                'LineWidth', get(gca, 'LineWidth'), ...
+                'HandleVisibility', 'off');  % nicht in der Legende anzeigen
+
+            tick_right = line([(current_xlim(2) - current_xlim(1))*(1 - tick_offset), current_xlim(2)], [0 0], ...
+                'Color', [0 0 0], ...
+                'LineStyle', '-', ...
+                'LineWidth', get(gca, 'LineWidth'), ...
+                'HandleVisibility', 'off');  % nicht in der Legende anzeigen
+        
+            % Linie nach hinten schieben
+            uistack(tick_left, 'bottom');
+            uistack(tick_right, 'bottom');
+            uistack(h0, 'bottom');
+        end
     
         % Alles weiß 
         set(gca, 'Color', 'w'); 
