@@ -19,6 +19,10 @@ Anmerkungen zur Geometrie (Verbindung zum analytischen Modell):
 -->
 <mujoco model='2_FHG_Rob_Model_1'>
 
+  <visual>
+  <global offwidth="3840" offheight="2160"/>
+  </visual>
+
   <compiler coordinate='local'/>
   <option timestep='0.002' gravity="0 0 0"/>
 
