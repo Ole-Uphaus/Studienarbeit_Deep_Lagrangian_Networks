@@ -108,7 +108,7 @@ number_runs = 12;
 rng(42)
 
 % Sollen Simulationsdaten gespeichert werden
-savedata = true;
+savedata = false;
 
 % Sollen plots gespeichert werden
 save_plots = true;

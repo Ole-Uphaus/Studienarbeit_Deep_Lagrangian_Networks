@@ -25,7 +25,7 @@ if DeLaN_dir_path not in sys.path:
 from DeLaN_functions_Ole import *
 
 # Sollen Trainingsdaten erstellt werden
-save_data = True
+save_data = False
 
 # Trainings- und Testdaten laden
 target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
