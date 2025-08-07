@@ -111,7 +111,7 @@ def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legen
     fig_height = 8.5 * cm_to_inch
 
     # Liniendicke
-    line_thickness = 0.35
+    line_thickness = 0.4
 
     # LaTeX Einstellungen
     rcParams.update({
@@ -144,10 +144,15 @@ def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legen
         # Achsgrenzen mit Puffer
         yl = ax.get_ylim()
         dy = yl[1] - yl[0]
-        ax.set_ylim(yl[0] - 0.05 * dy, yl[1] + 0.05 * dy)
+        new_ylim = [yl[0] - 0.05 * dy, yl[1] + 0.05 * dy]
+        ax.set_ylim(new_ylim[0], new_ylim[1])
+
+        # Nullinie etwas dicker machen
+        if (new_ylim[0] < 0) and (new_ylim[1] > 0):
+            ax.axhline(y=0, color=(0.8, 0.8, 0.8), linewidth=0.7, zorder=0)
 
         # liniendicke
-        ax.grid(True, linewidth=line_thickness)  # z. B. 0.3 für feine Gridlines
+        ax.grid(True, linewidth=line_thickness, color=(0.8, 0.8, 0.8))  # z. B. 0.3 für feine Gridlines
         ax.spines['top'].set_linewidth(line_thickness)
         ax.spines['bottom'].set_linewidth(line_thickness)
         ax.spines['left'].set_linewidth(line_thickness)
