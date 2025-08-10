@@ -29,8 +29,8 @@ save_data = False
 
 # Trainings- und Testdaten laden
 target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_06_07_09_09_04_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_08_07_14_54_52_Samples_1200.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_08_07_14_54_52_Samples_1200.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Daten aufbereiten (r, r_p und phi, phi_p heraussuchen) (zusätzlich noch Beschleunigungen - aber nur zur Auswertung)
 r_des_traj = features_training[:, 0]
@@ -41,8 +41,8 @@ phi_p_des_traj = features_training[:, 3]
 phi_pp_des_traj = features_training[:, 5]
 
 # Steuergrößen auswerten
-tau_r_des_traj = labels_training[:, 1]
-tau_phi_des_traj = labels_training[:, 0]
+tau_r_des_traj = labels_training[:, 0]
+tau_phi_des_traj = labels_training[:, 1]
 
 # Trajektorien aufteilen (da immer einzelne durchläufe in Datengenerierung - Dazu wird die Geschwindigkeit untersucht (Geschwindigkeit == 0 am Anfang und Ende))
 threshold = 1.e-10  # Schwellenwert definieren
@@ -266,6 +266,41 @@ if save_data:
 
 # Gesamtzeitvektor erstellen
 t_vec_ges = np.linspace(0, int(move_time*counter/2), int(r_des_traj_divided.shape[1]*counter/2))
+
+# Plots für Studienarbeit
+samples_vec = np.arange(1, phi_des_traj.shape[0] + 1).reshape(-1, 1)
+
+plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\04_Datengenerierung'
+plot_1_name = os.path.join(plot_path, 'Abbildung_r_phi_Rob_1_Mujoco.pdf')
+plot_2_name = os.path.join(plot_path, 'Abbildung_Drehmoment_Rob_1_Mujoco.pdf')
+
+# Plot 1
+double_subplot(
+    samples_vec,
+    [np.concatenate([r_des_traj.reshape(-1, 1), q_vec[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+     np.concatenate([phi_des_traj.reshape(-1, 1), q_vec[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2)],
+    r'Datenpunktindex',
+    [r'$\mathrm{Pos.} \, / \, \mathrm{m}$', r'$\mathrm{Winkel} \, / \, \mathrm{rad}$'],
+    ['', ''],
+    [[r'$r_{d,RS}$', r'$r_{RS}$'], [r'$\varphi_{d,RS}$', r'$\varphi_{RS}$']],
+    plot_1_name,
+    True,
+    True
+)
+
+# Plot 2
+double_subplot(
+    samples_vec,
+    [np.concatenate([tau_r_des_traj.reshape(-1, 1), tau_vec[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+     np.concatenate([tau_phi_des_traj.reshape(-1, 1), tau_vec[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2)],
+    r'Datenpunktindex',
+    [r'$F_{RS} \, / \, \mathrm{N}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$'],
+    ['', ''],
+    [[r'inv. Dyn.', r'Sim.'], [r'inv. Dyn.', r'Sim.']],
+    plot_2_name,
+    True,
+    True
+)
 
 # Soll vs. Ist Gelenkkoordinaten Plotten
 plt.figure()
