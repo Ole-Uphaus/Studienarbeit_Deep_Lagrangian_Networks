@@ -20,49 +20,28 @@ if DeLaN_dir_path not in sys.path:
 from DeLaN_functions_Ole import *
 
 # Trainings- und Testdaten laden
-target_folder = 'Torsionsschwinger_Messungen' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
-features_training, labels_training, features_test, labels_test, Mass_Cor_test = extract_training_data('Measuring_data_Training_Torsionsschwinger.mat', target_folder)
+target_folder = 'Studienarbeit_Data' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen', 'Studienarbeit_Data'
+features_training1, _, _, _, _ = extract_training_data('Variation_Datenmenge_Nruns_10.mat', target_folder)
+features_training2, _, _, _, _ = extract_training_data('Variation_Datenmenge_Nruns_50.mat', target_folder)
 
 # Anzahl der Samples 
-samples_training = np.arange(1, features_training.shape[0] + 1)
-samples_test = np.arange(1, features_test.shape[0] + 1)
+samples_training1 = np.arange(1, features_training1.shape[0] + 1)
+samples_training2 = np.arange(1, features_training2.shape[0] + 1)
 
-# Trainingsdaten plotten
-plt.figure()
+# Plots für Studienarbeit
+plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\05_Training_Regelung'
+plot_1_name = os.path.join(plot_path, 'Abbildung_Variation_Datenanzahl.pdf')
 
-plt.subplot(2, 1, 1)
-plt.plot(samples_training, features_training[:, 0])
-plt.title('q1')
-plt.xlabel('Samples')
-plt.ylabel('q1')
-plt.grid(True)
-
-plt.subplot(2, 1, 2)
-plt.plot(samples_training, features_training[:, 1])
-plt.title('q2')
-plt.xlabel('Samples')
-plt.ylabel('q2')
-plt.grid(True)
-
-plt.tight_layout()
-
-# Testdaten plotten
-plt.figure()
-
-plt.subplot(2, 1, 1)
-plt.plot(samples_test, features_test[:, 0])
-plt.title('q1')
-plt.xlabel('Samples')
-plt.ylabel('q1')
-plt.grid(True)
-
-plt.subplot(2, 1, 2)
-plt.plot(samples_test, features_test[:, 1])
-plt.title('q2')
-plt.xlabel('Samples')
-plt.ylabel('q2')
-plt.grid(True)
-
-plt.tight_layout()
-
-plt.show()
+# Plot 1
+double_subplot_varx(
+    [samples_training1, samples_training2],
+    [features_training1[:, 0].reshape(-1, 1), 
+     features_training2[:, 0].reshape(-1, 1)],
+    [r'', r'Datenpunktindex'],
+    [r'$r_{RS} \, / \, \mathrm{m}$', r'$r_{RS} \, / \, \mathrm{m}$'],
+    [r'$N_r = 8$', r'$N_r = 40$'],
+    [[r'$r_{d,RS}$', r'$r_{RS}$'], [r'$\varphi_{d,RS}$', r'$\varphi_{RS}$']],
+    plot_1_name,
+    True,
+    False
+)
