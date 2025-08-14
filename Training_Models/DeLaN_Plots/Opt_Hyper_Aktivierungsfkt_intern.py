@@ -36,7 +36,7 @@ hyper_param = {
     # Netzparameter
     'hidden_width': 64,
     'hidden_depth': 2,
-    'activation_fnc': 'elu',
+    'activation_fnc': 'relu',
     'activation_fnc_diag': 'softplus',
 
     # Initialisierung
@@ -84,8 +84,8 @@ DeLaN_network, results = Delan_Train_Eval(
     )
 
 # Ergebnisse entpacken
-training_loss_history_ELU = np.array(results['training_loss_history'])
-test_loss_history_ELU = np.array(results['test_loss_history'])
+training_loss_history_ReLU = np.array(results['training_loss_history'])
+test_loss_history_ReLU = np.array(results['test_loss_history'])
 
 ###################### Konfiguration Softplus ######################
 hyper_param['activation_fnc'] = 'softplus'
@@ -106,7 +106,7 @@ training_loss_history_Softplus = np.array(results['training_loss_history'])
 test_loss_history_Softplus = np.array(results['test_loss_history'])
 
 ###################### Konfiguration ReLU ######################
-hyper_param['activation_fnc'] = 'relu'
+hyper_param['activation_fnc'] = 'elu'
 
 # Modell trainieren
 DeLaN_network, results = Delan_Train_Eval(
@@ -120,8 +120,8 @@ DeLaN_network, results = Delan_Train_Eval(
     )
 
 # Ergebnisse entpacken
-training_loss_history_ReLU = np.array(results['training_loss_history'])
-test_loss_history_ReLU = np.array(results['test_loss_history'])
+training_loss_history_ELU = np.array(results['training_loss_history'])
+test_loss_history_ELU = np.array(results['test_loss_history'])
 
 # Ergebnisse plotten
 plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
