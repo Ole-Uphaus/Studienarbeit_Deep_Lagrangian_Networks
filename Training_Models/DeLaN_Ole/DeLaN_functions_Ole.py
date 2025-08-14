@@ -124,7 +124,7 @@ def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legen
         "axes.titlesize": 12,  
         "xtick.labelsize": 11,
         "ytick.labelsize": 11,
-        "legend.fontsize": 7
+        "legend.fontsize": 9
     })
 
     fig, axes = plt.subplots(2, 1, figsize=(fig_width, fig_height), dpi=300)
@@ -203,7 +203,7 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
         "axes.titlesize": 12,  
         "xtick.labelsize": 11,
         "ytick.labelsize": 11,
-        "legend.fontsize": 7
+        "legend.fontsize": 9
     })
 
     # 2 Zeilen × 2 Spalten
@@ -285,7 +285,7 @@ def double_subplot_varx(x_list, y_list, xlabel_str_list, ylabel_str_list, title_
         "axes.titlesize": 12,  
         "xtick.labelsize": 11,
         "ytick.labelsize": 11,
-        "legend.fontsize": 7
+        "legend.fontsize": 9
     })
 
     fig, axes = plt.subplots(2, 1, figsize=(fig_width, fig_height), dpi=300)
@@ -363,7 +363,7 @@ def single_plot_log(x, y_data, xlabel_str, ylabel_str, title_str, legend_label_l
         "axes.titlesize": 12,  
         "xtick.labelsize": 11,
         "ytick.labelsize": 11,
-        "legend.fontsize": 7
+        "legend.fontsize": 9
     })
 
     fig, ax = plt.subplots(1, 1, figsize=(fig_width, fig_height), dpi=300)
