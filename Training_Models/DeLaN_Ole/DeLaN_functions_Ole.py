@@ -257,7 +257,7 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
     for ax in axes[-2:]:
         ax.set_xlabel(xlabel_str)
 
-    fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.12, hspace=0.45, wspace=0.4)
+    fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.12, hspace=0.45, wspace=0.45)
     # plt.tight_layout()
 
     if save_pdf:

@@ -135,7 +135,7 @@ quad_subplot(
      np.concatenate([c_test[:, 1].reshape(-1, 1), Mass_Cor_test[:, 4].reshape(-1, 1)], axis=1).reshape(-1, 2), 
      np.concatenate([g_test[:, 1].reshape(-1, 1), Mass_Cor_test[:, 6].reshape(-1, 1)], axis=1).reshape(-1, 2)],
     r'Samples',
-    [r'$F_{RS} \, / \, \mathrm{N}$', r'$F_{RS} \, / \, \mathrm{N}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$'],
+    [r'$c_{RS,1} \, / \, \mathrm{N}$',r'$k^{(c)}_{RS,1} \, / \, \mathrm{N}$',r'$c_{RS,2} \, / \, \mathrm{Nm}$',r'$k^{(c)}_{RS,2} \, / \, \mathrm{Nm}$'],
     ['', '', '', ''],
     [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
     plot_3_name,
