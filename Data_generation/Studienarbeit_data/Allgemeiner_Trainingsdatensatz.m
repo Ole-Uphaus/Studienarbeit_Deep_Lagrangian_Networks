@@ -152,7 +152,7 @@ number_runs = 37;
 Rob_Model = 1;
 
 % Seed für reproduzierbare Ergebnisse
-rng(42)
+rng(40)
 
 % Sollen Simulationsdaten gespeichert werden
 savedata = true;
@@ -169,7 +169,7 @@ addpath(target_folder);
 
 if Rob_Model == 1
     % Startpunkte
-    q1_0 = random_init(number_runs, 0.5, 1.2, false); % Bsp. Intervall r [0, 0.5]
+    q1_0 = random_init(number_runs, 0.5, 1, false); % Bsp. Intervall r [0, 0.5]
     q2_0 = random_init(number_runs, 0, pi, false);  % Bsp. Intervall phi [0, pi]
     
     % Differenzen für Endpunkte
