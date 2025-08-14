@@ -240,8 +240,8 @@ if __name__ == "__main__":
         # Netzparameter
         'hidden_width': 64,
         'hidden_depth': 2,
-        'activation_fnc': 'elu',
-        'activation_fnc_diag': 'relu',
+        'activation_fnc': 'relu',
+        'activation_fnc_diag': 'softplus',
 
         # Initialisierung
         'bias_init_constant': 1.e-3,
@@ -255,13 +255,13 @@ if __name__ == "__main__":
         'batch_size': 512,
         'learning_rate': 5.e-4,
         'weight_decay': 1.e-4,
-        'n_epoch': 500,
+        'n_epoch': 1000,
 
         # Reibungsmodell
         'use_friction_model': False,
         'friction_model_init_d': [0.01, 0.01],
-        'friction_model_init_c': [3.01, 0.01],
-        'friction_model_init_s': [2.01, 0.01],
+        'friction_model_init_c': [0.01, 0.01],
+        'friction_model_init_s': [0.01, 0.01],
         'friction_model_init_v': [0.01, 0.01],
         'friction_epsilon': 100.0,
 
@@ -272,9 +272,9 @@ if __name__ == "__main__":
         'save_model': False}
 
     # Trainings- und Testdaten laden
-    target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
-    features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-    _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+    target_folder = 'Studienarbeit_Data' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen' 'Studienarbeit_Data'
+    features_training, labels_training, _, _, _ = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Trainingsdaten
+    _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
     # Modell trainieren
     DeLaN_network, results = Delan_Train_Eval(
