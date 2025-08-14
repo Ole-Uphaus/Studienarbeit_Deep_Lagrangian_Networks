@@ -88,7 +88,7 @@ function Quad_Subplot(x, y_cell, xlabel_str, ylabel_str_cell, title_str_cell, le
         ylabel(ylabel_str_cell{i}, 'Interpreter', 'latex', 'FontSize', 11);
         title(title_str_cell{i}, 'Interpreter', 'latex', 'FontSize', 12);
         if print_legend
-            legend(legend_label_cell{i}, 'Interpreter', 'latex', 'FontSize', 11, 'Location','best');
+            legend(legend_label_cell{i}, 'Interpreter', 'latex', 'FontSize', 9, 'Location','best');
         end
     
         % Rand festlegen

@@ -81,7 +81,7 @@ function Single_Plot(x, y, xlabel_str, ylabel_str, title_str, legend_label, file
     ylabel(ylabel_str, 'Interpreter', 'latex', 'FontSize', 11);
     title(title_str, 'Interpreter', 'latex', 'FontSize', 12);
     if print_legend
-        legend(legend_label, 'Interpreter', 'latex', 'FontSize', 11, 'Location','best');
+        legend(legend_label, 'Interpreter', 'latex', 'FontSize', 9, 'Location','best');
     end
 
     % Rand festlegen

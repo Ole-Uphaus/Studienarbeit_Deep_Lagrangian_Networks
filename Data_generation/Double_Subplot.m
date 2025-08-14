@@ -88,7 +88,7 @@ function Double_Subplot(x, y_cell, xlabel_str, ylabel_str_cell, title_str_cell, 
         ylabel(ylabel_str_cell{i}, 'Interpreter', 'latex', 'FontSize', 11);
         title(title_str_cell{i}, 'Interpreter', 'latex', 'FontSize', 12);
         if print_legend
-            legend(legend_label_cell{i}, 'Interpreter', 'latex', 'FontSize', 11, 'Location','northeast');
+            legend(legend_label_cell{i}, 'Interpreter', 'latex', 'FontSize', 9, 'Location','northeast');
         end
     
         % Rand festlegen
