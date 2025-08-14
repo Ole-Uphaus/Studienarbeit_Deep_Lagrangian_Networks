@@ -49,7 +49,7 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 10,
+    'n_epoch': 2000,
 
     # Reibungsmodell
     'use_friction_model': False,
@@ -95,7 +95,10 @@ tau_hat_test = results['tau_hat_test']
 samples_vec = np.arange(1, H_test.shape[0] + 1).reshape(-1, 1)
 
 plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
-plot_1_name = os.path.join(plot_path, 'test_plot.pdf')
+plot_1_name = os.path.join(plot_path, 'Opt_Hyper_inv_dyn.pdf')
+plot_2_name = os.path.join(plot_path, 'Opt_Hyper_loss.pdf')
+plot_3_name = os.path.join(plot_path, 'Opt_Hyper_coriolis_konservativ.pdf')
+plot_4_name = os.path.join(plot_path, 'Opt_Hyper_Massenmatrix.pdf')
 
 # Plot 1 Schätzung inverse Dynamik
 double_subplot(
@@ -107,7 +110,7 @@ double_subplot(
     ['', ''],
     [['DeLaN', 'GT'], ['DeLaN', 'GT']],
     plot_1_name,
-    False,
+    True,
     True
 )
 
@@ -119,12 +122,12 @@ single_plot_log(
     r'$\mathrm{Loss}$',
     '',
     ['Training', 'Test'],
-    plot_1_name,
-    False,
+    plot_2_name,
+    True,
     True
 )
 
-# Plot 3 Coriolisterme und nicht-konservative Kräfte
+# Plot 3 Coriolisterme und konservative Kräfte
 quad_subplot(
     samples_vec,
     [np.concatenate([c_test[:, 0].reshape(-1, 1), Mass_Cor_test[:, 3].reshape(-1, 1)], axis=1).reshape(-1, 2), 
@@ -135,8 +138,8 @@ quad_subplot(
     [r'$F_{RS} \, / \, \mathrm{N}$', r'$F_{RS} \, / \, \mathrm{N}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$'],
     ['', '', '', ''],
     [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
-    plot_1_name,
-    False,
+    plot_3_name,
+    True,
     True
 )
 
@@ -151,7 +154,7 @@ quad_subplot(
     [r'$M_{RS,11} \, / \, \mathrm{kg}$',r'$M_{RS,12} \, / \, \mathrm{kg} \, \mathrm{m}$',r'$M_{RS,21} \, / \, \mathrm{kg} \, \mathrm{m}$',r'$M_{RS,22} \, / \, \mathrm{kg} \, \mathrm{m}^2$'],
     ['', '', '', ''],
     [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
-    plot_1_name,
-    False,
+    plot_4_name,
+    True,
     True
 )
