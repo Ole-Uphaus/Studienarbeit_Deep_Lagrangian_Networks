@@ -107,7 +107,7 @@ test_loss_history_Softplus = np.array(results['test_loss_history'])
 
 # Ergebnisse plotten
 plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
-plot_1_name = os.path.join(plot_path, 'Opt_Hyper_Aktivierungsfunktion_Intern.pdf')
+plot_1_name = os.path.join(plot_path, 'Opt_Hyper_Aktivierungsfunktion_diag.pdf')
 
 # Plot 2 Loss Entwicklung
 single_plot_log(
