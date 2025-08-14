@@ -343,8 +343,6 @@ def double_subplot_varx(x_list, y_list, xlabel_str_list, ylabel_str_list, title_
 
 # Einzelner Plot logarithmisch
 def single_plot_log(x, y_data, xlabel_str, ylabel_str, title_str, legend_label_list, filename, save_pdf=True, print_legend=True):
-    import matplotlib.pyplot as plt
-    from matplotlib import rcParams
 
     # Größe wie in LaTeX (13.75 x 8.5 cm)
     cm_to_inch = 1 / 2.54
