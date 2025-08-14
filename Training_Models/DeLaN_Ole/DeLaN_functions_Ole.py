@@ -257,7 +257,7 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
     for ax in axes[-2:]:
         ax.set_xlabel(xlabel_str)
 
-    fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.12, hspace=0.45, wspace=0.35)
+    fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.12, hspace=0.45, wspace=0.4)
     # plt.tight_layout()
 
     if save_pdf:
@@ -349,7 +349,7 @@ def single_plot_log(x, y_data, xlabel_str, ylabel_str, title_str, legend_label_l
     # Größe wie in LaTeX (13.75 x 8.5 cm)
     cm_to_inch = 1 / 2.54
     fig_width = 13.75 * cm_to_inch
-    fig_height = 8.5 * cm_to_inch
+    fig_height = 5 * cm_to_inch
 
     # Liniendicke
     line_thickness = 0.4
@@ -412,7 +412,7 @@ def single_plot_log(x, y_data, xlabel_str, ylabel_str, title_str, legend_label_l
 
     ax.set_xlabel(xlabel_str)
 
-    fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.13)
+    fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.23)
 
     if save_pdf:
         fig.savefig(filename, transparent=True, format='pdf')
