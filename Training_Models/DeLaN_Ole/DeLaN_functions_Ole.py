@@ -102,6 +102,8 @@ def eval_friction_graph(model, device):
 
     return qd_numpy, tau_fric_numpy
 
+################## Plot Functions ##################
+
 # Doppelter subplot
 def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_label_list, filename, save_pdf=True, print_legend=True):
     
@@ -122,7 +124,7 @@ def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legen
         "axes.titlesize": 12,  
         "xtick.labelsize": 11,
         "ytick.labelsize": 11,
-        "legend.fontsize": 9
+        "legend.fontsize": 7
     })
 
     fig, axes = plt.subplots(2, 1, figsize=(fig_width, fig_height), dpi=300)
@@ -201,7 +203,7 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
         "axes.titlesize": 12,  
         "xtick.labelsize": 11,
         "ytick.labelsize": 11,
-        "legend.fontsize": 9
+        "legend.fontsize": 7
     })
 
     # 2 Zeilen × 2 Spalten
@@ -241,7 +243,7 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
 
         if print_legend:
             legend = ax.legend(legend_label_list[i], # Legende wie in matlab
-                loc='upper right',
+                loc='best',
                 frameon=True,         # Rahmen anzeigen (MATLAB-like)
                 edgecolor='black',    # Rahmenfarbe
                 framealpha=1.0,       # Kein transparenter Hintergrund
@@ -283,7 +285,7 @@ def double_subplot_varx(x_list, y_list, xlabel_str_list, ylabel_str_list, title_
         "axes.titlesize": 12,  
         "xtick.labelsize": 11,
         "ytick.labelsize": 11,
-        "legend.fontsize": 9
+        "legend.fontsize": 7
     })
 
     fig, axes = plt.subplots(2, 1, figsize=(fig_width, fig_height), dpi=300)
@@ -361,7 +363,7 @@ def single_plot_log(x, y_data, xlabel_str, ylabel_str, title_str, legend_label_l
         "axes.titlesize": 12,  
         "xtick.labelsize": 11,
         "ytick.labelsize": 11,
-        "legend.fontsize": 9
+        "legend.fontsize": 7
     })
 
     fig, ax = plt.subplots(1, 1, figsize=(fig_width, fig_height), dpi=300)
