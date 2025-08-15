@@ -213,7 +213,7 @@ else:
         np.concatenate([tau_hat_test[:, 1].reshape(-1, 1), labels_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2), 
         np.concatenate([tau_b_hat[:, 1].reshape(-1, 1), tau_b[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
         r'Samples',
-        [r'$F_{RS} \, / \, \mathrm{N}$',r'$\tau^{(tr)}_{RS,1} \, / \, \mathrm{N}$',r'$\tau_{RS} \, / \, \mathrm{Nm}$',r'$\tau^{(tr)}_{RS,2} \, / \, \mathrm{Nm}$'],
+        [r'$F_{RS} \, / \, \mathrm{N}$',r'$F^{(tr)}_{RS} \, / \, \mathrm{N}$',r'$\tau_{RS} \, / \, \mathrm{Nm}$',r'$\tau^{(tr)}_{RS} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
         [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
         plot_1_name,

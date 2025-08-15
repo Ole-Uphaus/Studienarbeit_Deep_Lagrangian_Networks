@@ -181,21 +181,29 @@ else:
     samples_vec = np.arange(1, H_test.shape[0] + 1).reshape(-1, 1)
 
     plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
-    plot_1_name = os.path.join(plot_path, 'Training_Doppelpendel_inv_dyn.pdf')
+    plot_1_name = os.path.join(plot_path, 'Training_Doppelpendel_inv_dyn_beschl.pdf')
     plot_3_name = os.path.join(plot_path, 'Training_Doppelpendel_coriolis_konservativ.pdf')
-    plot_4_name = os.path.join(plot_path, 'Training_Doppelpendel_Massenmatrix.pdf')
 
-    # Plot 1 Schätzung inverse Dynamik
-    double_subplot(
+    # Plot 1 Schätzung inverse Dynamik + Beschleunigungskräfte
+    q_pp = features_test[:, (4, 5)]
+    M = np.stack([np.stack([Mass_Cor_test[:, 0], Mass_Cor_test[:, 1]], axis=1),
+                np.stack([Mass_Cor_test[:, 1], Mass_Cor_test[:, 2]], axis=1)], axis=1)
+
+    tau_b = np.einsum('bij, bj -> bi', M, q_pp)
+    tau_b_hat = np.einsum('bij, bj -> bi', H_test, q_pp)
+
+    quad_subplot(
         samples_vec,
         [np.concatenate([tau_hat_test[:, 0].reshape(-1, 1), labels_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
-        np.concatenate([tau_hat_test[:, 1].reshape(-1, 1), labels_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
+        np.concatenate([tau_b_hat[:, 0].reshape(-1, 1), tau_b[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2),
+        np.concatenate([tau_hat_test[:, 1].reshape(-1, 1), labels_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+        np.concatenate([tau_b_hat[:, 1].reshape(-1, 1), tau_b[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
         r'Samples',
-        [r'$\tau_{SS, 1} \, / \, \mathrm{Nm}$', r'$\tau_{SS, 2} \, / \, \mathrm{Nm}$'],
-        ['', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT']],
+        [r'$\tau_{SS, 1} \, / \, \mathrm{Nm}$',r'$\tau_{SS, 1}^{(tr)} \, / \, \mathrm{Nm}$',r'$\tau_{SS, 2} \, / \, \mathrm{Nm}$',r'$\tau_{SS, 1}^{(tr)} \, / \, \mathrm{Nm}$'],
+        ['', '', '', ''],
+        [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
         plot_1_name,
-        save_plots,
+        True,
         True
     )
 
@@ -211,22 +219,6 @@ else:
         ['', '', '', ''],
         [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
         plot_3_name,
-        save_plots,
-        True
-    )
-
-    # Plot 4 Massenmatrix
-    quad_subplot(
-        samples_vec,
-        [np.concatenate([H_test[:, 0, 0].reshape(-1, 1), Mass_Cor_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
-        np.concatenate([H_test[:, 0, 1].reshape(-1, 1), Mass_Cor_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2),
-        np.concatenate([H_test[:, 1, 0].reshape(-1, 1), Mass_Cor_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2), 
-        np.concatenate([H_test[:, 1, 1].reshape(-1, 1), Mass_Cor_test[:, 2].reshape(-1, 1)], axis=1).reshape(-1, 2)],
-        r'Samples',
-        [r'$M_{SS,11} \, / \, \mathrm{kg} \, \mathrm{m}^2$',r'$M_{SS,12} \, / \, \mathrm{kg} \, \mathrm{m}^2$',r'$M_{SS,21} \, / \, \mathrm{kg} \, \mathrm{m}^2$',r'$M_{SS,22} \, / \, \mathrm{kg} \, \mathrm{m}^2$'],
-        ['', '', '', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
-        plot_4_name,
         save_plots,
         True
     )
