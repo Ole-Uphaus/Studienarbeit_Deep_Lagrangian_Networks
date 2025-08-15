@@ -11,6 +11,7 @@ import numpy as np
 import torch
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
+from matplotlib.ticker import ScalarFormatter
 
 def extract_training_data(file_name, target_folder):
     # Pfad des aktuellen Skriptes
@@ -223,6 +224,13 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
         ax.grid(True)
         ax.set_facecolor('white')
         ax.tick_params(axis='both', which='major', top=True, right=True, direction='in', length=4, width=line_thickness)
+
+        # Y-Achse Formatieren 10^-x
+        yfmt = ScalarFormatter(useMathText=True)
+        yfmt.set_scientific(True)
+        yfmt.set_powerlimits((0, 0))   # immer Sci-Notation
+        ax.yaxis.set_major_formatter(yfmt)
+        ax.ticklabel_format(axis='x', style='plain', useOffset=False)
 
         # Achsgrenzen mit Puffer
         yl = ax.get_ylim()
