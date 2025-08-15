@@ -404,7 +404,8 @@ def single_plot_log(x, y_data, xlabel_str, ylabel_str, title_str, legend_label_l
             framealpha=1.0,
             fancybox=False,
             borderpad=0.3,
-            handletextpad=0.5
+            handletextpad=0.5,
+            labelspacing=0.2
         )
         legend.get_frame().set_linewidth(line_thickness)
 
