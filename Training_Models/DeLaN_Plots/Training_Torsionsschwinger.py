@@ -97,7 +97,7 @@ if just_plot == False:
     tau_hat_test = results['tau_hat_test']
 
     # Ergebnisse plotten
-    save_plots = True
+    save_plots = False
     samples_vec = np.arange(1, H_test.shape[0] + 1).reshape(-1, 1)
 
     plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'

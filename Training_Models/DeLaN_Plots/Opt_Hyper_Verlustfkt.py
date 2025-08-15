@@ -236,7 +236,7 @@ if just_plot == False:
         '',
         ['Vor.', 'inv.', 'Ener.', 'inv. + Vor.', 'Vor. + Ener.', 'inv. + Vor. + Ener.'],
         plot_1_name,
-        True,
+        False,
         True
     )
 

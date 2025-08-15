@@ -154,7 +154,7 @@ if just_plot == False:
         '',
         ['ELU', 'Softplus', 'ReLU'],
         plot_1_name,
-        True,
+        False,
         True
     )
 

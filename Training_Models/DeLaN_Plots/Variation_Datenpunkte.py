@@ -129,7 +129,7 @@ if just_plot == False:
         ['', ''],
         [[r'DeLaN $N_r=10$', r'DeLaN $N_r=50$', 'GT'], [r'DeLaN $N_r=10$', r'DeLaN $N_r=50$', 'GT']],
         plot_1_name,
-        True,
+        False,
         True
     )
 

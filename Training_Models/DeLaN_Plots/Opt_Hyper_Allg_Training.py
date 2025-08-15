@@ -115,7 +115,7 @@ if just_plot == False:
         ['', ''],
         [['DeLaN', 'GT'], ['DeLaN', 'GT']],
         plot_1_name,
-        True,
+        False,
         True
     )
 
@@ -128,7 +128,7 @@ if just_plot == False:
         '',
         ['Training', 'Test'],
         plot_2_name,
-        True,
+        False,
         True
     )
 
@@ -144,7 +144,7 @@ if just_plot == False:
         ['', '', '', ''],
         [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
         plot_3_name,
-        True,
+        False,
         True
     )
 
@@ -160,7 +160,7 @@ if just_plot == False:
         ['', '', '', ''],
         [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
         plot_4_name,
-        True,
+        False,
         True
     )
 
