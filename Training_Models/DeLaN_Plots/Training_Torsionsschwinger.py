@@ -201,10 +201,11 @@ else:
         r'Samples',
         [r'$\tau_{T, 1} \, / \, \mathrm{Nm}$',r'$\tau_{T, 1}^{(tr)} \, / \, \mathrm{Nm}$',r'$\tau_{T, 2} \, / \, \mathrm{Nm}$',r'$\tau_{T, 1}^{(tr)} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
+        [[], [], ['DeLaN', 'GT'], []],
         plot_1_name,
         True,
-        True
+        True,
+        'upper right'
     )
 
     # Plot 3 Coriolisterme und konservative Kräfte
@@ -217,8 +218,9 @@ else:
         r'Samples',
         [r'$c_{T,1} \, / \, \mathrm{Nm}$',r'$k^{(c)}_{T,1} \, / \, \mathrm{Nm}$',r'$c_{T,2} \, / \, \mathrm{Nm}$',r'$k^{(c)}_{T,2} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
+        [['DeLaN', 'GT'], [], [], []],
         plot_3_name,
         save_plots,
-        True
+        True,
+        'upper right'
     )

@@ -159,7 +159,7 @@ else:
         r'Samples',
         [r'$F_{RS} \, / \, \mathrm{N}$',r'$F_{RS}^{(f)} \, / \, \mathrm{N}$',r'$\tau_{RS} \, / \, \mathrm{Nm}$',r'$\tau_{RS}^{(f)} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
+        [['DeLaN', 'GT'], [], [], []],
         plot_1_name,
         True,
         True

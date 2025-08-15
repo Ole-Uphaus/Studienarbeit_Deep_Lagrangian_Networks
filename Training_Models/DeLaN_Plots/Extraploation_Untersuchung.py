@@ -155,8 +155,9 @@ else:
         r'Samples',
         [r'$F_{RS} \, / \, \mathrm{N}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$'],
         ['', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT']],
+        [['DeLaN', 'GT'], []],
         plot_1_name,
         True,
-        True
+        True,
+        'upper right'
     )

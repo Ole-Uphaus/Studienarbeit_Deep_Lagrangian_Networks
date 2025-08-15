@@ -201,7 +201,7 @@ else:
         r'Samples',
         [r'$\tau_{SS, 1} \, / \, \mathrm{Nm}$',r'$\tau_{SS, 1}^{(tr)} \, / \, \mathrm{Nm}$',r'$\tau_{SS, 2} \, / \, \mathrm{Nm}$',r'$\tau_{SS, 1}^{(tr)} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
+        [[], [], [], ['DeLaN', 'GT']],
         plot_1_name,
         True,
         True
@@ -217,7 +217,7 @@ else:
         r'Samples',
         [r'$c_{SS,1} \, / \, \mathrm{Nm}$',r'$k^{(c)}_{SS,1} \, / \, \mathrm{Nm}$',r'$c_{SS,2} \, / \, \mathrm{Nm}$',r'$k^{(c)}_{SS,2} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
+        [[], [], ['DeLaN', 'GT'], []],
         plot_3_name,
         save_plots,
         True

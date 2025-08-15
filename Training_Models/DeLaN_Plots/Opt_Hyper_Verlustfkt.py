@@ -268,11 +268,11 @@ else:
     # Plot 2 Loss Entwicklung
     single_plot_log(
         test_loss_history_Vor_Ener[:, 0],
-        np.concatenate([test_loss_history_Vor[:, 1].reshape(-1, 1), test_loss_history_inv[:, 1].reshape(-1, 1), test_loss_history_Ener[:, 1].reshape(-1, 1), test_loss_history_inv_Vor[:, 1].reshape(-1, 1), test_loss_history_Vor_Ener[:, 1].reshape(-1, 1), test_loss_history_inv_Vor_Ener[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 6),
+        np.concatenate([test_loss_history_Vor[:, 1].reshape(-1, 1), test_loss_history_inv[:, 1].reshape(-1, 1), test_loss_history_Ener[:, 1].reshape(-1, 1), test_loss_history_inv_Vor[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 4),
         r'Epochen',
         r'$\mathrm{Test-Loss}$',
         '',
-        ['Vor.', 'inv.', 'Ener.', 'inv. + Vor.', 'Vor. + Ener.', 'inv. + Vor. + Ener.'],
+        ['Vor.', 'inv.', 'Ener.', 'inv. + Vor.'],
         plot_1_name,
         True,
         True

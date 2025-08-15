@@ -176,7 +176,7 @@ else:
         r'Samples',
         [r'$F_{RS} \, / \, \mathrm{N}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$'],
         ['', ''],
-        [[r'DeLaN $N_r=10$', r'DeLaN $N_r=50$', 'GT'], [r'DeLaN $N_r=10$', r'DeLaN $N_r=50$', 'GT']],
+        [[r'DeLaN $N_r=10$', r'DeLaN $N_r=50$', 'GT'], []],
         plot_1_name,
         True,
         True

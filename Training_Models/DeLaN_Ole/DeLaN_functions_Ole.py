@@ -106,7 +106,7 @@ def eval_friction_graph(model, device):
 ################## Plot Functions ##################
 
 # Doppelter subplot
-def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_label_list, filename, save_pdf=True, print_legend=True):
+def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_label_list, filename, save_pdf=True, print_legend=True, legend_loc='best'):
     
     # Größe wie in LaTeX (13.75 x 8.5 cm)
     cm_to_inch = 1 / 2.54
@@ -144,6 +144,13 @@ def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legen
         ax.set_facecolor('white')
         ax.tick_params(axis='both', which='major', top=True, right=True, direction='in', length=4, width=line_thickness)
 
+        # Y-Achse Formatieren 10^-x
+        yfmt = ScalarFormatter(useMathText=True)
+        yfmt.set_scientific(True)
+        yfmt.set_powerlimits((0, 2))   # immer Sci-Notation
+        ax.yaxis.set_major_formatter(yfmt)
+        ax.ticklabel_format(axis='x', style='plain', useOffset=False)
+
         # Achsgrenzen mit Puffer
         yl = ax.get_ylim()
         dy = yl[1] - yl[0]
@@ -161,15 +168,16 @@ def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legen
         ax.spines['left'].set_linewidth(line_thickness)
         ax.spines['right'].set_linewidth(line_thickness)
 
-        if print_legend:
+        if print_legend and legend_label_list[i]:
             legend = ax.legend(legend_label_list[i], # Legende wie in matlab
-                loc='upper right',
+                loc=legend_loc,
                 frameon=True,         # Rahmen anzeigen (MATLAB-like)
                 edgecolor='black',    # Rahmenfarbe
                 framealpha=1.0,       # Kein transparenter Hintergrund
                 fancybox=False,       # Kein abgerundeter Rahmen
                 borderpad=0.3,        # Weniger Padding im Rahmen
-                handletextpad=0.5     # Abstand zwischen Linie und Text
+                handletextpad=0.5,     # Abstand zwischen Linie und Text
+                labelspacing=0.2
                 )
             legend.get_frame().set_linewidth(line_thickness)
 
@@ -185,7 +193,7 @@ def double_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legen
 
 
 # Vierfacher subplot
-def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_label_list, filename, save_pdf=True, print_legend=True):
+def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_label_list, filename, save_pdf=True, print_legend=True, legend_loc='best'):
     
     # Größe wie in LaTeX (13.75 x 8.5 cm)
     cm_to_inch = 1 / 2.54
@@ -228,7 +236,7 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
         # Y-Achse Formatieren 10^-x
         yfmt = ScalarFormatter(useMathText=True)
         yfmt.set_scientific(True)
-        yfmt.set_powerlimits((0, 0))   # immer Sci-Notation
+        yfmt.set_powerlimits((0, 2))   # immer Sci-Notation
         ax.yaxis.set_major_formatter(yfmt)
         ax.ticklabel_format(axis='x', style='plain', useOffset=False)
 
@@ -249,15 +257,16 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
         ax.spines['left'].set_linewidth(line_thickness)
         ax.spines['right'].set_linewidth(line_thickness)
 
-        if print_legend:
+        if print_legend and legend_label_list[i]:
             legend = ax.legend(legend_label_list[i], # Legende wie in matlab
-                loc='best',
+                loc=legend_loc,
                 frameon=True,         # Rahmen anzeigen (MATLAB-like)
                 edgecolor='black',    # Rahmenfarbe
                 framealpha=1.0,       # Kein transparenter Hintergrund
                 fancybox=False,       # Kein abgerundeter Rahmen
                 borderpad=0.3,        # Weniger Padding im Rahmen
-                handletextpad=0.5     # Abstand zwischen Linie und Text
+                handletextpad=0.5,     # Abstand zwischen Linie und Text
+                labelspacing=0.2
                 )
             legend.get_frame().set_linewidth(line_thickness)
 
@@ -265,7 +274,7 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
     for ax in axes[-2:]:
         ax.set_xlabel(xlabel_str)
 
-    fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.12, hspace=0.45, wspace=0.45)
+    fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.12, hspace=0.45, wspace=0.4)
     # plt.tight_layout()
 
     if save_pdf:
@@ -274,7 +283,7 @@ def quad_subplot(x, y_list, xlabel_str, ylabel_str_list, title_str_list, legend_
     plt.show()
 
 # Doppelter subplot mit variablen x-Achsenbeschriftungen 
-def double_subplot_varx(x_list, y_list, xlabel_str_list, ylabel_str_list, title_str_list, legend_label_list, filename, save_pdf=True, print_legend=True):
+def double_subplot_varx(x_list, y_list, xlabel_str_list, ylabel_str_list, title_str_list, legend_label_list, filename, save_pdf=True, print_legend=True, legend_loc='best'):
     
     # Größe wie in LaTeX (13.75 x 8.5 cm)
     cm_to_inch = 1 / 2.54
@@ -313,6 +322,13 @@ def double_subplot_varx(x_list, y_list, xlabel_str_list, ylabel_str_list, title_
         ax.set_facecolor('white')
         ax.tick_params(axis='both', which='major', top=True, right=True, direction='in', length=4, width=line_thickness)
 
+        # Y-Achse Formatieren 10^-x
+        yfmt = ScalarFormatter(useMathText=True)
+        yfmt.set_scientific(True)
+        yfmt.set_powerlimits((0, 0))   # immer Sci-Notation
+        ax.yaxis.set_major_formatter(yfmt)
+        ax.ticklabel_format(axis='x', style='plain', useOffset=False)
+
         # Achsgrenzen mit Puffer
         yl = ax.get_ylim()
         dy = yl[1] - yl[0]
@@ -330,15 +346,16 @@ def double_subplot_varx(x_list, y_list, xlabel_str_list, ylabel_str_list, title_
         ax.spines['left'].set_linewidth(line_thickness)
         ax.spines['right'].set_linewidth(line_thickness)
 
-        if print_legend:
+        if print_legend and legend_label_list[i]:
             legend = ax.legend(legend_label_list[i], # Legende wie in matlab
-                loc='upper right',
+                loc=legend_loc,
                 frameon=True,         # Rahmen anzeigen (MATLAB-like)
                 edgecolor='black',    # Rahmenfarbe
                 framealpha=1.0,       # Kein transparenter Hintergrund
                 fancybox=False,       # Kein abgerundeter Rahmen
                 borderpad=0.3,        # Weniger Padding im Rahmen
-                handletextpad=0.5     # Abstand zwischen Linie und Text
+                handletextpad=0.5,     # Abstand zwischen Linie und Text
+                labelspacing=0.2
                 )
             legend.get_frame().set_linewidth(line_thickness)
 
@@ -350,7 +367,7 @@ def double_subplot_varx(x_list, y_list, xlabel_str_list, ylabel_str_list, title_
     plt.show()
 
 # Einzelner Plot logarithmisch
-def single_plot_log(x, y_data, xlabel_str, ylabel_str, title_str, legend_label_list, filename, save_pdf=True, print_legend=True):
+def single_plot_log(x, y_data, xlabel_str, ylabel_str, title_str, legend_label_list, filename, save_pdf=True, print_legend=True, legend_loc='best'):
 
     # Größe wie in LaTeX (13.75 x 8.5 cm)
     cm_to_inch = 1 / 2.54
@@ -406,7 +423,7 @@ def single_plot_log(x, y_data, xlabel_str, ylabel_str, title_str, legend_label_l
     if print_legend:
         legend = ax.legend(
             legend_label_list,
-            loc='upper right',
+            loc=legend_loc,
             frameon=True,
             edgecolor='black',
             framealpha=1.0,

@@ -215,7 +215,7 @@ else:
         r'Samples',
         [r'$F_{RS} \, / \, \mathrm{N}$',r'$F^{(tr)}_{RS} \, / \, \mathrm{N}$',r'$\tau_{RS} \, / \, \mathrm{Nm}$',r'$\tau^{(tr)}_{RS} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
+        [[], [], ['DeLaN', 'GT'], []],
         plot_1_name,
         True,
         True
@@ -231,7 +231,8 @@ else:
         ['Training', 'Test'],
         plot_2_name,
         True,
-        True
+        True,
+        'upper right'
     )
 
     # Plot 3 Coriolisterme und konservative Kräfte
@@ -244,7 +245,7 @@ else:
         r'Samples',
         [r'$c_{RS,1} \, / \, \mathrm{N}$',r'$k^{(c)}_{RS,1} \, / \, \mathrm{N}$',r'$c_{RS,2} \, / \, \mathrm{Nm}$',r'$k^{(c)}_{RS,2} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
-        [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
+        [['DeLaN', 'GT'], [], [], []],
         plot_3_name,
         True,
         True
