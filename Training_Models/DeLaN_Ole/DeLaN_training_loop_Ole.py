@@ -39,7 +39,7 @@ hyper_param = {
     'batch_size': 512,
     'learning_rate': 5.e-4,
     'weight_decay': 1.e-4,
-    'n_epoch': 200,
+    'n_epoch': 2000,
 
     # Reibungsmodell
     'use_friction_model': False,
@@ -61,7 +61,7 @@ features_training, labels_training, _, _, _ = extract_training_data('Allgemeiner
 _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Seeds festlegen
-max_seed = 3
+max_seed = 100
 seed_vec = np.arange(1, max_seed + 1)
 
 # Ergebnisvektor
