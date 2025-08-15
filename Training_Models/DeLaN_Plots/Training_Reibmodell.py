@@ -96,9 +96,6 @@ samples_vec = np.arange(1, H_test.shape[0] + 1).reshape(-1, 1)
 
 plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
 plot_1_name = os.path.join(plot_path, 'Reibungsmodell_inv_dyn_reibkraft.pdf')
-plot_2_name = os.path.join(plot_path, 'Opt_Hyper_loss.pdf')
-plot_3_name = os.path.join(plot_path, 'Opt_Hyper_coriolis_konservativ.pdf')
-plot_4_name = os.path.join(plot_path, 'Opt_Hyper_Massenmatrix.pdf')
 
 # Plot 3 Coriolisterme und konservative Kräfte
 quad_subplot(
@@ -111,7 +108,7 @@ quad_subplot(
     [r'$F_{RS} \, / \, \mathrm{N}$',r'$F_{RS}^{(f)} \, / \, \mathrm{N}$',r'$\tau_{RS} \, / \, \mathrm{Nm}$',r'$\tau_{RS}^{(f)} \, / \, \mathrm{Nm}$'],
     ['', '', '', ''],
     [['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT'], ['DeLaN', 'GT']],
-    plot_3_name,
+    plot_1_name,
     True,
     True
 )
