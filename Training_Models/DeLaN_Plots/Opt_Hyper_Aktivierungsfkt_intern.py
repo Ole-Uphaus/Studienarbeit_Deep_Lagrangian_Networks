@@ -29,113 +29,163 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 
-###################### Konfiguration ELU ######################
+# Auswählen, ob nur geplottet oder auch trainiert werden soll
+just_plot = True
 
-# Parameter festlegen
-hyper_param = {
-    # Netzparameter
-    'hidden_width': 64,
-    'hidden_depth': 2,
-    'activation_fnc': 'relu',
-    'activation_fnc_diag': 'softplus',
+if just_plot == False:
+    ###################### Konfiguration ELU ######################
 
-    # Initialisierung
-    'bias_init_constant': 1.e-3,
-    'wheight_init': 'xavier_normal',
+    # Parameter festlegen
+    hyper_param = {
+        # Netzparameter
+        'hidden_width': 64,
+        'hidden_depth': 2,
+        'activation_fnc': 'relu',
+        'activation_fnc_diag': 'softplus',
 
-    # Lagrange Dynamik
-    'L_diagonal_offset': 1.e-2,
-    
-    # Training
-    'dropuot': 0.0,
-    'batch_size': 512,
-    'learning_rate': 5.e-4,
-    'weight_decay': 1.e-4,
-    'n_epoch': 2000,
+        # Initialisierung
+        'bias_init_constant': 1.e-3,
+        'wheight_init': 'xavier_normal',
 
-    # Reibungsmodell
-    'use_friction_model': False,
-    'friction_model_init_d': [0.01, 0.01],
-    'friction_model_init_c': [0.01, 0.01],
-    'friction_model_init_s': [0.01, 0.01],
-    'friction_model_init_v': [0.01, 0.01],
-    'friction_epsilon': 100.0,
+        # Lagrange Dynamik
+        'L_diagonal_offset': 1.e-2,
+        
+        # Training
+        'dropuot': 0.0,
+        'batch_size': 512,
+        'learning_rate': 5.e-4,
+        'weight_decay': 1.e-4,
+        'n_epoch': 2000,
 
-    # Sonstiges
-    'use_inverse_model': True,
-    'use_forward_model': True,
-    'use_energy_consumption': False,
-    'save_model': False}
+        # Reibungsmodell
+        'use_friction_model': False,
+        'friction_model_init_d': [0.01, 0.01],
+        'friction_model_init_c': [0.01, 0.01],
+        'friction_model_init_s': [0.01, 0.01],
+        'friction_model_init_v': [0.01, 0.01],
+        'friction_epsilon': 100.0,
 
-# Trainings- und Testdaten laden
-target_folder = 'Studienarbeit_Data' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen' 'Studienarbeit_Data'
-features_training, labels_training, _, _, _ = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+        # Sonstiges
+        'use_inverse_model': True,
+        'use_forward_model': True,
+        'use_energy_consumption': False,
+        'save_model': False}
 
-# Modell trainieren
-DeLaN_network, results = Delan_Train_Eval(
-        target_folder,
-        features_training,
-        labels_training,
-        features_test,
-        labels_test,
-        hyper_param,
-        device
+    # Trainings- und Testdaten laden
+    target_folder = 'Studienarbeit_Data' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen' 'Studienarbeit_Data'
+    features_training, labels_training, _, _, _ = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Trainingsdaten
+    _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+
+    # Modell trainieren
+    DeLaN_network, results = Delan_Train_Eval(
+            target_folder,
+            features_training,
+            labels_training,
+            features_test,
+            labels_test,
+            hyper_param,
+            device
+        )
+
+    # Ergebnisse entpacken
+    training_loss_history_ReLU = np.array(results['training_loss_history'])
+    test_loss_history_ReLU = np.array(results['test_loss_history'])
+
+    ###################### Konfiguration Softplus ######################
+    hyper_param['activation_fnc'] = 'softplus'
+
+    # Modell trainieren
+    DeLaN_network, results = Delan_Train_Eval(
+            target_folder,
+            features_training,
+            labels_training,
+            features_test,
+            labels_test,
+            hyper_param,
+            device
+        )
+
+    # Ergebnisse entpacken
+    training_loss_history_Softplus = np.array(results['training_loss_history'])
+    test_loss_history_Softplus = np.array(results['test_loss_history'])
+
+    ###################### Konfiguration ReLU ######################
+    hyper_param['activation_fnc'] = 'elu'
+
+    # Modell trainieren
+    DeLaN_network, results = Delan_Train_Eval(
+            target_folder,
+            features_training,
+            labels_training,
+            features_test,
+            labels_test,
+            hyper_param,
+            device
+        )
+
+    # Ergebnisse entpacken
+    training_loss_history_ELU = np.array(results['training_loss_history'])
+    test_loss_history_ELU = np.array(results['test_loss_history'])
+
+    # Ergebnisse speichern
+    results = {
+        'training_loss_history_ReLU': training_loss_history_ReLU,
+        'test_loss_history_ReLU': test_loss_history_ReLU,
+        'training_loss_history_Softplus': training_loss_history_Softplus,
+        'test_loss_history_Softplus': test_loss_history_Softplus,
+        'training_loss_history_ELU': training_loss_history_ELU,
+        'test_loss_history_ELU': test_loss_history_ELU,
+    }
+
+    save_path = os.path.join(script_path, 'Ergebnisse_Aktivierungsfkt_intern.npy')
+
+    np.save(save_path, results)
+
+    # Ergebnisse plotten
+    plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
+    plot_1_name = os.path.join(plot_path, 'Opt_Hyper_Aktivierungsfunktion_Intern.pdf')
+
+    # Plot 2 Loss Entwicklung
+    single_plot_log(
+        test_loss_history_ELU[:, 0],
+        np.concatenate([test_loss_history_ELU[:, 1].reshape(-1, 1), test_loss_history_Softplus[:, 1].reshape(-1, 1), test_loss_history_ReLU[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 3),
+        r'Epochen',
+        r'$\mathrm{Test-Loss}$',
+        '',
+        ['ELU', 'Softplus', 'ReLU'],
+        plot_1_name,
+        True,
+        True
     )
 
-# Ergebnisse entpacken
-training_loss_history_ReLU = np.array(results['training_loss_history'])
-test_loss_history_ReLU = np.array(results['test_loss_history'])
+else:
 
-###################### Konfiguration Softplus ######################
-hyper_param['activation_fnc'] = 'softplus'
+    data_path = os.path.join(script_path, 'Ergebnisse_Aktivierungsfkt_intern.npy')
 
-# Modell trainieren
-DeLaN_network, results = Delan_Train_Eval(
-        target_folder,
-        features_training,
-        labels_training,
-        features_test,
-        labels_test,
-        hyper_param,
-        device
+    # Ergebnis-Dict laden
+    results = np.load(data_path, allow_pickle=True).item()
+
+    # Ergebnisse entpacken
+    training_loss_history_ReLU = results['training_loss_history_ReLU']
+    test_loss_history_ReLU = results['test_loss_history_ReLU']
+    training_loss_history_Softplus = results['training_loss_history_Softplus']
+    test_loss_history_Softplus = results['test_loss_history_Softplus']
+    training_loss_history_ELU = results['training_loss_history_ELU']
+    test_loss_history_ELU = results['test_loss_history_ELU']
+
+    # Ergebnisse plotten
+    plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
+    plot_1_name = os.path.join(plot_path, 'Opt_Hyper_Aktivierungsfunktion_Intern.pdf')
+
+    # Plot 2 Loss Entwicklung
+    single_plot_log(
+        test_loss_history_ELU[:, 0],
+        np.concatenate([test_loss_history_ELU[:, 1].reshape(-1, 1), test_loss_history_Softplus[:, 1].reshape(-1, 1), test_loss_history_ReLU[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 3),
+        r'Epochen',
+        r'$\mathrm{Test-Loss}$',
+        '',
+        ['ELU', 'Softplus', 'ReLU'],
+        plot_1_name,
+        True,
+        True
     )
-
-# Ergebnisse entpacken
-training_loss_history_Softplus = np.array(results['training_loss_history'])
-test_loss_history_Softplus = np.array(results['test_loss_history'])
-
-###################### Konfiguration ReLU ######################
-hyper_param['activation_fnc'] = 'elu'
-
-# Modell trainieren
-DeLaN_network, results = Delan_Train_Eval(
-        target_folder,
-        features_training,
-        labels_training,
-        features_test,
-        labels_test,
-        hyper_param,
-        device
-    )
-
-# Ergebnisse entpacken
-training_loss_history_ELU = np.array(results['training_loss_history'])
-test_loss_history_ELU = np.array(results['test_loss_history'])
-
-# Ergebnisse plotten
-plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
-plot_1_name = os.path.join(plot_path, 'Opt_Hyper_Aktivierungsfunktion_Intern.pdf')
-
-# Plot 2 Loss Entwicklung
-single_plot_log(
-    test_loss_history_ELU[:, 0],
-    np.concatenate([test_loss_history_ELU[:, 1].reshape(-1, 1), test_loss_history_Softplus[:, 1].reshape(-1, 1), test_loss_history_ReLU[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 3),
-    r'Epochen',
-    r'$\mathrm{Test-Loss}$',
-    '',
-    ['ELU', 'Softplus', 'ReLU'],
-    plot_1_name,
-    True,
-    True
-)

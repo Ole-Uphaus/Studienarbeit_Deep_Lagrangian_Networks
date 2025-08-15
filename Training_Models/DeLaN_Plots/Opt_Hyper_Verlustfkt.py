@@ -30,7 +30,7 @@ torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 
 # Auswählen, ob nur geplottet oder auch trainiert werden soll
-just_plot = False
+just_plot = True
 
 if just_plot == False:
     ###################### Konfiguration vor. dyn. ######################
