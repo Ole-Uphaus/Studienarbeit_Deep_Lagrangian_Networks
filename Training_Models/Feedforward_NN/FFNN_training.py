@@ -49,25 +49,25 @@ torch.cuda.manual_seed_all(seed)
 # Parameter festlegen
 hyper_param = {
     # Netzparameter
-    'hidden_size': 256,
+    'hidden_size': 64,
     'depth': 2,
     'activation_fnc': 'relu',
 
     # Training
-    'n_epoch': 1000,
+    'n_epoch': 2000,
     'learning_rate': 0.001,
     'wheight_decay': 1e-4,
     'dropout': 0.3,
     'batch_size': 512,
 
     # Sonstiges
-    'save_model': True,
+    'save_model': False,
     }
 
 # Trainings- und Testdaten laden
-target_folder = 'MATLAB_Simulation' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen'
-features_training, labels_training, _, _, _ = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Trainingsdaten
-_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('SimData_V3_Rob_Model_1_2025_05_09_10_27_03_Samples_3000.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+target_folder = 'Studienarbeit_Data' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen' 'Studienarbeit_Data'
+features_training, labels_training, _, _, _ = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Trainingsdaten
+_, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
 # Trainings- und Testdaten in Torch-Tensoren umwandeln
 features_tensor_training = torch.tensor(features_training, dtype=torch.float32)
@@ -195,27 +195,21 @@ plt.title('Loss-Verlauf während des Trainings')
 plt.grid(True)
 plt.legend()
 
-# tau
-plt.figure()
-
-plt.subplot(2, 1, 1)
-plt.plot(samples_vec, tau_hat_test[:, 0], label='tau1 FFNN')
-plt.plot(samples_vec, tau_test[:, 0] ,label='tau1 Analytic')
-plt.title('tau1')
-plt.xlabel('Samples')
-plt.ylabel('tau')
-plt.grid(True)
-plt.legend()
-
-plt.subplot(2, 1, 2)
-plt.plot(samples_vec, tau_hat_test[:, 1], label='tau2 FFNN')
-plt.plot(samples_vec, tau_test[:, 1] ,label='tau2 Analytic')
-plt.title('tau2')
-plt.xlabel('Samples')
-plt.ylabel('tau')
-plt.grid(True)
-plt.legend()
-
-plt.tight_layout()
-
 plt.show()
+
+# Plots Studienarbeit
+plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
+plot_1_name = os.path.join(plot_path, 'Training_Referenzmodell_Drehmoment.pdf')
+
+double_subplot(
+        samples_vec,
+        [np.concatenate([tau_hat_test[:, 0].reshape(-1, 1), labels_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2),
+        np.concatenate([tau_hat_test[:, 1].reshape(-1, 1), labels_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
+        r'Samples',
+        [r'$F_{RS} \, / \, \mathrm{N}$',r'$\tau_{RS} \, / \, \mathrm{Nm}$'],
+        ['', '', '', ''],
+        [['MLP', 'GT'], ['MLP', 'GT'], ['MLP', 'GT'], ['MLP', 'GT']],
+        plot_1_name,
+        True,
+        True
+    )
