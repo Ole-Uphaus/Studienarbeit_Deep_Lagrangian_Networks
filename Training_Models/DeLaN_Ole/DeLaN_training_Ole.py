@@ -210,6 +210,7 @@ def Delan_Train_Eval(
         'training_loss_history': training_loss_history,
         'test_loss_history': test_loss_history,
         'output_L_diag_no_activation_history': output_L_diag_no_activation_history,
+        'rmse_tau_percent': rmse_tau_percent,
 
         # Evaluation results
         'H_test': H_test,
