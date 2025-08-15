@@ -152,7 +152,7 @@ number_runs = 50;
 Rob_Model = 1;
 
 % Seed für reproduzierbare Ergebnisse
-rng(42)
+rng(41)
 
 % Sollen Simulationsdaten gespeichert werden
 savedata = true;
