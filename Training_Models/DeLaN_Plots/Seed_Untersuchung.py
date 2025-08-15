@@ -19,7 +19,7 @@ seed_loss_vec = np.load(data_path)
 print(seed_loss_vec)
 
 # Logische Variablen
-save_pdf = False
+save_pdf = True
 print_legend = True
 
 # Plots für Studienarbeit
@@ -66,7 +66,7 @@ ax.tick_params(axis='both', which='major', top=True, right=True, direction='in',
 # Achsgrenzen mit Puffer (Manuell angepasst)
 yl = ax.get_ylim()
 dy = yl[1] - yl[0]
-new_ylim = [yl[0] - 0.05 * dy, yl[1] + 0.05 * dy]
+new_ylim = [yl[0], yl[1]]
 new_ylim[1] = 10
 if new_ylim[0] > 0 and new_ylim[1] > 0:
     ax.set_ylim(new_ylim[0], new_ylim[1])
@@ -82,7 +82,7 @@ for spine in ax.spines.values():
 
 if print_legend:
     legend = ax.legend(
-        ['Training-Loss', 'Test-Loss'],
+        ['Training', 'Test'],
         loc='upper right',
         frameon=True,
         edgecolor='black',
@@ -95,7 +95,7 @@ if print_legend:
 
 ax.set_xlabel('Seed')
 
-fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.23)
+fig.subplots_adjust(left=0.13, right=0.91, top=0.93, bottom=0.21)
 
 if save_pdf:
     fig.savefig(plot_1_name, transparent=True, format='pdf')
