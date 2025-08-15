@@ -84,11 +84,11 @@ DeLaN_network, results = Delan_Train_Eval(
     )
 
 # Ergebnisse entpacken
-training_loss_history_ELU = np.array(results['training_loss_history'])
-test_loss_history_ELU = np.array(results['test_loss_history'])
+training_loss_history_Softplus = np.array(results['training_loss_history'])
+test_loss_history_Softplus = np.array(results['test_loss_history'])
 
 ###################### Konfiguration ReLu ######################
-hyper_param['activation_fnc'] = 'relu'
+hyper_param['activation_fnc_diag'] = 'relu'
 
 # Modell trainieren
 DeLaN_network, results = Delan_Train_Eval(
@@ -102,22 +102,22 @@ DeLaN_network, results = Delan_Train_Eval(
     )
 
 # Ergebnisse entpacken
-training_loss_history_Softplus = np.array(results['training_loss_history'])
-test_loss_history_Softplus = np.array(results['test_loss_history'])
+training_loss_history_ReLU = np.array(results['training_loss_history'])
+test_loss_history_ReLU = np.array(results['test_loss_history'])
 
 # Ergebnisse plotten
 plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
-plot_1_name = os.path.join(plot_path, 'Opt_Hyper_Aktivierungsfunktion_Intern.pdf')
+plot_1_name = os.path.join(plot_path, 'Opt_Hyper_Aktivierungsfunktion_Diag.pdf')
 
 # Plot 2 Loss Entwicklung
 single_plot_log(
-    test_loss_history_ELU[:, 0],
-    np.concatenate([test_loss_history_ELU[:, 1].reshape(-1, 1), test_loss_history_Softplus[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2),
+    test_loss_history_Softplus[:, 0],
+    np.concatenate([test_loss_history_Softplus[:, 1].reshape(-1, 1), test_loss_history_ReLU[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2),
     r'Epochen',
     r'$\mathrm{Test-Loss}$',
     '',
-    ['ELU', 'Softplus', 'ReLU'],
+    ['Softplus', 'ReLU'],
     plot_1_name,
-    False,
+    True,
     True
 )

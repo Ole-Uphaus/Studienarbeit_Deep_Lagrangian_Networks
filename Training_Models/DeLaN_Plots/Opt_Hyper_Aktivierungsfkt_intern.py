@@ -136,6 +136,6 @@ single_plot_log(
     '',
     ['ELU', 'Softplus', 'ReLU'],
     plot_1_name,
-    False,
+    True,
     True
 )
