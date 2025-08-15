@@ -92,7 +92,7 @@ tau_fric_test = results['tau_fric_test']
 tau_hat_test = results['tau_hat_test']
 
 # Ergebnisse plotten
-save_plots = False
+save_plots = True
 samples_vec = np.arange(1, H_test.shape[0] + 1).reshape(-1, 1)
 
 plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
