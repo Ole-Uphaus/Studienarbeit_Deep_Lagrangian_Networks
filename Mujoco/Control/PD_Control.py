@@ -172,6 +172,25 @@ mse_r = np.mean(error_r**2)
 print(f"MSE für phi: {mse_phi:.4e}")
 print(f"MSE für r: {mse_r:.4e}")
 
+# Ergebnisse speichern für finalen Plot
+results = {
+    'mse_phi': mse_phi,
+    'mse_r': mse_r,
+    't_vec': t_vec,
+    'x_des_traj': x_des_traj,
+    'y_des_traj': y_des_traj,
+    'end_mass_pos_vec': end_mass_pos_vec,
+    'q_vec': q_vec,
+    'phi_des_traj': phi_des_traj,
+    'r_des_traj': r_des_traj,
+    'error_phi': error_phi,
+    'error_r': error_r
+}
+
+save_path = os.path.join(script_path, 'Control_results_PD.npy')
+
+np.save(save_path, results)
+
 # Soll vs. Ist Trajektorie plotten
 plt.figure()
 
