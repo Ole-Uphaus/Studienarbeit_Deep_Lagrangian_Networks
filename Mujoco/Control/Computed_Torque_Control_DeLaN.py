@@ -56,7 +56,7 @@ dt = 0.002
 omega = 2 * np.pi / T   # Frequenz so anpassen, dass eine Umdrehung in gegebener Zeit durchgeführt wird
 
 offset_phi = 0.2
-offset_r = 1.0
+offset_r = 0.8
 
 # Zeitvektor
 t_vec = np.arange(0, T, dt)
