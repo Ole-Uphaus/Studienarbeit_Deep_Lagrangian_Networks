@@ -270,9 +270,9 @@ else:
         test_loss_history_Vor_Ener[:, 0],
         np.concatenate([test_loss_history_Vor[:, 1].reshape(-1, 1), test_loss_history_inv[:, 1].reshape(-1, 1), test_loss_history_Ener[:, 1].reshape(-1, 1), test_loss_history_inv_Vor[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 4),
         r'Epochen',
-        r'$\mathrm{Test-Loss}$',
+        r'$\mathrm{Fehler}$',
         '',
-        ['Vor.', 'inv.', 'Ener.', 'inv. + Vor.'],
+        [r'$\ell_{Vor}(\cdot)$', r'$\ell_{inv}(\cdot)$', r'$\ell_{Ener}(\cdot)$', r'$\ell_{inv}(\cdot) + \ell_{Vor}(\cdot)$'],
         plot_1_name,
         True,
         True
