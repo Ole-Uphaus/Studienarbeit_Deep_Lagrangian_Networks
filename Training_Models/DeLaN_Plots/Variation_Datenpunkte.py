@@ -171,12 +171,12 @@ else:
     # Plot 1 Schätzung inverse Dynamik
     double_subplot(
         samples_vec,
-        [np.concatenate([tau_hat_test_Nruns_10[:, 0].reshape(-1, 1), tau_hat_test_Nruns_50[:, 0].reshape(-1, 1), labels_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 3), 
-        np.concatenate([tau_hat_test_Nruns_10[:, 1].reshape(-1, 1), tau_hat_test_Nruns_50[:, 1].reshape(-1, 1), labels_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 3)],
+        [np.concatenate([labels_test[:, 0].reshape(-1, 1), tau_hat_test_Nruns_10[:, 0].reshape(-1, 1), tau_hat_test_Nruns_50[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 3), 
+        np.concatenate([labels_test[:, 1].reshape(-1, 1), tau_hat_test_Nruns_10[:, 1].reshape(-1, 1), tau_hat_test_Nruns_50[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 3)],
         r'Samples',
         [r'$F_{RS} \, / \, \mathrm{N}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$'],
         ['', ''],
-        [[r'DeLaN $N_r=10$', r'DeLaN $N_r=50$', 'GT'], []],
+        [['GT', r'DeLaN $N_r=10$', r'DeLaN $N_r=50$'], []],
         plot_1_name,
         True,
         True

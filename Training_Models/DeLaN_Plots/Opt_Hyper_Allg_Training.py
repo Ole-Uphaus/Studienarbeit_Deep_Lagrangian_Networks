@@ -208,14 +208,14 @@ else:
 
     quad_subplot(
         samples_vec,
-        [np.concatenate([tau_hat_test[:, 0].reshape(-1, 1), labels_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
-        np.concatenate([tau_b_hat[:, 0].reshape(-1, 1), tau_b[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2),
-        np.concatenate([tau_hat_test[:, 1].reshape(-1, 1), labels_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2), 
-        np.concatenate([tau_b_hat[:, 1].reshape(-1, 1), tau_b[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
+        [np.concatenate([labels_test[:, 0].reshape(-1, 1), tau_hat_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+        np.concatenate([tau_b[:, 0].reshape(-1, 1), tau_b_hat[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2),
+        np.concatenate([labels_test[:, 1].reshape(-1, 1), tau_hat_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+        np.concatenate([tau_b[:, 1].reshape(-1, 1), tau_b_hat[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
         r'Samples',
         [r'$F_{RS} \, / \, \mathrm{N}$',r'$F^{(tr)}_{RS} \, / \, \mathrm{N}$',r'$\tau_{RS} \, / \, \mathrm{Nm}$',r'$\tau^{(tr)}_{RS} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
-        [[], [], ['DeLaN', 'GT'], []],
+        [[], [], ['GT', 'DeLaN'], []],
         plot_1_name,
         True,
         True
@@ -238,14 +238,14 @@ else:
     # Plot 3 Coriolisterme und konservative Kräfte
     quad_subplot(
         samples_vec,
-        [np.concatenate([c_test[:, 0].reshape(-1, 1), Mass_Cor_test[:, 3].reshape(-1, 1)], axis=1).reshape(-1, 2), 
-        np.concatenate([g_test[:, 0].reshape(-1, 1), Mass_Cor_test[:, 5].reshape(-1, 1)], axis=1).reshape(-1, 2),
-        np.concatenate([c_test[:, 1].reshape(-1, 1), Mass_Cor_test[:, 4].reshape(-1, 1)], axis=1).reshape(-1, 2), 
-        np.concatenate([g_test[:, 1].reshape(-1, 1), Mass_Cor_test[:, 6].reshape(-1, 1)], axis=1).reshape(-1, 2)],
+        [np.concatenate([Mass_Cor_test[:, 3].reshape(-1, 1), c_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+        np.concatenate([Mass_Cor_test[:, 5].reshape(-1, 1), g_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2),
+        np.concatenate([Mass_Cor_test[:, 4].reshape(-1, 1), c_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+        np.concatenate([Mass_Cor_test[:, 6].reshape(-1, 1), g_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
         r'Samples',
         [r'$c_{RS,1} \, / \, \mathrm{N}$',r'$k^{(c)}_{RS,1} \, / \, \mathrm{N}$',r'$c_{RS,2} \, / \, \mathrm{Nm}$',r'$k^{(c)}_{RS,2} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
-        [['DeLaN', 'GT'], [], [], []],
+        [['GT', 'DeLaN'], [], [], []],
         plot_3_name,
         True,
         True

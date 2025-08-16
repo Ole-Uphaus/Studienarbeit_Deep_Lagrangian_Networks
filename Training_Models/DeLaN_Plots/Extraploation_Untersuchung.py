@@ -150,12 +150,12 @@ else:
     # Plot 1 Schätzung inverse Dynamik
     double_subplot(
         samples_vec,
-        [np.concatenate([tau_hat_test[:, 0].reshape(-1, 1), labels_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
-        np.concatenate([tau_hat_test[:, 1].reshape(-1, 1), labels_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
+        [np.concatenate([labels_test[:, 0].reshape(-1, 1), tau_hat_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+        np.concatenate([labels_test[:, 1].reshape(-1, 1), tau_hat_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
         r'Samples',
         [r'$F_{RS} \, / \, \mathrm{N}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$'],
         ['', ''],
-        [['DeLaN', 'GT'], []],
+        [['GT', 'DeLaN'], []],
         plot_1_name,
         True,
         True,
