@@ -120,12 +120,14 @@ if save_pdf:
 plt.show()
 
 # Zweiter Plot
+zeros_vec = np.zeros_like(results_analytic['t_vec'])
+
 quad_subplot(
         results_analytic['t_vec'],
         [np.concatenate([results_analytic['r_des_traj'].reshape(-1, 1), results_pd['q_vec'][:, 1].reshape(-1, 1), results_analytic['q_vec'][:, 1].reshape(-1, 1), results_ffnn['q_vec'][:, 1].reshape(-1, 1), results_delan['q_vec'][:, 1].reshape(-1, 1)], axis=1).reshape(-1, 5), 
-        np.concatenate([results_analytic['error_r'].reshape(-1, 1), results_pd['error_r'].reshape(-1, 1), results_analytic['error_r'].reshape(-1, 1), results_ffnn['error_r'].reshape(-1, 1), results_delan['error_r'].reshape(-1, 1)], axis=1).reshape(-1, 5),
+        np.concatenate([zeros_vec.reshape(-1, 1), results_pd['error_r'].reshape(-1, 1), results_analytic['error_r'].reshape(-1, 1), results_ffnn['error_r'].reshape(-1, 1), results_delan['error_r'].reshape(-1, 1)], axis=1).reshape(-1, 5),
         np.concatenate([results_analytic['phi_des_traj'].reshape(-1, 1), results_pd['q_vec'][:, 0].reshape(-1, 1), results_analytic['q_vec'][:, 0].reshape(-1, 1), results_ffnn['q_vec'][:, 0].reshape(-1, 1), results_delan['q_vec'][:, 0].reshape(-1, 1)], axis=1).reshape(-1, 5), 
-        np.concatenate([results_analytic['error_phi'].reshape(-1, 1), results_pd['error_phi'].reshape(-1, 1), results_analytic['error_phi'].reshape(-1, 1), results_ffnn['error_phi'].reshape(-1, 1), results_delan['error_phi'].reshape(-1, 1)], axis=1).reshape(-1, 5)],
+        np.concatenate([zeros_vec.reshape(-1, 1), results_pd['error_phi'].reshape(-1, 1), results_analytic['error_phi'].reshape(-1, 1), results_ffnn['error_phi'].reshape(-1, 1), results_delan['error_phi'].reshape(-1, 1)], axis=1).reshape(-1, 5)],
         r'$t \, / \, \mathrm{s}$',
         [r'$r_{RS} \, / \, \mathrm{m}$',r'$e_{r} \, / \, \mathrm{m}$',r'$\varphi_{RS} \, / \, \mathrm{m}$',r'$e_{\varphi} \, / \, \mathrm{rad}$'],
         ['', '', '', ''],
