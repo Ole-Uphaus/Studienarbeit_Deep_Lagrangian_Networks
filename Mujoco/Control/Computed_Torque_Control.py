@@ -21,7 +21,7 @@ def inv_dyn_2_FHG_Robot(v, phi, phi_p, r, r_p):
     l_m = 0.25
 
     # Massenmatrix
-    M = np.array([[m_kg, 0],
+    M = np.array([[m_kg + mL_kg, 0],
                   [0, J_kgm2 + m_kg*(r - l_m)**2 + mL_kg*r**2]])
     
     # Coriolisterme
@@ -31,10 +31,16 @@ def inv_dyn_2_FHG_Robot(v, phi, phi_p, r, r_p):
     # Gewichtskräfte
     g = np.zeros_like(c)
 
-    # Stellgrößen berechnen
-    tau = np.matmul(M, v) + c + g
+    # Regelgesetz vertauschen, da beim .xml Modell die Minimalkoordinaten andersherum angenommen wurden
+    v_modell = v[[1, 0]]
 
-    return tau
+    # Stellgrößen berechnen
+    tau = np.matmul(M, v_modell) + c + g
+
+    # Stellgrößen vertauschen, da beim .xml Modell die Minimalkoordinaten andersherum angenommen wurden
+    tau_xml = tau[[1, 0]]
+
+    return tau_xml
 
 # Parameter Trajektorie 
 amp_phi = 0.1
