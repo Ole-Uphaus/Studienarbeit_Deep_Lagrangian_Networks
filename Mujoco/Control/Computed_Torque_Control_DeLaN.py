@@ -84,7 +84,7 @@ model = mujoco.MjModel.from_xml_path(xml_path)
 data = mujoco.MjData(model)
 
 # DeLaN Modell Daten laden
-DeLaN_name = "DeLaN_model_MJ_Sim_2025_06_16_14_43_39_Epochen_1000.pth"
+DeLaN_name = "DeLaN_model_2025_08_16_09_17_47_Epochen_2000.pth"
 DeLaN_path = os.path.join(script_path, '..', '..', 'Training_Models', 'DeLaN_Ole', 'Saved_Models', DeLaN_name)
 DeLaN_data = torch.load(DeLaN_path, map_location=torch.device('cpu'))
 
@@ -202,6 +202,25 @@ mse_r = np.mean(error_r**2)
 # Ausgabe
 print(f"MSE für phi: {mse_phi:.4e}")
 print(f"MSE für r: {mse_r:.4e}")
+
+# Ergebnisse speichern für finalen Plot
+results = {
+    'mse_phi': mse_phi,
+    'mse_r': mse_r,
+    't_vec': t_vec,
+    'x_des_traj': x_des_traj,
+    'y_des_traj': y_des_traj,
+    'end_mass_pos_vec': end_mass_pos_vec,
+    'q_vec': q_vec,
+    'phi_des_traj': phi_des_traj,
+    'r_des_traj': r_des_traj,
+    'error_phi': error_phi,
+    'error_r': error_r
+}
+
+save_path = os.path.join(script_path, 'Control_results_DeLaN.npy')
+
+np.save(save_path, results)
 
 # Soll vs. Ist Trajektorie plotten
 plt.figure()
