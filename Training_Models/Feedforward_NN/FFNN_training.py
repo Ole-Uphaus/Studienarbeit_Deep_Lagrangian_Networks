@@ -165,7 +165,7 @@ if hyper_param['save_model'] == True:
     # Aktueller Zeitstempel
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
-    if target_folder == 'MATLAB_Simulation':
+    if target_folder == 'MATLAB_Simulation' or target_folder == 'Studienarbeit_Data':
         model_path = os.path.join(script_path, "Saved_Models", f"FFNN_model_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
     else:
         model_path = os.path.join(script_path, "Saved_Models", f"FFNN_model_MJ_Sim_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
