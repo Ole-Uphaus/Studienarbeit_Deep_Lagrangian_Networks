@@ -51,8 +51,8 @@ rcParams.update({
 fig, ax = plt.subplots(1, 1, figsize=(fig_width, fig_height), dpi=300)
 
 # Plotten
-ax.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 1])
-ax.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 2])
+ax.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 1], s=10)
+ax.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 2], s=10)
 
 # Achseneinstellungen
 ax.set_yscale("log")    # Logarithmisch
