@@ -89,7 +89,8 @@ if print_legend:
         framealpha=1.0,
         fancybox=False,
         borderpad=0.3,
-        handletextpad=0.5
+        handletextpad=0.5,
+        labelspacing=0.2
     )
     legend.get_frame().set_linewidth(line_thickness)
 
