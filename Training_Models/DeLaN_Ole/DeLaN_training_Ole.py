@@ -184,7 +184,7 @@ def Delan_Train_Eval(
         timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         script_path = os.path.dirname(os.path.abspath(__file__))
 
-        if target_folder == 'MATLAB_Simulation':
+        if target_folder == 'MATLAB_Simulation' or target_folder == 'Studienarbeit_Data':
             model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
         else:
             model_path = os.path.join(script_path, "Saved_Models", f"DeLaN_model_MJ_Sim_{timestamp}_Epochen_{hyper_param['n_epoch']}.pth")
@@ -241,7 +241,7 @@ if __name__ == "__main__":
         # Netzparameter
         'hidden_width': 64,
         'hidden_depth': 2,
-        'activation_fnc': 'relu',
+        'activation_fnc': 'elu',
         'activation_fnc_diag': 'softplus',
 
         # Initialisierung
@@ -256,7 +256,7 @@ if __name__ == "__main__":
         'batch_size': 512,
         'learning_rate': 5.e-4,
         'weight_decay': 1.e-4,
-        'n_epoch': 1000,
+        'n_epoch': 2000,
 
         # Reibungsmodell
         'use_friction_model': False,
@@ -270,7 +270,7 @@ if __name__ == "__main__":
         'use_inverse_model': True,
         'use_forward_model': True,
         'use_energy_consumption': False,
-        'save_model': False}
+        'save_model': True}
 
     # Trainings- und Testdaten laden
     target_folder = 'Studienarbeit_Data' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen' 'Studienarbeit_Data'
