@@ -57,7 +57,7 @@ ax.scatter(seed_loss_vec[:, 0], seed_loss_vec[:, 2], s=10)
 # Achseneinstellungen
 ax.set_yscale("log")    # Logarithmisch
 ax.set_xlim((seed_loss_vec[0, 0] - 1), seed_loss_vec[-1, 0])
-ax.set_ylabel('Loss')
+ax.set_ylabel('Fehler')
 ax.set_title('')
 ax.grid(True)
 ax.set_facecolor('white')
