@@ -148,16 +148,15 @@ else:
     plot_1_name = os.path.join(plot_path, 'Extrapolation_inv_dyn.pdf')
 
     # Plot 1 Schätzung inverse Dynamik
-    double_subplot(
+    double_subplot_sbs(
         samples_vec,
         [np.concatenate([labels_test[:, 0].reshape(-1, 1), tau_hat_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
         np.concatenate([labels_test[:, 1].reshape(-1, 1), tau_hat_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
         r'Datenpunktindex',
         [r'$F_{RS} \, / \, \mathrm{N}$', r'$\tau_{RS} \, / \, \mathrm{Nm}$'],
         ['', ''],
-        [['GT', 'DeLaN'], []],
+        [[], ['GT', 'DeLaN']],
         plot_1_name,
         True,
-        True,
-        'upper right'
+        True
     )
