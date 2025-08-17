@@ -156,7 +156,7 @@ else:
         np.concatenate([Mass_Cor_test[:, 7].reshape(-1, 1), tau_fric_test[:, 0].reshape(-1, 1)], axis=1).reshape(-1, 2),
         np.concatenate([labels_test[:, 1].reshape(-1, 1), tau_hat_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2), 
         np.concatenate([Mass_Cor_test[:, 8].reshape(-1, 1), tau_fric_test[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
-        r'Samples',
+        r'Datenpunktindex',
         [r'$F_{RS} \, / \, \mathrm{N}$',r'$F_{RS}^{(f)} \, / \, \mathrm{N}$',r'$\tau_{RS} \, / \, \mathrm{Nm}$',r'$\tau_{RS}^{(f)} \, / \, \mathrm{Nm}$'],
         ['', '', '', ''],
         [['GT', 'DeLaN'], [], [], []],
