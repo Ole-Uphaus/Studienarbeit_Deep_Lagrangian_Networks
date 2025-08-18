@@ -150,14 +150,21 @@ tau_test = labels_tensor_test.cpu().detach().numpy()
 # Metriken Berechnen (Fehler aus inverser Dynamik)
 mse_tau = np.mean(np.sum((tau_hat_test - tau_test)**2, axis=1))
 rmse_tau = np.sqrt(mse_tau)
+abs_error = np.abs(tau_hat_test - tau_test)
+mae_tau = np.mean(abs_error)
+
 tau_mean = np.sqrt(np.mean(np.sum((tau_test)**2, axis=1)))
+
 rmse_tau_percent = rmse_tau/tau_mean*100
+mae_tau_percent = mae_tau / tau_mean * 100
 
 # Metriken ausgeben
 print('Metriken:')
 print(f"MSE Test: {mse_tau:4f}")
-print(f"RMSE (Absolutfehler) Test: {rmse_tau:4f}")
-print(f"Prozentualer Fehler Test: {rmse_tau_percent:4f}")
+print(f"RMSE Test: {rmse_tau:4f}")
+print(f"MAE Test: {mae_tau:4f}")
+print(f"Prozentualer RMSE Test: {rmse_tau_percent:4f}")
+print(f"Prozentualer MAE Test: {mae_tau_percent:4f}")
 
 # Modell abspeichern
 if hyper_param['save_model'] == True:
