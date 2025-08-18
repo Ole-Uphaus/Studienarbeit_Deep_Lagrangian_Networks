@@ -92,6 +92,7 @@ if just_plot == False:
     # Ergebnisse entpacken
     training_loss_history_Vor = np.array(results['training_loss_history'])
     test_loss_history_Vor = np.array(results['test_loss_history'])
+    mae_tau_percent_Vor= results['mae_tau_percent']
 
     ###################### Konfiguration energy cons ######################
     hyper_param['use_inverse_model'] = False
@@ -114,6 +115,7 @@ if just_plot == False:
     # Ergebnisse entpacken
     training_loss_history_Ener = np.array(results['training_loss_history'])
     test_loss_history_Ener = np.array(results['test_loss_history'])
+    mae_tau_percent_Ener= results['mae_tau_percent']
 
     ###################### Konfiguration inv + vor ######################
     hyper_param['use_inverse_model'] = True
@@ -136,6 +138,7 @@ if just_plot == False:
     # Ergebnisse entpacken
     training_loss_history_inv_Vor = np.array(results['training_loss_history'])
     test_loss_history_inv_Vor = np.array(results['test_loss_history'])
+    mae_tau_percent_inv_Vor= results['mae_tau_percent']
 
     ###################### Konfiguration inv ######################
     hyper_param['use_inverse_model'] = True
@@ -158,6 +161,7 @@ if just_plot == False:
     # Ergebnisse entpacken
     training_loss_history_inv = np.array(results['training_loss_history'])
     test_loss_history_inv = np.array(results['test_loss_history'])
+    mae_tau_percent_inv= results['mae_tau_percent']
 
     ###################### Konfiguration inv + vor + energy ######################
     hyper_param['use_inverse_model'] = True
@@ -180,6 +184,7 @@ if just_plot == False:
     # Ergebnisse entpacken
     training_loss_history_inv_Vor_Ener = np.array(results['training_loss_history'])
     test_loss_history_inv_Vor_Ener = np.array(results['test_loss_history'])
+    mae_tau_percent_inv_Vor_Ener= results['mae_tau_percent']
 
     ###################### Konfiguration vor + energy ######################
     hyper_param['use_inverse_model'] = False
@@ -202,21 +207,33 @@ if just_plot == False:
     # Ergebnisse entpacken
     training_loss_history_Vor_Ener = np.array(results['training_loss_history'])
     test_loss_history_Vor_Ener = np.array(results['test_loss_history'])
+    mae_tau_percent_Vor_Ener= results['mae_tau_percent']
 
     # Ergebnisse speichern
     results = {
         'training_loss_history_Vor': training_loss_history_Vor,
         'test_loss_history_Vor': test_loss_history_Vor,
+        'mae_tau_percent_Vor': mae_tau_percent_Vor,
+
         'training_loss_history_Ener': training_loss_history_Ener,
         'test_loss_history_Ener': test_loss_history_Ener,
+        'mae_tau_percent_Ener': mae_tau_percent_Ener,
+
         'training_loss_history_inv_Vor': training_loss_history_inv_Vor,
         'test_loss_history_inv_Vor': test_loss_history_inv_Vor,
+        'mae_tau_percent_inv_Vor': mae_tau_percent_inv_Vor,
+
         'training_loss_history_inv': training_loss_history_inv,
         'test_loss_history_inv': test_loss_history_inv,
+        'mae_tau_percent_inv': mae_tau_percent_inv,
+
         'training_loss_history_inv_Vor_Ener': training_loss_history_inv_Vor_Ener,
         'test_loss_history_inv_Vor_Ener': test_loss_history_inv_Vor_Ener,
+        'mae_tau_percent_inv_Vor_Ener': mae_tau_percent_inv_Vor_Ener,
+
         'training_loss_history_Vor_Ener': training_loss_history_Vor_Ener,
-        'test_loss_history_Vor_Ener': test_loss_history_Vor_Ener
+        'test_loss_history_Vor_Ener': test_loss_history_Vor_Ener,
+        'mae_tau_percent_Vor_Ener': mae_tau_percent_Vor_Ener
     }
 
     save_path = os.path.join(script_path, 'Ergebnisse_Verlustfkt.npy')
@@ -250,16 +267,35 @@ else:
     # Ergebnisse entpacken
     training_loss_history_Vor = results['training_loss_history_Vor']
     test_loss_history_Vor = results['test_loss_history_Vor']
+    mae_tau_percent_Vor = results['mae_tau_percent_Vor']
+
     training_loss_history_Ener = results['training_loss_history_Ener']
     test_loss_history_Ener = results['test_loss_history_Ener']
+    mae_tau_percent_Ener = results['mae_tau_percent_Ener']
+
     training_loss_history_inv_Vor = results['training_loss_history_inv_Vor']
     test_loss_history_inv_Vor = results['test_loss_history_inv_Vor']
+    mae_tau_percent_inv_Vor = results['mae_tau_percent_inv_Vor']
+
     training_loss_history_inv = results['training_loss_history_inv']
     test_loss_history_inv = results['test_loss_history_inv']
+    mae_tau_percent_inv = results['mae_tau_percent_inv']
+
     training_loss_history_inv_Vor_Ener = results['training_loss_history_inv_Vor_Ener']
     test_loss_history_inv_Vor_Ener = results['test_loss_history_inv_Vor_Ener']
+    mae_tau_percent_inv_Vor_Ener = results['mae_tau_percent_inv_Vor_Ener']
+
     training_loss_history_Vor_Ener = results['training_loss_history_Vor_Ener']
     test_loss_history_Vor_Ener = results['test_loss_history_Vor_Ener']
+    mae_tau_percent_Vor_Ener = results['mae_tau_percent_Vor_Ener']
+
+    # Prozentualen Fehler ausgeben
+    print(f"Prozentualer MAE Test Vor: {mae_tau_percent_Vor:4f}")
+    print(f"Prozentualer MAE Test Ener: {mae_tau_percent_Ener:4f}")
+    print(f"Prozentualer MAE Test inv: {mae_tau_percent_inv:4f}")
+    print(f"Prozentualer MAE Test inv + Vor: {mae_tau_percent_inv_Vor:4f}")
+    print(f"Prozentualer MAE Test inv + Vor + Ener: {mae_tau_percent_inv_Vor_Ener:4f}")
+    print(f"Prozentualer MAE Test Vor + Ener: {mae_tau_percent_Vor_Ener:4f}")
 
     # Ergebnisse plotten
     plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
