@@ -37,6 +37,19 @@ results_pd = np.load(data_path, allow_pickle=True).item()
 save_pdf = True
 print_legend = True
 
+# Mittlere Absulute Fehler ausgeben
+print(f'MAE r (Analytische CT): {np.sqrt(results_analytic['mse_r']):.2e}')
+print(f'MAE phi (Analytische CT): {np.sqrt(results_analytic['mse_phi']):.2e}', '\n')
+
+print(f'MAE r (Delan CT): {np.sqrt(results_delan['mse_r']):.2e}')
+print(f'MAE phi (Delan CT): {np.sqrt(results_delan['mse_phi']):.2e}', '\n')
+
+print(f'MAE r (FFNN CT): {np.sqrt(results_ffnn['mse_r']):.2e}')
+print(f'MAE phi (FFNN CT): {np.sqrt(results_ffnn['mse_phi']):.2e}', '\n')
+
+print(f'MAE r (PD-Regelung): {np.sqrt(results_pd['mse_r']):.2e}')
+print(f'MAE phi (PD-Regelung): {np.sqrt(results_pd['mse_phi']):.2e}', '\n')
+
 # Plots für Studienarbeit
 plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
 plot_1_name = os.path.join(plot_path, 'Ergebnisse_Regelung_xy_Ebene.pdf')
