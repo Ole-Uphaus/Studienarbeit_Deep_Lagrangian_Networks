@@ -168,14 +168,21 @@ def Delan_Train_Eval(
     # Metriken Berechnen (Fehler aus inverser Dynamik)
     mse_tau = np.mean(np.sum((tau_hat_test - tau_test.cpu().detach().numpy())**2, axis=1))
     rmse_tau = np.sqrt(mse_tau)
+    abs_error = np.abs(tau_hat_test - tau_test.cpu().detach().numpy())
+    mae_tau = np.mean(np.sum(abs_error, axis=1))
+
     tau_mean = np.sqrt(np.mean(np.sum((tau_test.cpu().detach().numpy())**2, axis=1)))
+
     rmse_tau_percent = rmse_tau/tau_mean*100
+    mae_tau_percent = mae_tau / tau_mean * 100
 
     # Metriken ausgeben
     print('Metriken:')
     print(f"MSE Test: {mse_tau:4f}")
-    print(f"RMSE (Absolutfehler) Test: {rmse_tau:4f}")
-    print(f"Prozentualer Fehler Test: {rmse_tau_percent:4f}")
+    print(f"RMSE Test: {rmse_tau:4f}")
+    print(f"MAE Test: {mae_tau:4f}")
+    print(f"Prozentualer RMSE Test: {rmse_tau_percent:4f}")
+    print(f"Prozentualer MAE Test: {mae_tau_percent:4f}")
 
     # Modell abspeichern
     if hyper_param['save_model'] == True:
@@ -211,6 +218,7 @@ def Delan_Train_Eval(
         'test_loss_history': test_loss_history,
         'output_L_diag_no_activation_history': output_L_diag_no_activation_history,
         'rmse_tau_percent': rmse_tau_percent,
+        'mae_tau_percent': mae_tau_percent,
 
         # Evaluation results
         'H_test': H_test,
