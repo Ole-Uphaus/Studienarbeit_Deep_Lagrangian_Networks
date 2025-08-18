@@ -90,6 +90,7 @@ if just_plot == False:
     # Ergebnisse entpacken
     training_loss_history_Softplus = np.array(results['training_loss_history'])
     test_loss_history_Softplus = np.array(results['test_loss_history'])
+    mae_tau_percent_Softplus= results['mae_tau_percent']
 
     ###################### Konfiguration ReLu ######################
     hyper_param['activation_fnc_diag'] = 'relu'
@@ -108,13 +109,17 @@ if just_plot == False:
     # Ergebnisse entpacken
     training_loss_history_ReLU = np.array(results['training_loss_history'])
     test_loss_history_ReLU = np.array(results['test_loss_history'])
+    mae_tau_percent_ReLU= results['mae_tau_percent']
 
     # Ergebnisse speichern
     results = {
         'training_loss_history_Softplus': training_loss_history_Softplus,
         'test_loss_history_Softplus': test_loss_history_Softplus,
+        'mae_tau_percent_Softplus': mae_tau_percent_Softplus,
+
         'training_loss_history_ReLU': training_loss_history_ReLU,
         'test_loss_history_ReLU': test_loss_history_ReLU,
+        'mae_tau_percent_ReLU': mae_tau_percent_ReLU
     }
 
     save_path = os.path.join(script_path, 'Ergebnisse_Aktivierungsfunktion_diag.npy')
@@ -148,8 +153,15 @@ else:
     # Ergebnisse entpacken
     training_loss_history_Softplus = results['training_loss_history_Softplus']
     test_loss_history_Softplus = results['test_loss_history_Softplus']
+    mae_tau_percent_Softplus = results['mae_tau_percent_Softplus']
+
     training_loss_history_ReLU = results['training_loss_history_ReLU']
     test_loss_history_ReLU = results['test_loss_history_ReLU']
+    mae_tau_percent_ReLU = results['mae_tau_percent_ReLU']
+
+    # Prozentualen Fehler ausgeben
+    print(f"Prozentualer MAE Test Softplus: {mae_tau_percent_Softplus:4f}")
+    print(f"Prozentualer MAE Test ReLU: {mae_tau_percent_ReLU:4f}")
 
     # Ergebnisse plotten
     plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
