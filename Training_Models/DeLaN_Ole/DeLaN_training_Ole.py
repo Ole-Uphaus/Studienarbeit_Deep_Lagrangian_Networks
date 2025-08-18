@@ -169,7 +169,7 @@ def Delan_Train_Eval(
     mse_tau = np.mean(np.sum((tau_hat_test - tau_test.cpu().detach().numpy())**2, axis=1))
     rmse_tau = np.sqrt(mse_tau)
     abs_error = np.abs(tau_hat_test - tau_test.cpu().detach().numpy())
-    mae_tau = np.mean(np.sum(abs_error, axis=1))
+    mae_tau = np.mean(abs_error)
 
     tau_mean = np.sqrt(np.mean(np.sum((tau_test.cpu().detach().numpy())**2, axis=1)))
 
