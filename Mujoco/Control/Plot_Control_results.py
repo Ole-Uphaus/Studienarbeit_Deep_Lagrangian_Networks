@@ -67,11 +67,91 @@ rcParams.update({
 fig, ax = plt.subplots(1, 1, figsize=(fig_width, fig_height), dpi=300)
 
 # Plotten
-ax.plot(results_analytic['x_des_traj'], results_analytic['y_des_traj'])
-ax.plot(results_pd['end_mass_pos_vec'][:, 0], results_pd['end_mass_pos_vec'][:, 1])
+h_soll, = ax.plot(results_analytic['x_des_traj'], results_analytic['y_des_traj'])
+h_pd, = ax.plot(results_pd['end_mass_pos_vec'][:, 0], results_pd['end_mass_pos_vec'][:, 1])
 ax.plot(results_analytic['end_mass_pos_vec'][:, 0], results_analytic['end_mass_pos_vec'][:, 1])
-ax.plot(results_ffnn['end_mass_pos_vec'][:, 0], results_ffnn['end_mass_pos_vec'][:, 1])
-ax.plot(results_delan['end_mass_pos_vec'][:, 0], results_delan['end_mass_pos_vec'][:, 1])
+h_ffnn, = ax.plot(results_ffnn['end_mass_pos_vec'][:, 0], results_ffnn['end_mass_pos_vec'][:, 1])
+h_delan, = ax.plot(results_delan['end_mass_pos_vec'][:, 0], results_delan['end_mass_pos_vec'][:, 1])
+
+# Startpunkte plotten
+ax.plot(results_pd['end_mass_pos_vec'][0, 0], results_pd['end_mass_pos_vec'][0, 1], marker='o', markersize=4.0,  # klein & dezent
+            markerfacecolor='k',
+            markeredgecolor='none', zorder=5)
+
+ax.plot(results_analytic['x_des_traj'][0], results_analytic['y_des_traj'][0], marker='o', markersize=4.0,  # klein & dezent
+            markerfacecolor='k',
+            markeredgecolor='none', zorder=5)
+
+# Pfeile plotten
+ax.annotate(
+    "", xy=(results_analytic['x_des_traj'][70], results_analytic['y_des_traj'][70]), xytext=(results_analytic['x_des_traj'][69], results_analytic['y_des_traj'][69]),
+    arrowprops=dict(arrowstyle="-|>",
+                    shrinkA=0, shrinkB=0,
+                    linewidth=1,
+                    mutation_scale=11,
+                    color=h_soll.get_color()),
+    zorder=6
+)
+
+ax.annotate(
+    "", xy=(results_pd['end_mass_pos_vec'][150, 0], results_pd['end_mass_pos_vec'][150, 1]), xytext=(results_pd['end_mass_pos_vec'][149, 0], results_pd['end_mass_pos_vec'][149, 1]),
+    arrowprops=dict(arrowstyle="-|>",
+                    shrinkA=0, shrinkB=0,
+                    linewidth=1,
+                    mutation_scale=11,
+                    color=h_pd.get_color()),
+    zorder=6
+)
+
+ax.annotate(
+    "", xy=(results_pd['end_mass_pos_vec'][700, 0], results_pd['end_mass_pos_vec'][700, 1]), xytext=(results_pd['end_mass_pos_vec'][699, 0], results_pd['end_mass_pos_vec'][699, 1]),
+    arrowprops=dict(arrowstyle="-|>",
+                    shrinkA=0, shrinkB=0,
+                    linewidth=1,
+                    mutation_scale=11,
+                    color=h_pd.get_color()),
+    zorder=6
+)
+
+ax.annotate(
+    "", xy=(results_pd['end_mass_pos_vec'][1750, 0], results_pd['end_mass_pos_vec'][1750, 1]), xytext=(results_pd['end_mass_pos_vec'][1749, 0], results_pd['end_mass_pos_vec'][1749, 1]),
+    arrowprops=dict(arrowstyle="-|>",
+                    shrinkA=0, shrinkB=0,
+                    linewidth=1,
+                    mutation_scale=11,
+                    color=h_pd.get_color()),
+    zorder=6
+)
+
+ax.annotate(
+    "", xy=(results_ffnn['end_mass_pos_vec'][100, 0], results_ffnn['end_mass_pos_vec'][100, 1]), xytext=(results_ffnn['end_mass_pos_vec'][99, 0], results_ffnn['end_mass_pos_vec'][99, 1]),
+    arrowprops=dict(arrowstyle="-|>",
+                    shrinkA=0, shrinkB=0,
+                    linewidth=1,
+                    mutation_scale=11,
+                    color=h_ffnn.get_color()),
+    zorder=6
+)
+
+ax.annotate(
+    "", xy=(results_delan['end_mass_pos_vec'][500, 0], results_delan['end_mass_pos_vec'][500, 1]), xytext=(results_delan['end_mass_pos_vec'][499, 0], results_delan['end_mass_pos_vec'][499, 1]),
+    arrowprops=dict(arrowstyle="-|>",
+                    shrinkA=0, shrinkB=0,
+                    linewidth=1,
+                    mutation_scale=11,
+                    color=h_delan.get_color()),
+    zorder=6
+)
+
+ax.annotate(
+    "", xy=(results_delan['end_mass_pos_vec'][1850, 0], results_delan['end_mass_pos_vec'][1850, 1]), xytext=(results_delan['end_mass_pos_vec'][1849, 0], results_delan['end_mass_pos_vec'][1849, 1]),
+    arrowprops=dict(arrowstyle="-|>",
+                    shrinkA=0, shrinkB=0,
+                    linewidth=1,
+                    mutation_scale=11,
+                    color=h_delan.get_color()),
+    zorder=6
+)
 
 # Achseneinstellungen
 # ax.set_xlim((seed_loss_vec[0, 0] - 1), seed_loss_vec[-1, 0])
