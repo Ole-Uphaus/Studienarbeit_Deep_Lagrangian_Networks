@@ -191,14 +191,18 @@ error_r = r_des_traj - q_vec[:, 1]
 mse_phi = np.mean(error_phi**2)
 mse_r = np.mean(error_r**2)
 
+# Mittelwert der absoluten Fehler (MAE)
+mae_phi = np.mean(np.abs(error_phi))
+mae_r = np.mean(np.abs(error_r))
+
 # Ausgabe
 print(f"MSE für phi: {mse_phi:.4e}")
 print(f"MSE für r: {mse_r:.4e}")
 
 # Ergebnisse speichern für finalen Plot
 results = {
-    'mse_phi': mse_phi,
-    'mse_r': mse_r,
+    'mae_phi': mae_phi,
+    'mae_r': mae_r,
     't_vec': t_vec,
     'x_des_traj': x_des_traj,
     'y_des_traj': y_des_traj,
