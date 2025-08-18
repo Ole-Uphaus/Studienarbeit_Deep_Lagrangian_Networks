@@ -55,6 +55,7 @@ line_thickness = 0.4
 # LaTeX Einstellungen
 rcParams.update({
     "text.usetex": True,
+    "text.latex.preamble": r"\usepackage{amsmath}",
     "font.family": "serif",
     "font.serif": ["Latin Modern Roman"],
     "axes.labelsize": 11,
@@ -77,10 +78,13 @@ h_delan, = ax.plot(results_delan['end_mass_pos_vec'][:, 0], results_delan['end_m
 ax.plot(results_pd['end_mass_pos_vec'][0, 0], results_pd['end_mass_pos_vec'][0, 1], marker='o', markersize=4.0,  # klein & dezent
             markerfacecolor='k',
             markeredgecolor='none', zorder=5)
+ax.text(results_pd['end_mass_pos_vec'][0, 0] - 0.004, results_pd['end_mass_pos_vec'][0, 1] + 0.004, r"$\boldsymbol{r}_0$", fontsize=11, va="bottom", ha="right")
 
 ax.plot(results_analytic['x_des_traj'][0], results_analytic['y_des_traj'][0], marker='o', markersize=4.0,  # klein & dezent
             markerfacecolor='k',
             markeredgecolor='none', zorder=5)
+
+ax.text(results_analytic['x_des_traj'][0] + 0.01, results_analytic['y_des_traj'][0], r"$\boldsymbol{r}_{d, 0}$", fontsize=11, ha="left")
 
 # Pfeile plotten
 ax.annotate(
