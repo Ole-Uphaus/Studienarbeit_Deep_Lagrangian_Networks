@@ -93,6 +93,7 @@ if just_plot == False:
     # Ergebnisse entpacken
     tau_hat_test_Nruns_10 = results['tau_hat_test']
     rmse_tau_percent_Nruns_10 = results['rmse_tau_percent']
+    mae_tau_percent_Nruns_10 = results['mae_tau_percent']
 
     ###################### Viele Daten ######################
     features_training, labels_training, _, _, _ = extract_training_data('Variation_Datenmenge_Nruns_50.mat', target_folder)  # Mein Modell Trainingsdaten
@@ -112,6 +113,7 @@ if just_plot == False:
     # Ergebnisse entpacken
     tau_hat_test_Nruns_50 = results['tau_hat_test']
     rmse_tau_percent_Nruns_50 = results['rmse_tau_percent']
+    mae_tau_percent_Nruns_50 = results['mae_tau_percent']
 
     # Ergebnisse plotten
     samples_vec = np.arange(1, tau_hat_test_Nruns_50.shape[0] + 1).reshape(-1, 1)
@@ -137,8 +139,10 @@ if just_plot == False:
     results = {
         'tau_hat_test_Nruns_10': tau_hat_test_Nruns_10,
         'rmse_tau_percent_Nruns_10': rmse_tau_percent_Nruns_10,
+        'mae_tau_percent_Nruns_10': mae_tau_percent_Nruns_10,
         'tau_hat_test_Nruns_50': tau_hat_test_Nruns_50,
         'rmse_tau_percent_Nruns_50': rmse_tau_percent_Nruns_50,
+        'mae_tau_percent_Nruns_50': mae_tau_percent_Nruns_50,
     }
 
     save_path = os.path.join(script_path, 'Ergebnisse_Variation_Datenpunkte.npy')
@@ -155,12 +159,14 @@ else:
     # Ergebnisse entpacken
     tau_hat_test_Nruns_10 = results['tau_hat_test_Nruns_10']
     rmse_tau_percent_Nruns_10 = results['rmse_tau_percent_Nruns_10']
+    mae_tau_percent_Nruns_10 = results['mae_tau_percent_Nruns_10']
     tau_hat_test_Nruns_50 = results['tau_hat_test_Nruns_50']
     rmse_tau_percent_Nruns_50 = results['rmse_tau_percent_Nruns_50']
+    mae_tau_percent_Nruns_50 = results['mae_tau_percent_Nruns_50']
 
     # Prozentualen Fehler ausgeben
-    print(f"Prozentualer Fehler Test Nr = 10: {rmse_tau_percent_Nruns_10:4f}")
-    print(f"Prozentualer Fehler Test Nr = 50: {rmse_tau_percent_Nruns_50:4f}")
+    print(f"Prozentualer MAE Test Nr = 10: {mae_tau_percent_Nruns_10:4f}")
+    print(f"Prozentualer MAE Test Nr = 50: {mae_tau_percent_Nruns_50:4f}")
 
     # Ergebnisse plotten
     samples_vec = np.arange(1, tau_hat_test_Nruns_50.shape[0] + 1).reshape(-1, 1)

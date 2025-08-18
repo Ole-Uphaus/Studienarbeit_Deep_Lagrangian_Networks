@@ -139,7 +139,7 @@ else:
     tau_hat_test = results['tau_hat_test']
 
     # Prozentualen Fehler ausgeben
-    print(f"Prozentualer Fehler Test: {results['rmse_tau_percent']:4f}")
+    print(f"Prozentualer Fehler Test: {results['mae_tau_percent']:4f}")
 
     # Ergebnisse plotten
     samples_vec = np.arange(1, H_test.shape[0] + 1).reshape(-1, 1)
