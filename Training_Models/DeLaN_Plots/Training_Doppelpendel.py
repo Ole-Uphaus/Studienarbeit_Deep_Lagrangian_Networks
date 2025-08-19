@@ -222,3 +222,23 @@ else:
         save_plots,
         True
     )
+
+    # Plots Anhang
+    plot_path_anh = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\08_Anhang'
+    plot_1_name_anh = os.path.join(plot_path_anh, 'Training_Doppelpendel_Massenmatrix.pdf')
+
+    # Plot Massenmatrix
+    quad_subplot(
+        samples_vec,
+        [np.concatenate([Mass_Cor_test[:, 0].reshape(-1, 1), H_test[:, 0, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+        np.concatenate([Mass_Cor_test[:, 1].reshape(-1, 1), H_test[:, 0, 1].reshape(-1, 1)], axis=1).reshape(-1, 2),
+        np.concatenate([Mass_Cor_test[:, 1].reshape(-1, 1), H_test[:, 1, 0].reshape(-1, 1)], axis=1).reshape(-1, 2), 
+        np.concatenate([Mass_Cor_test[:, 2].reshape(-1, 1), H_test[:, 1, 1].reshape(-1, 1)], axis=1).reshape(-1, 2)],
+        r'Datenpunktindex',
+        [r'$M_{RR,11} \, / \, \mathrm{kg} \, \mathrm{m}^2$',r'$M_{R,12} \, / \, \mathrm{kg} \, \mathrm{m}^2$',r'$M_{RR,21} \, / \, \mathrm{kg} \, \mathrm{m}^2$',r'$M_{RR,22} \, / \, \mathrm{kg} \, \mathrm{m}^2$'],
+        ['', '', '', ''],
+        [[], ['GT', 'DeLaN'], [], []],
+        plot_1_name_anh,
+        True,
+        True
+    )
