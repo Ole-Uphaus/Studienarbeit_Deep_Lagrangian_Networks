@@ -168,10 +168,10 @@ else:
     print(f"Prozentualer MAE Test Nr = 10: {mae_tau_percent_Nruns_10:4f}")
     print(f"Prozentualer MAE Test Nr = 50: {mae_tau_percent_Nruns_50:4f}")
 
-    # Ergebnisse plotten
+    # Ergebnisse plotten (Anhang)
     samples_vec = np.arange(1, tau_hat_test_Nruns_50.shape[0] + 1).reshape(-1, 1)
 
-    plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\06_Ergebnisse'
+    plot_path = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\08_Anhang'
     plot_1_name = os.path.join(plot_path, 'Variation_Datenpunkte_inv_dyn.pdf')
 
     # Plot 1 Schätzung inverse Dynamik
