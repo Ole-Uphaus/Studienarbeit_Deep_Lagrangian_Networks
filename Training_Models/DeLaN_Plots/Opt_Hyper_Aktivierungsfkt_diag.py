@@ -172,7 +172,7 @@ else:
         test_loss_history_Softplus[:, 0],
         np.concatenate([test_loss_history_Softplus[:, 1].reshape(-1, 1), test_loss_history_ReLU[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2),
         r'Epochen',
-        r'$\mathrm{Fehler}$',
+        r'$\mathrm{Verlust}$',
         '',
         ['Softplus', 'ReLU'],
         plot_1_name,

@@ -226,7 +226,7 @@ else:
         training_loss_history[:, 0],
         np.concatenate([training_loss_history[:, 1].reshape(-1, 1), test_loss_history[:, 1].reshape(-1, 1)], axis=1).reshape(-1, 2),
         r'Epochen',
-        r'$\mathrm{Fehler}$',
+        r'$\mathrm{Verlust}$',
         '',
         ['Training', 'Test'],
         plot_2_name,
