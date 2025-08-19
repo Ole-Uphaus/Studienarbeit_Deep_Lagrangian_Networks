@@ -227,7 +227,7 @@ else:
 
     # Plots Anhang
     plot_path_anh = r'D:\Programmierung_Ole\Latex\Studienarbeit_Repo_Overleaf\Bilder\08_Anhang'
-    plot_1_name_anh = os.path.join(plot_path_anh, 'Training_Doppelpendel_Massenmatrix.pdf')
+    plot_1_name_anh = os.path.join(plot_path_anh, 'Training_Torsionsschwinger_Massenmatrix.pdf')
 
     # Plot Massenmatrix
     quad_subplot(
