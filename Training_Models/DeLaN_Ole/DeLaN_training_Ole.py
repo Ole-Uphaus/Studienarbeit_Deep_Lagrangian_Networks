@@ -264,7 +264,7 @@ if __name__ == "__main__":
         'batch_size': 512,
         'learning_rate': 5.e-4,
         'weight_decay': 1.e-4,
-        'n_epoch': 2000,
+        'n_epoch': 2200,
 
         # Reibungsmodell
         'use_friction_model': False,
@@ -278,12 +278,12 @@ if __name__ == "__main__":
         'use_inverse_model': True,
         'use_forward_model': True,
         'use_energy_consumption': False,
-        'save_model': True}
+        'save_model': False}
 
     # Trainings- und Testdaten laden
     target_folder = 'Studienarbeit_Data' # Möglichkeiten: 'MATLAB_Simulation', 'Mujoco_Simulation', 'Torsionsschwinger_Messungen' 'Studienarbeit_Data'
-    features_training, labels_training, _, _, _ = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Trainingsdaten
-    _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Allgemeiner_Trainingsdatensatz_Nruns_37.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
+    features_training, labels_training, _, _, _ = extract_training_data('Datensatz_Doppelpendel_Nruns_37.mat', target_folder)  # Mein Modell Trainingsdaten
+    _, _, features_test, labels_test, Mass_Cor_test = extract_training_data('Datensatz_Doppelpendel_Nruns_37.mat', target_folder)  # Mein Modell Testdaten (Immer dieselben Testdaten nutzen)
 
     # Modell trainieren
     DeLaN_network, results = Delan_Train_Eval(
