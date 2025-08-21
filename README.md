@@ -29,3 +29,4 @@ In diesem Repository befindet sich der gesamte Code, der im Rahmen meiner Studie
 
 1. Trainingsdaten können mit einem der Skripte aus (`Data_generation/`) auf verschiedene weisen für verschiedene Systemmodelle generiert werden.  
 2. Hauptskript ist das (`Data_generation/DeLaN_Ole/DeLaN_training_Ole.py`) Skript, mit dem sich das DeLaN Modell auf beliebigen Trainingsdaten mit variablen Hyperparametern trainieren lässt.
+3. Die Regelungsimplementierungen befindet sich unter (`Mujoco/Control`). Es kann das jeweils vortrainierte Systemmodell kann in den entsprechenden Skripten ausgewählt werden.
