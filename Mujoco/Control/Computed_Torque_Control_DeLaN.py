@@ -83,6 +83,22 @@ xml_path = os.path.join(script_path, '..', 'Models', xml_name)
 model = mujoco.MjModel.from_xml_path(xml_path)
 data = mujoco.MjData(model)
 
+# Sites auf die Solltrajektorie setzen
+anz_sites = 500
+site_counter = 0
+site_step = phi_p_des_traj.shape[0] // anz_sites
+
+for i in range(len(t_vec)):
+    if np.mod(i, site_step) == 0:
+        # Site Position aktualisieren
+        body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, f'sitebody_des_{site_counter}')
+        model.body_pos[body_id] = np.array([x_des_traj[i], y_des_traj[i], 0])
+
+        # Counter aktualisieren
+        site_counter += 1
+
+mujoco.mj_forward(model, data)
+
 # DeLaN Modell Daten laden
 DeLaN_name = "DeLaN_model_2025_08_16_09_17_47_Epochen_2000.pth"
 DeLaN_path = os.path.join(script_path, '..', '..', 'Training_Models', 'DeLaN_Ole', 'Saved_Models', DeLaN_name)
@@ -112,6 +128,10 @@ Kv = np.array([[25, 0],
 # Listen zum Tracken der Trajektorien
 end_mass_pos_vec = []
 q_vec = []
+
+# ID des end effector sites abspeichern
+end_site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, f'end_mass_site')
+site_counter = 0
 
 # Viewer starten
 with viewer.launch_passive(model, data) as view:
@@ -168,10 +188,19 @@ with viewer.launch_passive(model, data) as view:
 
         # Messwerte abspeichern
         # Endeffektor Position auslesen
-        end_mass_pos_vec.append(data.site_xpos[0].copy())
+        end_mass_pos_vec.append(data.site_xpos[end_site_id].copy())
 
-        # Istgelenkwonkel auslesen
+        # Istgelenkwinkel auslesen
         q_vec.append(data.qpos.copy())
+
+        # Trajektorie malen
+        if np.mod(t, site_step) == 0:
+            body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, f'sitebody_ist_{site_counter}')
+            model.body_pos[body_id] = data.site_xpos[end_site_id].copy()
+
+            # Counter aktualisieren
+            site_counter += 1
+            mujoco.mj_forward(model, data)
 
         # Bild aktualisieren
         view.sync()
