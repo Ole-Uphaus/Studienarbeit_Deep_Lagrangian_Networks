@@ -137,12 +137,12 @@ site_counter = 0
 with viewer.launch_passive(model, data) as view:
     # Kamera konfigurieren
     view.cam.lookat[:] = [0.5, 0, 0]   # Zentrum deiner Szene
-    view.cam.distance = 3.0                # Nähe
+    view.cam.distance = 2.0                # Nähe
     view.cam.azimuth = 90
     view.cam.elevation = -70
 
     # kurz warten am Anfang
-    time.sleep(1)
+    time.sleep(3)
 
     # Simulation beginnen
     for t in range(len(t_vec)):
